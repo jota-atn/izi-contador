@@ -1,0 +1,38 @@
+# --- Python / Backend ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+build/
+dist/
+
+# --- Segurança e Credenciais (CRÍTICO) ---
+backend/credentials.json
+backend/token.json
+.env
+
+# --- Dados e Temporários ---
+# Ignora os CSVs baixados para não sujar o repo com dados financeiros reais
+backend/app/data/
+*.csv
+*.xlsx
+
+# --- Frontend / React ---
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# --- IDEs / Sistema ---
+.vscode/
+.idea/
+.DS_Store
+*.swpcredentials.json
+token.json
+data/
+venv/
