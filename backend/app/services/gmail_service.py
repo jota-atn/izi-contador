@@ -9,14 +9,19 @@ from googleapiclient.discovery import build
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
 google_creds_content = os.environ.get('GOOGLE_CREDENTIALS')
+google_token_content = os.environ.get('GOOGLE_TOKEN')
+
 CREDENTIALS_FILE = 'credentials.json'
+TOKEN_PATH = 'token.json'
+DATA_FOLDER = 'app/data'
 
 if google_creds_content:
     with open(CREDENTIALS_FILE, 'w') as f:
         f.write(google_creds_content)
 
-TOKEN_PATH = 'token.json'
-DATA_FOLDER = 'app/data'
+if google_token_content:
+    with open(TOKEN_PATH, 'w') as f:
+        f.write(google_token_content)
 
 def get_gmail_service():
     creds = None
