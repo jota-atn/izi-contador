@@ -12,7 +12,7 @@ BACKEND_DIR = os.path.dirname(os.path.dirname(BASE_DIR))
 
 CREDENTIALS_PATH = os.environ.get('GOOGLE_CREDENTIALS')
 
-if google_creds_json:
+if CREDENTIALS_PATH:
     with open('credentials.json', 'w') as f:
         f.write(google_creds_json)
 
