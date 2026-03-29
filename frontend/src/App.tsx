@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getRelatorio } from './api';
-import { Wallet, Users, Receipt, AlertTriangle, ArrowRight, UserCircle, CreditCard, PieChart as PieIcon } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { Wallet, Users, Receipt, AlertTriangle, ArrowRight, UserCircle, CreditCard, PieChart as PieIcon, Copy, Check } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface Gasto {
   descricao: string;
@@ -26,6 +26,7 @@ export default function App() {
   const [dados, setDados] = useState<RelatorioFatura | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copiado, setCopiado] = useState(false);
 
   useEffect(() => {
     getRelatorio()
@@ -33,6 +34,23 @@ export default function App() {
       .catch(() => setError("Erro ao conectar com o backend."))
       .finally(() => setLoading(false));
   }, []);
+
+  const copiarResumo = () => {
+    if (!dados) return;
+
+    const texto = dados.relatorio_por_pessoa
+      .map((pessoa) => {
+        const itens = pessoa.itens
+          .map((item) => `${item.descricao} - ${item.valor.toFixed(2)}`)
+          .join('\n');
+        return `${pessoa.dono}\n${itens}\nTotal = ${pessoa.total_individual.toFixed(2)}`;
+      })
+      .join('\n\n');
+
+    navigator.clipboard.writeText(texto);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2000);
+  };
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900">
@@ -64,9 +82,26 @@ export default function App() {
             </div>
             <h1 className="text-xl font-black tracking-tight text-white uppercase">Izi<span className="text-purple-500">Contador</span></h1>
           </div>
-          <div className="flex items-center gap-3 bg-slate-900 px-4 py-2 rounded-full border border-slate-800">
-            <UserCircle className="text-purple-400 w-4 h-4" />
-            <span className="text-xs font-bold uppercase tracking-wider">Olá, Jota</span>
+          
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={copiarResumo}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all active:scale-95 ${
+                copiado 
+                ? 'bg-green-500/20 border-green-500 text-green-400' 
+                : 'bg-slate-900 border-slate-700 hover:border-purple-500 text-slate-300'
+              }`}
+            >
+              {copiado ? <Check size={14} /> : <Copy size={14} />}
+              <span className="text-xs font-bold uppercase tracking-wider">
+                {copiado ? 'Copiado!' : 'Copiar Resumo'}
+              </span>
+            </button>
+
+            <div className="flex items-center gap-3 bg-slate-900 px-4 py-2 rounded-full border border-slate-800">
+              <UserCircle className="text-purple-400 w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">Olá, Jota</span>
+            </div>
           </div>
         </div>
       </nav>
