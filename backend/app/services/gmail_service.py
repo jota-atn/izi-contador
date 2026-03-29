@@ -1,5 +1,6 @@
 import os
 import base64
+import json
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -7,29 +8,31 @@ from googleapiclient.discovery import build
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-BACKEND_DIR = os.path.dirname(os.path.dirname(BASE_DIR))
+google_creds_content = os.environ.get('GOOGLE_CREDENTIALS')
+CREDENTIALS_FILE = 'credentials.json'
 
-CREDENTIALS_PATH = os.environ.get('GOOGLE_CREDENTIALS')
+if google_creds_content:
+    with open(CREDENTIALS_FILE, 'w') as f:
+        f.write(google_creds_content)
 
-if CREDENTIALS_PATH:
-    with open('credentials.json', 'w') as f:
-        f.write(google_creds_json)
-
-TOKEN_PATH = os.path.join(BACKEND_DIR, 'token.json')
-DATA_FOLDER = os.path.join(BACKEND_DIR, 'app', 'data')
+TOKEN_PATH = 'token.json'
+DATA_FOLDER = 'app/data'
 
 def get_gmail_service():
     creds = None
+    
     if os.path.exists(TOKEN_PATH):
         creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
     
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request()) 
+            creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
-            creds = flow.run_local_server(port=0)
+            if os.path.exists(CREDENTIALS_FILE):
+                flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
+                creds = flow.run_local_server(port=0)
+            else:
+                raise Exception("Credenciais nao encontradas")
         
         with open(TOKEN_PATH, 'w') as token:
             token.write(creds.to_json())
@@ -37,9 +40,6 @@ def get_gmail_service():
     return build('gmail', 'v1', credentials=creds)
 
 def download_latest_csv(service):
-    """
-    Busca o último e-mail de extrato do Nubank e baixa o anexo CSV.
-    """
     query = 'subject:"Extrato da fatura do Cartão Nubank" has:attachment'
     results = service.users().messages().list(userId='me', q=query, maxResults=1).execute()
     messages = results.get('messages', [])
@@ -63,7 +63,7 @@ def download_latest_csv(service):
             if not os.path.exists(DATA_FOLDER):
                 os.makedirs(DATA_FOLDER)
             
-            path = os.path.join(DATA_FOLDER, "fatura_recente.csv")
+            path = os.path.join(DATA_FOLDER, "fatura_recent.csv")
             with open(path, 'wb') as f:
                 f.write(file_data)
             
