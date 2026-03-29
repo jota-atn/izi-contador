@@ -10,7 +10,12 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BACKEND_DIR = os.path.dirname(os.path.dirname(BASE_DIR))
 
-CREDENTIALS_PATH = os.path.join(BACKEND_DIR, 'credentials.json')
+CREDENTIALS_PATH = os.environ.get('GOOGLE_CREDENTIALS')
+
+if google_creds_json:
+    with open('credentials.json', 'w') as f:
+        f.write(google_creds_json)
+
 TOKEN_PATH = os.path.join(BACKEND_DIR, 'token.json')
 DATA_FOLDER = os.path.join(BACKEND_DIR, 'app', 'data')
 
