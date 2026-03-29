@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://izi-contador-backend.onrender.com/api';
+const API_URL = 'https://izi-contador.onrender.com/api';
 
 export const api = axios.create({
   baseURL: API_URL,
