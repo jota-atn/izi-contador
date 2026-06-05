@@ -8,42 +8,89 @@ CATEGORIAS_MAP = {
     "STREAMING": ["HBO", "PRIME VIDEO", "SPOTIFY", "CRUNCHYROLL", "NETFLIX", "DISNEY", "YOUTUBE PREMIUM"]
 }
 
-SPLIT_PATTERN = re.compile(r'\(metade\s+(\w+)\)', re.IGNORECASE)
+# Sufixos que não são pessoas (método de pagamento, etc.)
+NON_PERSONS = {'NUPAY'}
+
+# "Metade Pessoa" com parênteses: Item(Metade Sofia) - João
+SPLIT_PARENS = re.compile(r'\(metade\s+(\w+)\)', re.IGNORECASE)
+# "Metade Pessoa" sem parênteses: Uber - Metade Sofia
+SPLIT_DASH = re.compile(r'\s*-\s*metade\s+(\w+)\s*$', re.IGNORECASE)
+# Valor fixo nos parênteses: (Menos 44 Dante) ou (20 Sofia)
+SPLIT_FIXED = re.compile(r'\((?:menos\s+)?(\d+(?:[.,]\d+)?)\s+(\w+)\)', re.IGNORECASE)
+# Parcela no final: - Parcela 2/3
+PARCELA_SUFFIX = re.compile(r'\s*-\s*parcela\s+\d+/\d+\s*$', re.IGNORECASE)
+
 
 def _expand_split_rows(df):
     rows_to_add = []
     indices_to_drop = []
 
     for idx, row in df.iterrows():
-        split_match = SPLIT_PATTERN.search(str(row['title']))
-        if not split_match:
-            continue
+        title = str(row['title'])
 
-        split_person = split_match.group(1).capitalize()
-        half = row['amount'] / 2
+        parens_match = SPLIT_PARENS.search(title)
+        fixed_match = SPLIT_FIXED.search(title)
+        dash_match = SPLIT_DASH.search(title)
 
-        base_title = re.split(r'\s*\(', str(row['title']))[0].strip()
+        if fixed_match:
+            raw_amount = fixed_match.group(1).replace(',', '.')
+            person_amount = float(raw_amount)
+            split_person = fixed_match.group(2).capitalize()
+            payer_amount = row['amount'] - person_amount
+            base_title = re.split(r'\s*\(', title)[0].strip()
 
-        dono_match = re.search(r'\)\s*-\s*(\w+)\s*$', str(row['title']), re.IGNORECASE)
-        payer = dono_match.group(1).capitalize() if dono_match else 'João'
+            row_payer = row.copy()
+            row_payer['amount'] = payer_amount
+            row_payer['title'] = base_title
+            rows_to_add.append(row_payer)
 
-        row_payer = row.copy()
-        row_payer['amount'] = half
-        row_payer['title'] = base_title
-        rows_to_add.append(row_payer)
+            row_split = row.copy()
+            row_split['amount'] = person_amount
+            row_split['title'] = f"{base_title} - {split_person}"
+            rows_to_add.append(row_split)
 
-        row_split = row.copy()
-        row_split['amount'] = half
-        row_split['title'] = f"{base_title} - {split_person}"
-        rows_to_add.append(row_split)
+            indices_to_drop.append(idx)
 
-        indices_to_drop.append(idx)
+        elif parens_match:
+            split_person = parens_match.group(1).capitalize()
+            half = row['amount'] / 2
+            base_title = re.split(r'\s*\(', title)[0].strip()
+
+            row_payer = row.copy()
+            row_payer['amount'] = half
+            row_payer['title'] = base_title
+            rows_to_add.append(row_payer)
+
+            row_split = row.copy()
+            row_split['amount'] = half
+            row_split['title'] = f"{base_title} - {split_person}"
+            rows_to_add.append(row_split)
+
+            indices_to_drop.append(idx)
+
+        elif dash_match:
+            split_person = dash_match.group(1).capitalize()
+            half = row['amount'] / 2
+            base_title = SPLIT_DASH.sub('', title).strip()
+
+            row_payer = row.copy()
+            row_payer['amount'] = half
+            row_payer['title'] = base_title
+            rows_to_add.append(row_payer)
+
+            row_split = row.copy()
+            row_split['amount'] = half
+            row_split['title'] = f"{base_title} - {split_person}"
+            rows_to_add.append(row_split)
+
+            indices_to_drop.append(idx)
 
     if indices_to_drop:
         df = df.drop(indices_to_drop)
         df = pd.concat([df, pd.DataFrame(rows_to_add)], ignore_index=True)
 
     return df
+
 
 def processar_csv_nubank(file_path):
     try:
@@ -65,10 +112,16 @@ def processar_csv_nubank(file_path):
         df['title'] = df['title'].str.upper()
 
         def categorizar_item(titulo):
-            dono_match = re.search(r' - ([^-\n()]+)$', titulo)
+            # Remove "- Parcela X/X" do final antes de qualquer extração
+            titulo_clean = PARCELA_SUFFIX.sub('', titulo).strip()
+
+            dono_match = re.search(r' - ([^-\n()]+)$', titulo_clean)
             explicit_dono = dono_match.group(1).strip() if dono_match else None
 
-            titulo_base = titulo.split('(')[0].strip()
+            if explicit_dono and explicit_dono.upper() in NON_PERSONS:
+                explicit_dono = None
+
+            titulo_base = titulo_clean.split('(')[0].strip()
 
             for categoria, palavras in CATEGORIAS_MAP.items():
                 if any(palavra in titulo_base for palavra in palavras):
@@ -78,7 +131,7 @@ def processar_csv_nubank(file_path):
                 titulo_display = re.sub(r'\s*-\s*[^-]+$', '', titulo_base).strip()
                 return titulo_display or titulo_base, explicit_dono
 
-            return titulo, "JOÃO"
+            return titulo_clean, "JOÃO"
 
         df[['exibicao', 'dono']] = df.apply(
             lambda x: pd.Series(categorizar_item(x['title'])), axis=1
