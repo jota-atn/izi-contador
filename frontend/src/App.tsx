@@ -31,7 +31,13 @@ export default function App() {
   useEffect(() => {
     getRelatorio()
       .then(setDados)
-      .catch(() => setError("Erro ao conectar com o backend."))
+      .catch((err) => {
+        if (err?.response?.status === 401) {
+          setError("Sessão do Google expirada. Reinicie o backend para reautenticar.");
+        } else {
+          setError("Erro ao conectar com o backend.");
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 

@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-const API_URL = 'https://izi-contador.onrender.com/api';
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+const API_URL = isLocalhost 
+  ? 'http://127.0.0.1:8080/api' 
+  : 'https://izi-contador-backend.onrender.com/api'; 
 
 export const api = axios.create({
   baseURL: API_URL,
