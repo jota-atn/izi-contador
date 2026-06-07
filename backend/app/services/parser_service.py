@@ -37,7 +37,7 @@ def _expand_split_rows(df):
             person_amount = float(raw_amount)
             split_person = fixed_match.group(2).capitalize()
             payer_amount = row['amount'] - person_amount
-            base_title = re.split(r'\s*\(', title)[0].strip()
+            base_title = SPLIT_FIXED.sub('', title).strip()
 
             row_payer = row.copy()
             row_payer['amount'] = payer_amount
@@ -54,7 +54,7 @@ def _expand_split_rows(df):
         elif parens_match:
             split_person = parens_match.group(1).capitalize()
             half = row['amount'] / 2
-            base_title = re.split(r'\s*\(', title)[0].strip()
+            base_title = SPLIT_PARENS.sub('', title).strip()
 
             row_payer = row.copy()
             row_payer['amount'] = half
@@ -112,7 +112,15 @@ def processar_csv_nubank(file_path):
         df['title'] = df['title'].str.upper()
 
         def categorizar_item(titulo):
-            # Remove "- Parcela X/X" do final antes de qualquer extração
+            # Extrai o número da parcela antes de remover o sufixo
+            parcela_match = PARCELA_SUFFIX.search(titulo)
+            parcela_str = ''
+            if parcela_match:
+                nums = re.search(r'(\d+/\d+)', parcela_match.group(0))
+                if nums:
+                    parcela_str = f" - {nums.group(1)}"
+
+            # Remove "- Parcela X/X" do final antes de qualquer extração de dono
             titulo_clean = PARCELA_SUFFIX.sub('', titulo).strip()
 
             dono_match = re.search(r' - ([^-\n()]+)$', titulo_clean)
@@ -128,10 +136,10 @@ def processar_csv_nubank(file_path):
                     return categoria, explicit_dono if explicit_dono else "JOÃO"
 
             if explicit_dono and not explicit_dono.isdigit():
-                titulo_display = re.sub(r'\s*-\s*[^-]+$', '', titulo_base).strip()
-                return titulo_display or titulo_base, explicit_dono
+                titulo_display = re.sub(r'\s*-\s*[^-()]+$', '', titulo_clean).strip()
+                return (titulo_display or titulo_clean) + parcela_str, explicit_dono
 
-            return titulo_clean, "JOÃO"
+            return titulo_clean + parcela_str, "JOÃO"
 
         df[['exibicao', 'dono']] = df.apply(
             lambda x: pd.Series(categorizar_item(x['title'])), axis=1
