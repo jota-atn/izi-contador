@@ -1,0 +1,41 @@
+import { Dimensions, Text, View } from 'react-native';
+import { PieChart } from 'react-native-chart-kit';
+import { RelatorioPessoa } from '../types';
+
+const COLORS = ['#7C3AED', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', '#6366F1'];
+const SCREEN_W = Dimensions.get('window').width;
+
+interface Props {
+  pessoas: RelatorioPessoa[];
+}
+
+export function PieChartCard({ pessoas }: Props) {
+  const data = pessoas.map((p, i) => ({
+    name: p.dono,
+    population: p.total_individual,
+    color: COLORS[i % COLORS.length],
+    legendFontColor: '#94a3b8',
+    legendFontSize: 12,
+  }));
+
+  return (
+    <View className="bg-slate-900 rounded-3xl p-6 border border-slate-800 items-center">
+      <Text className="text-white text-sm font-bold uppercase tracking-wider mb-4 self-start">
+        🥧 Divisão de Gastos
+      </Text>
+      <PieChart
+        data={data}
+        width={SCREEN_W - 64}
+        height={180}
+        chartConfig={{
+          color: () => '#7C3AED',
+          labelColor: () => '#94a3b8',
+        }}
+        accessor="population"
+        backgroundColor="transparent"
+        paddingLeft="8"
+        hasLegend
+      />
+    </View>
+  );
+}
