@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "mobile",
+    "name": "IziContador",
     "slug": "mobile",
     "scheme": "izi-contador",
     "version": "1.0.0",
@@ -12,12 +12,25 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#6D28D9",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.jota_atn.mobile",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "com.jota_atn.mobile",
+              "path": "/oauthredirect"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -25,6 +38,11 @@
     "plugins": [
       "expo-web-browser",
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "d5ed8dd8-7485-4277-a415-729fdb20c6d0"
+      }
+    }
   }
 }
