@@ -1,7 +1,5 @@
 import './global.css';
-import { SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
-import { useState } from 'react';
+import { SafeAreaView, ScrollView, Share, StatusBar, Text, TouchableOpacity, View } from 'react-native';
 
 import { useGoogleAuth } from './src/auth/useGoogleAuth';
 import { useRelatorio } from './src/hooks/useRelatorio';
@@ -15,9 +13,7 @@ import { PersonCard } from './src/components/PersonCard';
 export default function App() {
   const { status: authStatus, signIn, signOut, getAccessToken, request } = useGoogleAuth();
   const { state, refresh } = useRelatorio(getAccessToken, authStatus);
-  const [copiado, setCopiado] = useState(false);
-
-  const copiarResumo = async () => {
+  const compartilharResumo = async () => {
     if (state.status !== 'success') return;
     const texto = state.data.relatorio_por_pessoa
       .map((p) => {
@@ -25,9 +21,7 @@ export default function App() {
         return `${p.dono}\n${itens}\nTotal = ${p.total_individual.toFixed(2)}`;
       })
       .join('\n\n');
-    await Clipboard.setStringAsync(texto);
-    setCopiado(true);
-    setTimeout(() => setCopiado(false), 2000);
+    await Share.share({ message: texto });
   };
 
   if (authStatus === 'loading') {
@@ -67,13 +61,11 @@ export default function App() {
         </Text>
         <View className="flex-row items-center gap-2">
           <TouchableOpacity
-            onPress={copiarResumo}
-            className={`px-4 py-2 rounded-full border ${
-              copiado ? 'bg-green-500/20 border-green-500' : 'bg-slate-900 border-slate-700'
-            }`}
+            onPress={compartilharResumo}
+            className="px-4 py-2 rounded-full border bg-slate-900 border-slate-700"
           >
-            <Text className={`text-xs font-bold uppercase tracking-wider ${copiado ? 'text-green-400' : 'text-slate-300'}`}>
-              {copiado ? '✓ Copiado' : 'Copiar'}
+            <Text className="text-xs font-bold uppercase tracking-wider text-slate-300">
+              Compartilhar
             </Text>
           </TouchableOpacity>
 
