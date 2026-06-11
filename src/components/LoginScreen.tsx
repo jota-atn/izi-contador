@@ -1,5 +1,7 @@
 import { Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { IconCard } from './icons/IconCard';
+import { IconGoogle } from './icons/IconGoogle';
 
 interface Props {
   onSignIn: () => void;
@@ -9,7 +11,7 @@ export function LoginScreen({ onSignIn }: Props) {
   return (
     <SafeAreaView className="flex-1 bg-slate-950 px-8 justify-center items-center">
       <View className="w-20 h-20 bg-purple-600 rounded-3xl items-center justify-center mb-8 shadow-lg">
-        <Text className="text-4xl">💳</Text>
+        <IconCard size={36} color="#ffffff" />
       </View>
 
       <Text className="text-white text-4xl font-black tracking-tight mb-2">
@@ -24,7 +26,7 @@ export function LoginScreen({ onSignIn }: Props) {
         activeOpacity={0.85}
         className="w-full flex-row items-center justify-center gap-3 bg-white py-4 rounded-2xl"
       >
-        <Text className="text-xl">G</Text>
+        <IconGoogle size={20} />
         <Text className="text-slate-900 font-bold text-base">Entrar com Google</Text>
       </TouchableOpacity>
     </SafeAreaView>
