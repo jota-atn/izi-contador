@@ -1,4 +1,5 @@
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Props {
   message: string;
@@ -7,7 +8,7 @@ interface Props {
 
 export function ErrorScreen({ message, onRetry }: Props) {
   return (
-    <View className="flex-1 items-center justify-center bg-slate-900 px-8">
+    <SafeAreaView className="flex-1 items-center justify-center bg-slate-950 px-8">
       <Text className="text-5xl mb-4">⚠️</Text>
       <Text className="text-white text-lg font-bold text-center mb-6">{message}</Text>
       <TouchableOpacity onPress={onRetry} className="bg-purple-600 px-8 py-3 rounded-full">
@@ -15,6 +16,6 @@ export function ErrorScreen({ message, onRetry }: Props) {
           Tentar novamente
         </Text>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }

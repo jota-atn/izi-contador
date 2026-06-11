@@ -1,4 +1,5 @@
 import { Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Props {
   onSignIn: () => void;
@@ -6,7 +7,7 @@ interface Props {
 
 export function LoginScreen({ onSignIn }: Props) {
   return (
-    <View className="flex-1 bg-slate-950 px-8 justify-center items-center">
+    <SafeAreaView className="flex-1 bg-slate-950 px-8 justify-center items-center">
       <View className="w-20 h-20 bg-purple-600 rounded-3xl items-center justify-center mb-8 shadow-lg">
         <Text className="text-4xl">💳</Text>
       </View>
@@ -26,6 +27,6 @@ export function LoginScreen({ onSignIn }: Props) {
         <Text className="text-xl">G</Text>
         <Text className="text-slate-900 font-bold text-base">Entrar com Google</Text>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
