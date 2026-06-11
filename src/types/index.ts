@@ -15,8 +15,3 @@ export interface RelatorioFatura {
   relatorio_por_pessoa: RelatorioPessoa[];
 }
 
-export interface StoredTokens {
-  accessToken: string;
-  refreshToken: string | null;
-  expiresAt: number;
-}
