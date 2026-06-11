@@ -11,7 +11,7 @@ import { PieChartCard } from './src/components/PieChartCard';
 import { PersonCard } from './src/components/PersonCard';
 
 export default function App() {
-  const { status: authStatus, signIn, signOut, getAccessToken, request } = useGoogleAuth();
+  const { status: authStatus, signIn, signOut, getAccessToken } = useGoogleAuth();
   const { state, refresh } = useRelatorio(getAccessToken, authStatus);
   const compartilharResumo = async () => {
     if (state.status !== 'success') return;
@@ -29,7 +29,7 @@ export default function App() {
   }
 
   if (authStatus === 'unauthenticated') {
-    return <LoginScreen onSignIn={signIn} request={request} />;
+    return <LoginScreen onSignIn={signIn} />;
   }
 
   if (state.status === 'auth_expired') {
