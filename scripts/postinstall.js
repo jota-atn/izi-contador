@@ -241,8 +241,54 @@ extractSpecsFromTarball(
   path.join(nm, 'react-native-svg/src/fabric'),
   'src/fabric'
 );
+// Also restore missing android/src/main/jni files for react-native-svg
+(function restoreSvgJni() {
+  const svgBase = path.join(nm, 'react-native-svg');
+  const missingJni = [
+    'android/src/main/jni/CMakeLists.txt',
+  ];
+  const anyMissing = missingJni.some(f => !fs.existsSync(path.join(svgBase, f)));
+  if (!anyMissing) return;
+  try {
+    const tmpDir = require('os').tmpdir() + '/izi-svg-' + Date.now();
+    fs.mkdirSync(tmpDir, { recursive: true });
+    execSync(`curl -sf "https://registry.npmjs.org/react-native-svg/-/react-native-svg-15.15.4.tgz" | tar -xz -C "${tmpDir}" 2>/dev/null`, { shell: '/bin/bash' });
+    missingJni.forEach(rel => {
+      const dest = path.join(svgBase, rel);
+      const src = path.join(tmpDir, 'package', rel);
+      if (!fs.existsSync(dest) && fs.existsSync(src)) {
+        fs.mkdirSync(path.dirname(dest), { recursive: true });
+        fs.copyFileSync(src, dest);
+        console.log(`[postinstall] Restored react-native-svg/${rel}`);
+      }
+    });
+    execSync(`rm -rf "${tmpDir}"`);
+  } catch (e) {
+    console.warn('[postinstall] Warning: could not restore svg jni files:', e.message);
+  }
+})();
 extractSpecsFromTarball(
   'https://registry.npmjs.org/react-native-gesture-handler/-/react-native-gesture-handler-2.31.2.tgz',
   path.join(nm, 'react-native-gesture-handler/src/specs'),
   'src/specs'
 );
+
+// Fix 7: Disable IPO/LTO check in ReactNative-application.cmake
+// check_ipo_supported() uses try_compile() which doesn't propagate CMAKE_ANDROID_NDK_VERSION.
+// Clang.cmake then defaults to -fuse-ld=gold which fails on Linux ARM cross-compilation.
+// LTO is a release performance optimization — not needed for local debug builds.
+const rnAppCmake = path.join(nm, 'react-native/ReactAndroid/cmake-utils/ReactNative-application.cmake');
+if (fs.existsSync(rnAppCmake)) {
+  let cmakeContent = fs.readFileSync(rnAppCmake, 'utf8');
+  if (cmakeContent.includes('check_ipo_supported(RESULT IPO_SUPPORT)') && !cmakeContent.includes('# IPO_DISABLED_LINUX')) {
+    cmakeContent = cmakeContent.replace(
+      /# If the user toolchain supports IPO, we enable it for the app build\ninclude\(CheckIPOSupported\)\ncheck_ipo_supported\(RESULT IPO_SUPPORT\)\nif \(IPO_SUPPORT\)\n  set\(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE\)\nendif\(\)/,
+      '# IPO_DISABLED_LINUX: check_ipo_supported fails on Linux/ARM cross-compilation\n' +
+      '# (CMake 3.22 + NDK r27 try_compile does not propagate CMAKE_ANDROID_NDK_VERSION,\n' +
+      '#  so Clang.cmake defaults to -fuse-ld=gold which the system linker can\'t use for ARM)\n' +
+      '# set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)'
+    );
+    fs.writeFileSync(rnAppCmake, cmakeContent);
+    console.log('[postinstall] Disabled IPO check in ReactNative-application.cmake');
+  }
+}
