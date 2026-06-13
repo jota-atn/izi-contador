@@ -13,6 +13,8 @@ const NON_PERSONS = new Set(['NUPAY']);
 const SPLIT_PARENS = /\(metade\s+(\w+)\)/i;
 const SPLIT_DASH = /\s*-\s*metade\s+(\w+)\s*$/i;
 const SPLIT_FIXED = /\((?:menos\s+)?(\d+(?:[.,]\d+)?)\s+(\w+)\)/i;
+// Formato: (Nome=40, Maria=20, ...) — divide explicitamente por pessoa
+const SPLIT_MULTI = /\((\w+=\d+(?:[.,]\d+)?(?:,\s*\w+=\d+(?:[.,]\d+)?)*)\)/i;
 const PARCELA_SUFFIX = /\s*-\s*parcela\s+\d+\/\d+\s*$/i;
 
 interface Row {
@@ -31,11 +33,27 @@ function expandSplitRows(rows: Row[]): Row[] {
   const result: Row[] = [];
 
   for (const row of rows) {
+    const multiMatch = SPLIT_MULTI.exec(row.title);
     const fixedMatch = SPLIT_FIXED.exec(row.title);
     const parensMatch = SPLIT_PARENS.exec(row.title);
     const dashMatch = SPLIT_DASH.exec(row.title);
 
-    if (fixedMatch) {
+    if (multiMatch) {
+      // (Joao=40, Maria=20) → uma linha por pessoa com o valor explícito
+      // Remove o bloco (…) e o sufixo "- Dono" da descrição base
+      const baseTitle = row.title
+        .replace(SPLIT_MULTI, '')
+        .replace(/\s*-\s*\w+\s*$/, '')
+        .trim();
+      const pairs = multiMatch[1].split(',');
+      for (const pair of pairs) {
+        const [name, amountStr] = pair.trim().split('=');
+        const amount = parseFloat(amountStr.replace(',', '.'));
+        if (!isNaN(amount)) {
+          result.push({ ...row, amount, title: `${baseTitle} - ${capitalize(name.trim())}` });
+        }
+      }
+    } else if (fixedMatch) {
       const personAmount = parseFloat(fixedMatch[1].replace(',', '.'));
       const splitPerson = capitalize(fixedMatch[2]);
       const baseTitle = row.title.replace(SPLIT_FIXED, '').trim();
