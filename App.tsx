@@ -1,6 +1,6 @@
 import './global.css';
 import { useState } from 'react';
-import { ScrollView, Share, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Share, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
@@ -14,7 +14,7 @@ import { TotalCard } from './src/components/TotalCard';
 import { PieChartCard } from './src/components/PieChartCard';
 import { PersonCard } from './src/components/PersonCard';
 import { CategoriasModal } from './src/components/CategoriasModal';
-import { IconSettings } from './src/components/icons/IconSettings';
+import { HeaderMenu } from './src/components/HeaderMenu';
 
 export default function App() {
   const { status: authStatus, userName, signIn, signOut, getAccessToken } = useGoogleAuth();
@@ -61,28 +61,13 @@ export default function App() {
             <Text className="text-white text-xl font-black tracking-tight">
               Izi<Text className="text-purple-500">Contador</Text>
             </Text>
-            <View className="flex-row items-center gap-2">
-              <TouchableOpacity
-                onPress={compartilharResumo}
-                className="px-4 py-2 rounded-full border bg-slate-900 border-slate-700"
-              >
-                <Text className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                  Compartilhar
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => setShowCategorias(true)}
-                className="w-9 h-9 rounded-full border border-slate-700 items-center justify-center"
-              >
-                <IconSettings size={16} color="#94a3b8" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={signOut}
-                className="px-3 py-2 rounded-full border border-slate-700"
-              >
-                <Text className="text-slate-500 text-xs font-bold">Sair</Text>
-              </TouchableOpacity>
-            </View>
+            <HeaderMenu
+              items={[
+                { label: 'Compartilhar', onPress: compartilharResumo },
+                { label: 'Categorias', onPress: () => setShowCategorias(true) },
+                { label: 'Sair', onPress: signOut, danger: true },
+              ]}
+            />
           </View>
 
           <ScrollView
