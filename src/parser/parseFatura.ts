@@ -50,26 +50,26 @@ function expandSplitRows(rows: Row[]): Row[] {
         const [name, amountStr] = pair.trim().split('=');
         const amount = parseFloat(amountStr.replace(',', '.'));
         if (!isNaN(amount)) {
-          result.push({ ...row, amount, title: `${baseTitle} - ${capitalize(name.trim())}` });
+          result.push({ ...row, amount, title: `${baseTitle} - ${normalizeName(name.trim())}` });
         }
       }
     } else if (fixedMatch) {
       const personAmount = parseFloat(fixedMatch[1].replace(',', '.'));
-      const splitPerson = capitalize(fixedMatch[2]);
+      const splitPerson = normalizeName(fixedMatch[2]);
       const baseTitle = row.title.replace(SPLIT_FIXED, '').trim();
 
       result.push({ ...row, amount: row.amount - personAmount, title: baseTitle });
       result.push({ ...row, amount: personAmount, title: `${baseTitle} - ${splitPerson}` });
     } else if (parensMatch) {
       const half = row.amount / 2;
-      const splitPerson = capitalize(parensMatch[1]);
+      const splitPerson = normalizeName(parensMatch[1]);
       const baseTitle = row.title.replace(SPLIT_PARENS, '').trim();
 
       result.push({ ...row, amount: half, title: baseTitle });
       result.push({ ...row, amount: half, title: `${baseTitle} - ${splitPerson}` });
     } else if (dashMatch) {
       const half = row.amount / 2;
-      const splitPerson = capitalize(dashMatch[1]);
+      const splitPerson = normalizeName(dashMatch[1]);
       const baseTitle = row.title.replace(SPLIT_DASH, '').trim();
 
       result.push({ ...row, amount: half, title: baseTitle });
@@ -90,7 +90,7 @@ function categorizarItem(title: string, defaultOwner: string): { exibicao: strin
 
   const titleClean = title.replace(PARCELA_SUFFIX, '').trim();
   const donoMatch = /\s*-\s*([^-()\n]+)$/.exec(titleClean);
-  let explicitDono = donoMatch ? donoMatch[1].trim() : null;
+  let explicitDono = donoMatch ? normalizeName(donoMatch[1].trim()) : null;
 
   if (explicitDono && NON_PERSONS.has(explicitDono.toUpperCase())) {
     explicitDono = null;
@@ -116,7 +116,13 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }
 
+// Remove acentos e normaliza capitalização — "João" e "Joao" viram "Joao"
+function normalizeName(s: string): string {
+  return capitalize(s.normalize('NFD').replace(/[̀-ͯ]/g, ''));
+}
+
 export function parseFatura(csvText: string, defaultOwner = 'EU'): RelatorioFatura {
+  defaultOwner = normalizeName(defaultOwner);
   const { data } = Papa.parse<Record<string, string>>(csvText, {
     header: true,
     skipEmptyLines: true,
