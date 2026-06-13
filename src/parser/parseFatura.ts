@@ -1,12 +1,6 @@
 import Papa from 'papaparse';
 import { RelatorioFatura, RelatorioPessoa, Gasto } from '../types';
-
-const CATEGORIAS: Record<string, string[]> = {
-  TRANSPORTE: ['UBER', '99POP', '99APP', '99 POP', 'POSTO', 'ESTACIONAMENTO'],
-  ALMOÇO: ['IFOOD', 'QUENTINHA', 'ALMOÇO', 'RESTAURANTE', 'LANCHONETE', 'BURGER', 'IFD'],
-  NECESSIDADES: ['SUPERMERCADO', 'FARMACIA', 'DROGARIA', 'PANIFICADORA', 'MINIBOX'],
-  STREAMING: ['HBO', 'PRIME VIDEO', 'SPOTIFY', 'CRUNCHYROLL', 'NETFLIX', 'DISNEY', 'YOUTUBE PREMIUM'],
-};
+import { Categorias, DEFAULT_CATEGORIAS } from '../config/categorias';
 
 const NON_PERSONS = new Set(['NUPAY']);
 
@@ -82,7 +76,7 @@ function expandSplitRows(rows: Row[]): Row[] {
   return result;
 }
 
-function categorizarItem(title: string, defaultOwner: string): { exibicao: string; dono: string } {
+function categorizarItem(title: string, defaultOwner: string, categorias: Categorias): { exibicao: string; dono: string } {
   const parcelaMatch = PARCELA_SUFFIX.exec(title);
   const parcelaStr = parcelaMatch
     ? ` - ${(/(\d+\/\d+)/.exec(parcelaMatch[0])?.[1] ?? '')}`
@@ -98,7 +92,7 @@ function categorizarItem(title: string, defaultOwner: string): { exibicao: strin
 
   const titleBase = titleClean.split('(')[0].trim();
 
-  for (const [categoria, palavras] of Object.entries(CATEGORIAS)) {
+  for (const [categoria, palavras] of Object.entries(categorias)) {
     if (palavras.some((p) => titleBase.includes(p))) {
       return { exibicao: categoria, dono: explicitDono ?? defaultOwner };
     }
@@ -121,7 +115,7 @@ function normalizeName(s: string): string {
   return capitalize(s.normalize('NFD').replace(/[̀-ͯ]/g, ''));
 }
 
-export function parseFatura(csvText: string, defaultOwner = 'EU'): RelatorioFatura {
+export function parseFatura(csvText: string, defaultOwner = 'EU', categorias: Categorias = DEFAULT_CATEGORIAS): RelatorioFatura {
   const { data } = Papa.parse<Record<string, string>>(csvText, {
     header: true,
     skipEmptyLines: true,
@@ -144,13 +138,13 @@ export function parseFatura(csvText: string, defaultOwner = 'EU'): RelatorioFatu
   const porDono = new Map<string, { display: string; itensMap: Map<string, { total: number; date: string }> }>();
 
   for (const row of rows) {
-    const { exibicao, dono } = categorizarItem(row.title, defaultOwner);
+    const { exibicao, dono } = categorizarItem(row.title, defaultOwner, categorias);
     const key = normalizeName(dono);
 
     if (!porDono.has(key)) porDono.set(key, { display: dono, itensMap: new Map() });
     const { itensMap } = porDono.get(key)!;
 
-    const isCategoria = Object.keys(CATEGORIAS).includes(exibicao);
+    const isCategoria = Object.keys(categorias).includes(exibicao);
     if (itensMap.has(exibicao)) {
       itensMap.get(exibicao)!.total += row.amount;
     } else {

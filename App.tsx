@@ -1,20 +1,26 @@
 import './global.css';
+import { useState } from 'react';
 import { ScrollView, Share, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
 import { useGoogleAuth } from './src/auth/useGoogleAuth';
 import { useRelatorio } from './src/hooks/useRelatorio';
+import { useCategorias } from './src/hooks/useCategorias';
 import { LoadingScreen } from './src/components/LoadingScreen';
 import { ErrorScreen } from './src/components/ErrorScreen';
 import { LoginScreen } from './src/components/LoginScreen';
 import { TotalCard } from './src/components/TotalCard';
 import { PieChartCard } from './src/components/PieChartCard';
 import { PersonCard } from './src/components/PersonCard';
+import { CategoriasModal } from './src/components/CategoriasModal';
+import { IconSettings } from './src/components/icons/IconSettings';
 
 export default function App() {
   const { status: authStatus, userName, signIn, signOut, getAccessToken } = useGoogleAuth();
-  const { state, refresh } = useRelatorio(getAccessToken, authStatus, userName);
+  const { categorias, addKeyword, removeKeyword, addCategoria, removeCategoria, reset } = useCategorias();
+  const { state, refresh } = useRelatorio(getAccessToken, authStatus, userName, categorias);
+  const [showCategorias, setShowCategorias] = useState(false);
 
   const compartilharResumo = async () => {
     if (state.status !== 'success') return;
@@ -65,6 +71,12 @@ export default function App() {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
+                onPress={() => setShowCategorias(true)}
+                className="w-9 h-9 rounded-full border border-slate-700 items-center justify-center"
+              >
+                <IconSettings size={16} color="#94a3b8" />
+              </TouchableOpacity>
+              <TouchableOpacity
                 onPress={signOut}
                 className="px-3 py-2 rounded-full border border-slate-700"
               >
@@ -93,6 +105,16 @@ export default function App() {
         </SafeAreaView>
       )}
       </View>
+      <CategoriasModal
+        visible={showCategorias}
+        onClose={() => setShowCategorias(false)}
+        categorias={categorias}
+        addKeyword={addKeyword}
+        removeKeyword={removeKeyword}
+        addCategoria={addCategoria}
+        removeCategoria={removeCategoria}
+        reset={reset}
+      />
     </SafeAreaProvider>
   );
 }

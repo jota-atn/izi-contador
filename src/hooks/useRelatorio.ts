@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { RelatorioFatura } from '../types';
 import { findLatestFaturaMessage, downloadCsvAttachment } from '../gmail/gmailApi';
 import { parseFatura } from '../parser/parseFatura';
+import { Categorias } from '../config/categorias';
 
 type State =
   | { status: 'idle' }
@@ -14,6 +15,7 @@ export function useRelatorio(
   getAccessToken: () => Promise<string | null>,
   authStatus: 'loading' | 'unauthenticated' | 'authenticated',
   ownerName: string,
+  categorias: Categorias,
 ) {
   const [state, setState] = useState<State>({ status: 'idle' });
 
@@ -34,7 +36,7 @@ export function useRelatorio(
       }
 
       const csvText = await downloadCsvAttachment(token, messageId);
-      const data = parseFatura(csvText, ownerName);
+      const data = parseFatura(csvText, ownerName, categorias);
       setState({ status: 'success', data });
     } catch (err: any) {
       if (err?.status === 401) {
