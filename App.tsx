@@ -92,7 +92,7 @@ export default function App() {
               <PersonCard key={pessoa.dono} pessoa={pessoa} />
             ))}
             <Text className="text-slate-700 text-[10px] font-bold uppercase tracking-[0.2em] text-center py-4">
-              IziContador • Automático • 2026
+              IziContador • Automático • {new Date().getFullYear()}
             </Text>
           </ScrollView>
         </SafeAreaView>
