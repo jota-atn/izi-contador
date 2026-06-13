@@ -241,6 +241,37 @@ extractSpecsFromTarball(
   path.join(nm, 'react-native-svg/src/fabric'),
   'src/fabric'
 );
+// Also restore missing src/ files for react-native-svg
+// The package.json "react-native" field points to src/index.ts which Metro uses,
+// but npm only extracts a subset of files — most of src/ is missing.
+(function restoreSvgSrc() {
+  const svgBase = path.join(nm, 'react-native-svg');
+  if (!fs.existsSync(path.join(svgBase, 'src/index.ts'))) {
+    try {
+      const tmpDir = require('os').tmpdir() + '/izi-svg-src-' + Date.now();
+      fs.mkdirSync(tmpDir, { recursive: true });
+      execSync(`curl -sf "https://registry.npmjs.org/react-native-svg/-/react-native-svg-15.15.4.tgz" | tar -xz -C "${tmpDir}" 2>/dev/null`, { shell: '/bin/bash' });
+      const srcInTarball = path.join(tmpDir, 'package/src');
+      function copyDirIfMissing(srcDir, destDir) {
+        fs.mkdirSync(destDir, { recursive: true });
+        fs.readdirSync(srcDir).forEach(entry => {
+          const s = path.join(srcDir, entry);
+          const d = path.join(destDir, entry);
+          if (fs.statSync(s).isDirectory()) {
+            copyDirIfMissing(s, d);
+          } else if (!fs.existsSync(d)) {
+            fs.copyFileSync(s, d);
+          }
+        });
+      }
+      copyDirIfMissing(srcInTarball, path.join(svgBase, 'src'));
+      execSync(`rm -rf "${tmpDir}"`);
+      console.log('[postinstall] Restored react-native-svg/src/ from tarball');
+    } catch (e) {
+      console.warn('[postinstall] Warning: could not restore svg src files:', e.message);
+    }
+  }
+})();
 // Also restore missing android/src/main/jni files for react-native-svg
 (function restoreSvgJni() {
   const svgBase = path.join(nm, 'react-native-svg');
@@ -271,6 +302,68 @@ extractSpecsFromTarball(
   'https://registry.npmjs.org/react-native-gesture-handler/-/react-native-gesture-handler-2.31.2.tgz',
   path.join(nm, 'react-native-gesture-handler/src/specs'),
   'src/specs'
+);
+// Also restore missing android/src/main/jni files for react-native-gesture-handler
+(function restoreGestureHandlerJni() {
+  const ghBase = path.join(nm, 'react-native-gesture-handler');
+  const missingJni = [
+    'android/src/main/jni/CMakeLists.txt',
+    'android/src/main/jni/cpp-adapter.cpp',
+  ];
+  const anyMissing = missingJni.some(f => !fs.existsSync(path.join(ghBase, f)));
+  if (!anyMissing) return;
+  try {
+    const tmpDir = require('os').tmpdir() + '/izi-gh-' + Date.now();
+    fs.mkdirSync(tmpDir, { recursive: true });
+    execSync(`curl -sf "https://registry.npmjs.org/react-native-gesture-handler/-/react-native-gesture-handler-2.31.2.tgz" | tar -xz -C "${tmpDir}" 2>/dev/null`, { shell: '/bin/bash' });
+    missingJni.forEach(rel => {
+      const dest = path.join(ghBase, rel);
+      const src = path.join(tmpDir, 'package', rel);
+      if (!fs.existsSync(dest) && fs.existsSync(src)) {
+        fs.mkdirSync(path.dirname(dest), { recursive: true });
+        fs.copyFileSync(src, dest);
+        console.log(`[postinstall] Restored react-native-gesture-handler/${rel}`);
+      }
+    });
+    execSync(`rm -rf "${tmpDir}"`);
+  } catch (e) {
+    console.warn('[postinstall] Warning: could not restore gesture-handler jni files:', e.message);
+  }
+})();
+
+// Restore missing src/ trees for packages that set "react-native": "src/index[.ts]"
+// but omit most of src/ from the npm tarball extraction.
+function restoreSrcFromTarball(tarballUrl, pkgBase, sentinel) {
+  if (fs.existsSync(path.join(pkgBase, sentinel))) return;
+  try {
+    const tmpDir = require('os').tmpdir() + '/izi-src-' + Date.now();
+    fs.mkdirSync(tmpDir, { recursive: true });
+    execSync(`curl -sf "${tarballUrl}" | tar -xz -C "${tmpDir}" 2>/dev/null`, { shell: '/bin/bash' });
+    const srcInTarball = path.join(tmpDir, 'package/src');
+    function copyDirIfMissing(s, d) {
+      fs.mkdirSync(d, { recursive: true });
+      fs.readdirSync(s).forEach(entry => {
+        const ss = path.join(s, entry), dd = path.join(d, entry);
+        if (fs.statSync(ss).isDirectory()) copyDirIfMissing(ss, dd);
+        else if (!fs.existsSync(dd)) fs.copyFileSync(ss, dd);
+      });
+    }
+    copyDirIfMissing(srcInTarball, path.join(pkgBase, 'src'));
+    execSync(`rm -rf "${tmpDir}"`);
+    console.log(`[postinstall] Restored ${path.basename(pkgBase)}/src/ from tarball`);
+  } catch (e) {
+    console.warn(`[postinstall] Warning: could not restore ${path.basename(pkgBase)}/src/:`, e.message);
+  }
+}
+restoreSrcFromTarball(
+  'https://registry.npmjs.org/react-native-reanimated/-/react-native-reanimated-4.3.1.tgz',
+  path.join(nm, 'react-native-reanimated'),
+  'src/index.ts'
+);
+restoreSrcFromTarball(
+  'https://registry.npmjs.org/react-native-gesture-handler/-/react-native-gesture-handler-2.31.2.tgz',
+  path.join(nm, 'react-native-gesture-handler'),
+  'src/index.ts'
 );
 
 // Fix 7: Disable IPO/LTO check in ReactNative-application.cmake

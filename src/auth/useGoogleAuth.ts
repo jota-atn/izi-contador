@@ -3,6 +3,7 @@ import { GoogleSignin, isErrorWithCode, statusCodes } from '@react-native-google
 
 GoogleSignin.configure({
   scopes: ['https://www.googleapis.com/auth/gmail.readonly'],
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
 });
 
 export type AuthStatus = 'loading' | 'unauthenticated' | 'authenticated';
