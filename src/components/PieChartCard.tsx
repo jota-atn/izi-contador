@@ -1,6 +1,7 @@
 import { Dimensions, Text, View } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
 import { RelatorioPessoa } from '../types';
+import { IconPieChart } from './icons/IconPieChart';
 
 const COLORS = ['#7C3AED', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', '#6366F1'];
 const SCREEN_W = Dimensions.get('window').width;
@@ -20,9 +21,12 @@ export function PieChartCard({ pessoas }: Props) {
 
   return (
     <View className="bg-slate-900 rounded-3xl p-6 border border-slate-800 items-center">
-      <Text className="text-white text-sm font-bold uppercase tracking-wider mb-4 self-start">
-        🥧 Divisão de Gastos
-      </Text>
+      <View className="flex-row items-center gap-2 mb-4 self-start">
+        <IconPieChart size={14} color="#ffffff" />
+        <Text className="text-white text-sm font-bold uppercase tracking-wider">
+          Divisão de Gastos
+        </Text>
+      </View>
       <PieChart
         data={data}
         width={SCREEN_W - 64}

@@ -18,9 +18,7 @@ export function HeaderMenu({ items }: Props) {
 
   function openMenu() {
     btnRef.current?.measureInWindow((x, y, width, height) => {
-      // y=14 h=44 → botão termina em 58. Header tem py-4 (16px) abaixo.
-      // Dropdown deve aparecer abaixo do header inteiro: y + h + 16 (padding) + 8 (gap)
-      setTop(y + height + 24);
+      setTop(y + height + 8);
       setOpen(true);
     });
   }
@@ -44,10 +42,14 @@ export function HeaderMenu({ items }: Props) {
       </TouchableOpacity>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        {/* Backdrop: fecha ao tocar fora */}
-        <Pressable style={StyleSheet.absoluteFillObject} onPress={() => setOpen(false)}>
-          {/* Dropdown: onPress vazio absorve toque pra não fechar ao tocar dentro */}
-          <Pressable style={[s.dropdown, { top }]} onPress={() => {}}>
+        {/* Pressable único cobre a tela toda e fecha ao tocar fora */}
+        <Pressable style={s.backdrop} onPress={() => setOpen(false)}>
+          {/*
+            onStartShouldSetResponder reclama o evento para o dropdown antes
+            do Pressable pai — assim toques dentro do dropdown não fecham o menu,
+            mas toques fora (onde só o Pressable existe) fecham.
+          */}
+          <View style={[s.dropdown, { top }]} onStartShouldSetResponder={() => true}>
             {items.map((item, i) => (
               <TouchableOpacity
                 key={item.label}
@@ -57,7 +59,7 @@ export function HeaderMenu({ items }: Props) {
                 <Text style={[s.itemText, item.danger && s.itemDanger]}>{item.label}</Text>
               </TouchableOpacity>
             ))}
-          </Pressable>
+          </View>
         </Pressable>
       </Modal>
     </>
@@ -65,6 +67,9 @@ export function HeaderMenu({ items }: Props) {
 }
 
 const s = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+  },
   btn: {
     width: 44,
     height: 44,

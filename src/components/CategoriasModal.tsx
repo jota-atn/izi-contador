@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Categorias } from '../config/categorias';
+import { IconClose } from './icons/IconClose';
 
 interface Props {
   visible: boolean;
@@ -95,7 +96,7 @@ export function CategoriasModal({
                       style={s.chip}
                     >
                       <Text style={s.chipText}>{kw}</Text>
-                      <Text style={s.chipX}>✕</Text>
+                      <IconClose size={10} color="#64748b" />
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -247,10 +248,6 @@ const s = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     marginRight: 6,
-  },
-  chipX: {
-    color: '#64748b',
-    fontSize: 11,
   },
   inputRow: {
     flexDirection: 'row',
