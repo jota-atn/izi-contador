@@ -1,4 +1,4 @@
-import { ScrollView, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { RelatorioPessoa } from '../types';
 
 interface Props {
@@ -20,29 +20,23 @@ export function PersonCard({ pessoa }: Props) {
         </Text>
       </View>
 
-      <ScrollView
-        className="px-6 py-4"
-        style={{ maxHeight: 320 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <View className="gap-3">
-          {pessoa.itens.map((item, idx) => (
-            <View key={idx} className="flex-row items-start justify-between">
-              <View className="flex-1 mr-4">
-                <Text className="text-slate-200 text-xs font-bold uppercase tracking-tight">
-                  {item.descricao}
-                </Text>
-                <Text className="text-slate-500 text-[10px] mt-0.5">{item.data}</Text>
-              </View>
-              <View className="bg-slate-800 px-2 py-1 rounded">
-                <Text className="text-slate-300 font-mono text-xs font-bold">
-                  R$ {item.valor.toFixed(2)}
-                </Text>
-              </View>
+      <View className="px-6 py-4 gap-3">
+        {pessoa.itens.map((item, idx) => (
+          <View key={idx} className="flex-row items-start justify-between">
+            <View className="flex-1 mr-4">
+              <Text className="text-slate-200 text-xs font-bold uppercase tracking-tight">
+                {item.descricao}
+              </Text>
+              <Text className="text-slate-500 text-[10px] mt-0.5">{item.data}</Text>
             </View>
-          ))}
-        </View>
-      </ScrollView>
+            <View className="bg-slate-800 px-2 py-1 rounded">
+              <Text className="text-slate-300 font-mono text-xs font-bold">
+                R$ {item.valor.toFixed(2)}
+              </Text>
+            </View>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
