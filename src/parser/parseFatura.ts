@@ -122,7 +122,6 @@ function normalizeName(s: string): string {
 }
 
 export function parseFatura(csvText: string, defaultOwner = 'EU'): RelatorioFatura {
-  defaultOwner = normalizeName(defaultOwner);
   const { data } = Papa.parse<Record<string, string>>(csvText, {
     header: true,
     skipEmptyLines: true,
@@ -141,13 +140,15 @@ export function parseFatura(csvText: string, defaultOwner = 'EU'): RelatorioFatu
   rows = rows.map((r) => ({ ...r, title: r.title.toUpperCase() }));
 
   // Categoriza e agrupa por dono → exibicao
-  const porDono = new Map<string, Map<string, { total: number; date: string }>>();
+  // Chave interna = nome normalizado (sem acentos); display = primeira forma vista
+  const porDono = new Map<string, { display: string; itensMap: Map<string, { total: number; date: string }> }>();
 
   for (const row of rows) {
     const { exibicao, dono } = categorizarItem(row.title, defaultOwner);
+    const key = normalizeName(dono);
 
-    if (!porDono.has(dono)) porDono.set(dono, new Map());
-    const itensMap = porDono.get(dono)!;
+    if (!porDono.has(key)) porDono.set(key, { display: dono, itensMap: new Map() });
+    const { itensMap } = porDono.get(key)!;
 
     const isCategoria = Object.keys(CATEGORIAS).includes(exibicao);
     if (itensMap.has(exibicao)) {
@@ -163,7 +164,7 @@ export function parseFatura(csvText: string, defaultOwner = 'EU'): RelatorioFatu
   const relatorioPorPessoa: RelatorioPessoa[] = [];
   let totalFatura = 0;
 
-  for (const [dono, itensMap] of porDono.entries()) {
+  for (const [, { display: dono, itensMap }] of porDono.entries()) {
     const itens: Gasto[] = Array.from(itensMap.entries()).map(([descricao, { total, date }]) => ({
       descricao,
       valor: total,
