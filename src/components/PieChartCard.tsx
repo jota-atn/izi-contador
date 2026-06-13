@@ -21,8 +21,10 @@ export function PieChartCard({ pessoas }: Props) {
 
   return (
     <View className="bg-slate-900 rounded-3xl p-6 border border-slate-800 items-center">
-      <View className="flex-row items-center gap-2 mb-4 self-start">
-        <IconPieChart size={14} color="#ffffff" />
+      <View className="flex-row items-center mb-4 self-start">
+        <View style={{ marginRight: 8 }}>
+          <IconPieChart size={14} color="#ffffff" />
+        </View>
         <Text className="text-white text-sm font-bold uppercase tracking-wider">
           Divisão de Gastos
         </Text>

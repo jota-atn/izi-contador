@@ -15,8 +15,10 @@ export function TotalCard({ total, numeroPessoas }: Props) {
       <Text className="text-white text-5xl font-black tracking-tighter mb-3">
         R$ {total.toFixed(2)}
       </Text>
-      <View className="flex-row items-center gap-2 self-start bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full">
-        <IconUsers size={12} color="#c084fc" />
+      <View className="flex-row items-center self-start bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full">
+        <View style={{ marginRight: 6 }}>
+          <IconUsers size={12} color="#c084fc" />
+        </View>
         <Text className="text-purple-400 text-xs font-bold uppercase tracking-wider">
           {numeroPessoas} pessoas
         </Text>
