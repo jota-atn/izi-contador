@@ -1,6 +1,6 @@
 import './global.css';
 import { useState } from 'react';
-import { ScrollView, Share, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, Share, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
@@ -21,6 +21,13 @@ export default function App() {
   const { categorias, addKeyword, removeKeyword, addCategoria, removeCategoria, reset } = useCategorias();
   const { state, refresh } = useRelatorio(getAccessToken, authStatus, userName, categorias);
   const [showCategorias, setShowCategorias] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  async function onRefresh() {
+    setRefreshing(true);
+    await refresh();
+    setRefreshing(false);
+  }
 
   const compartilharResumo = async () => {
     if (state.status !== 'success') return;
@@ -74,6 +81,7 @@ export default function App() {
             className="flex-1"
             contentContainerStyle={{ padding: 16, gap: 16 }}
             showsVerticalScrollIndicator={false}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7c3aed" colors={['#7c3aed']} />}
           >
             <TotalCard
               total={state.data.total_fatura}
