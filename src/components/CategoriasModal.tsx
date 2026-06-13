@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import {
+  Alert,
   Modal,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Categorias } from '../config/categorias';
@@ -22,8 +23,10 @@ interface Props {
   reset: () => void;
 }
 
-export function CategoriasModal({ visible, onClose, categorias, addKeyword, removeKeyword, addCategoria, removeCategoria, reset }: Props) {
-
+export function CategoriasModal({
+  visible, onClose, categorias,
+  addKeyword, removeKeyword, addCategoria, removeCategoria, reset,
+}: Props) {
   const [newCat, setNewCat] = useState('');
   const [kwInputs, setKwInputs] = useState<Record<string, string>>({});
 
@@ -56,47 +59,51 @@ export function CategoriasModal({ visible, onClose, categorias, addKeyword, remo
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaView className="flex-1 bg-slate-950">
-        <View className="flex-row items-center justify-between px-6 py-4 border-b border-slate-800">
-          <Text className="text-white text-lg font-black tracking-tight">Categorias</Text>
-          <TouchableOpacity onPress={onClose} className="px-3 py-1.5 rounded-full border border-slate-700">
-            <Text className="text-slate-400 text-sm font-bold">Fechar</Text>
+      <SafeAreaView style={s.root}>
+
+        {/* Header */}
+        <View style={s.header}>
+          <Text style={s.headerTitle}>Categorias</Text>
+          <TouchableOpacity onPress={onClose} style={s.closeBtn}>
+            <Text style={s.closeBtnText}>Fechar</Text>
           </TouchableOpacity>
         </View>
 
         <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ padding: 16, gap: 12 }}
+          style={{ flex: 1 }}
+          contentContainerStyle={s.scroll}
           keyboardShouldPersistTaps="handled"
         >
           {Object.entries(categorias).map(([nome, palavras]) => (
-            <View key={nome} className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
-              <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-800">
-                <Text className="text-purple-400 font-black text-sm uppercase tracking-widest">
-                  {nome}
-                </Text>
-                <TouchableOpacity onPress={() => handleRemoveCategoria(nome)}>
-                  <Text className="text-red-500 text-xs font-bold">Remover</Text>
+            <View key={nome} style={s.card}>
+
+              {/* Cabeçalho da categoria */}
+              <View style={s.catHeader}>
+                <Text style={s.catName}>{nome}</Text>
+                <TouchableOpacity onPress={() => handleRemoveCategoria(nome)} style={s.removeBtn}>
+                  <Text style={s.removeBtnText}>Remover</Text>
                 </TouchableOpacity>
               </View>
 
-              <View className="px-4 py-3 gap-3">
-                <View className="flex-row flex-wrap gap-2">
+              <View style={s.cardBody}>
+                {/* Chips das palavras-chave */}
+                <View style={s.chips}>
                   {palavras.map((kw) => (
                     <TouchableOpacity
                       key={kw}
                       onPress={() => removeKeyword(nome, kw)}
-                      className="flex-row items-center gap-1.5 bg-slate-800 px-2.5 py-1 rounded-full border border-slate-700"
+                      style={s.chip}
                     >
-                      <Text className="text-slate-300 text-xs font-bold">{kw}</Text>
-                      <Text className="text-slate-500 text-xs">✕</Text>
+                      <Text style={s.chipText}>{kw}</Text>
+                      <Text style={s.chipX}>✕</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
 
-                <View className="flex-row gap-2">
+                {/* Input para nova palavra */}
+                <View style={s.inputRow}>
                   <TextInput
-                    className="flex-1 bg-slate-800 text-white text-xs px-3 py-2 rounded-xl border border-slate-700"
+                    style={s.input}
                     placeholder="Nova palavra-chave..."
                     placeholderTextColor="#475569"
                     value={kwInputs[nome] ?? ''}
@@ -105,24 +112,20 @@ export function CategoriasModal({ visible, onClose, categorias, addKeyword, remo
                     returnKeyType="done"
                     autoCapitalize="characters"
                   />
-                  <TouchableOpacity
-                    onPress={() => handleAddKeyword(nome)}
-                    className="bg-purple-700 px-3 py-2 rounded-xl items-center justify-center"
-                  >
-                    <Text className="text-white text-xs font-black">+</Text>
+                  <TouchableOpacity onPress={() => handleAddKeyword(nome)} style={s.addBtn}>
+                    <Text style={s.addBtnText}>+</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             </View>
           ))}
 
-          <View className="bg-slate-900 rounded-2xl border border-slate-800 p-4 gap-2">
-            <Text className="text-slate-400 text-xs font-bold uppercase tracking-widest">
-              Nova categoria
-            </Text>
-            <View className="flex-row gap-2">
+          {/* Nova categoria */}
+          <View style={[s.card, { marginTop: 8 }]}>
+            <Text style={s.newCatLabel}>Nova categoria</Text>
+            <View style={[s.inputRow, { marginTop: 8 }]}>
               <TextInput
-                className="flex-1 bg-slate-800 text-white text-sm px-3 py-2 rounded-xl border border-slate-700"
+                style={s.input}
                 placeholder="Ex: ACADEMIA"
                 placeholderTextColor="#475569"
                 value={newCat}
@@ -131,25 +134,176 @@ export function CategoriasModal({ visible, onClose, categorias, addKeyword, remo
                 returnKeyType="done"
                 autoCapitalize="characters"
               />
-              <TouchableOpacity
-                onPress={handleAddCategoria}
-                className="bg-purple-700 px-4 py-2 rounded-xl items-center justify-center"
-              >
-                <Text className="text-white text-sm font-black">+</Text>
+              <TouchableOpacity onPress={handleAddCategoria} style={s.addBtn}>
+                <Text style={s.addBtnText}>+</Text>
               </TouchableOpacity>
             </View>
           </View>
 
-          <TouchableOpacity
-            onPress={handleReset}
-            className="py-3 rounded-2xl border border-slate-800 items-center"
-          >
-            <Text className="text-slate-500 text-xs font-bold uppercase tracking-widest">
-              Restaurar padrões
-            </Text>
+          {/* Restaurar padrões */}
+          <TouchableOpacity onPress={handleReset} style={s.resetBtn}>
+            <Text style={s.resetBtnText}>Restaurar padrões</Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
     </Modal>
   );
 }
+
+const s = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: '#020617',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1e293b',
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+  },
+  closeBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  closeBtnText: {
+    color: '#94a3b8',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  scroll: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+  card: {
+    backgroundColor: '#0f172a',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  catHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1e293b',
+  },
+  catName: {
+    color: '#a78bfa',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+  },
+  removeBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: '#1e0a0a',
+    borderWidth: 1,
+    borderColor: '#7f1d1d',
+  },
+  removeBtnText: {
+    color: '#f87171',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  cardBody: {
+    padding: 14,
+  },
+  chips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 12,
+    gap: 8,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1e293b',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  chipText: {
+    color: '#cbd5e1',
+    fontSize: 12,
+    fontWeight: '700',
+    marginRight: 6,
+  },
+  chipX: {
+    color: '#64748b',
+    fontSize: 11,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  input: {
+    flex: 1,
+    backgroundColor: '#1e293b',
+    color: '#fff',
+    fontSize: 13,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#334155',
+    marginRight: 8,
+  },
+  addBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#7c3aed',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addBtnText: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: '700',
+    lineHeight: 26,
+  },
+  newCatLabel: {
+    color: '#64748b',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    paddingHorizontal: 16,
+    paddingTop: 14,
+  },
+  resetBtn: {
+    paddingVertical: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  resetBtnText: {
+    color: '#475569',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+});
