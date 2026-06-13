@@ -13,8 +13,8 @@ import { PieChartCard } from './src/components/PieChartCard';
 import { PersonCard } from './src/components/PersonCard';
 
 export default function App() {
-  const { status: authStatus, signIn, signOut, getAccessToken } = useGoogleAuth();
-  const { state, refresh } = useRelatorio(getAccessToken, authStatus);
+  const { status: authStatus, userName, signIn, signOut, getAccessToken } = useGoogleAuth();
+  const { state, refresh } = useRelatorio(getAccessToken, authStatus, userName);
 
   const compartilharResumo = async () => {
     if (state.status !== 'success') return;

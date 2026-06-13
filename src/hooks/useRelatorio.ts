@@ -13,6 +13,7 @@ type State =
 export function useRelatorio(
   getAccessToken: () => Promise<string | null>,
   authStatus: 'loading' | 'unauthenticated' | 'authenticated',
+  ownerName: string,
 ) {
   const [state, setState] = useState<State>({ status: 'idle' });
 
@@ -33,7 +34,7 @@ export function useRelatorio(
       }
 
       const csvText = await downloadCsvAttachment(token, messageId);
-      const data = parseFatura(csvText);
+      const data = parseFatura(csvText, ownerName);
       setState({ status: 'success', data });
     } catch (err: any) {
       if (err?.status === 401) {

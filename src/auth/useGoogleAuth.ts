@@ -12,11 +12,19 @@ export function useGoogleAuth() {
   const [status, setStatus] = useState<AuthStatus>(() =>
     GoogleSignin.hasPreviousSignIn() ? 'authenticated' : 'unauthenticated'
   );
+  const [userName, setUserName] = useState<string>(() => {
+    const u = GoogleSignin.getCurrentUser();
+    return u?.user.givenName ?? u?.user.name?.split(' ')[0] ?? 'Eu';
+  });
 
   const signIn = useCallback(async () => {
     try {
       await GoogleSignin.hasPlayServices();
-      await GoogleSignin.signIn();
+      const result = await GoogleSignin.signIn();
+      if (result.type === 'success') {
+        const given = result.data.user.givenName ?? result.data.user.name?.split(' ')[0] ?? 'Eu';
+        setUserName(given);
+      }
       setStatus('authenticated');
     } catch (error) {
       if (isErrorWithCode(error) && error.code !== statusCodes.SIGN_IN_CANCELLED) {
@@ -50,5 +58,5 @@ export function useGoogleAuth() {
     }
   }, []);
 
-  return { status, signIn, signOut, getAccessToken };
+  return { status, userName, signIn, signOut, getAccessToken };
 }

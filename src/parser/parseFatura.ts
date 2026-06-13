@@ -64,7 +64,7 @@ function expandSplitRows(rows: Row[]): Row[] {
   return result;
 }
 
-function categorizarItem(title: string): { exibicao: string; dono: string } {
+function categorizarItem(title: string, defaultOwner: string): { exibicao: string; dono: string } {
   const parcelaMatch = PARCELA_SUFFIX.exec(title);
   const parcelaStr = parcelaMatch
     ? ` - ${(/(\d+\/\d+)/.exec(parcelaMatch[0])?.[1] ?? '')}`
@@ -82,7 +82,7 @@ function categorizarItem(title: string): { exibicao: string; dono: string } {
 
   for (const [categoria, palavras] of Object.entries(CATEGORIAS)) {
     if (palavras.some((p) => titleBase.includes(p))) {
-      return { exibicao: categoria, dono: explicitDono ?? 'JOÃO' };
+      return { exibicao: categoria, dono: explicitDono ?? defaultOwner };
     }
   }
 
@@ -91,14 +91,14 @@ function categorizarItem(title: string): { exibicao: string; dono: string } {
     return { exibicao: (titleDisplay || titleClean) + parcelaStr, dono: explicitDono };
   }
 
-  return { exibicao: titleClean + parcelaStr, dono: 'JOÃO' };
+  return { exibicao: titleClean + parcelaStr, dono: defaultOwner };
 }
 
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }
 
-export function parseFatura(csvText: string): RelatorioFatura {
+export function parseFatura(csvText: string, defaultOwner = 'EU'): RelatorioFatura {
   const { data } = Papa.parse<Record<string, string>>(csvText, {
     header: true,
     skipEmptyLines: true,
@@ -120,7 +120,7 @@ export function parseFatura(csvText: string): RelatorioFatura {
   const porDono = new Map<string, Map<string, { total: number; date: string }>>();
 
   for (const row of rows) {
-    const { exibicao, dono } = categorizarItem(row.title);
+    const { exibicao, dono } = categorizarItem(row.title, defaultOwner);
 
     if (!porDono.has(dono)) porDono.set(dono, new Map());
     const itensMap = porDono.get(dono)!;
