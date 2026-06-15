@@ -10,8 +10,8 @@ const NON_PERSONS = new Set(['NUPAY']);
 const SPLIT_PARENS = /\(metade\s+(\w+)\)/i;
 const SPLIT_DASH = /\s*-\s*metade\s+(\w+)\s*$/i;
 const SPLIT_FIXED = /\((?:menos\s+)?(\d+(?:[.,]\d+)?)\s+(\w+)\)/i;
-// Formato: (Nome=40, Maria=20, ...) — divide explicitamente por pessoa
-const SPLIT_MULTI = /\(([^\s=(),]+=\d+(?:[.,]\d+)?(?:,\s*[^\s=(),]+=\d+(?:[.,]\d+)?)*)\)/i;
+// Formato: (Nome=40, Maria=20, ...) — divide explicitamente por pessoa; separador: vírgula ou espaço
+const SPLIT_MULTI = /\(([^\s=(),]+=\d+(?:[.,]\d+)?(?:[,\s]+[^\s=(),]+=\d+(?:[.,]\d+)?)*)\)/i;
 const PARCELA_SUFFIX = /\s*-\s*parcela\s+\d+\/\d+\s*$/i;
 
 interface Row {
@@ -38,7 +38,7 @@ function expandSplitRows(rows: Row[], defaultOwner: string): { rows: Row[]; inva
 
     if (multiMatch) {
       // (Joao=40, Maria=20) → parse primeiro, valida soma, depois gera linhas
-      const pairs = multiMatch[1].split(',');
+      const pairs = multiMatch[1].split(/[,\s]+/);
       const parsed: { name: string; amount: number }[] = [];
       let assignedTotal = 0;
       for (const pair of pairs) {
