@@ -24,12 +24,12 @@ import { MonthSelector } from './src/components/MonthSelector';
 import { SEM_CATEGORIA } from './src/parser/parseFatura';
 
 export default function App() {
-  const { status: authStatus, userName, signIn, signOut, getAccessToken } = useGoogleAuth();
+  const { status: authStatus, userName, userEmail, signIn, signOut, getAccessToken } = useGoogleAuth();
   const { categorias, addKeyword, removeKeyword, addCategoria, removeCategoria, reset } = useCategorias();
   const { regras, addRegra, removeRegra } = useRegrasAlocacao();
-  const { getEstado, toggleOculto, togglePago } = useEstadoFatura();
+  const { getEstado, toggleOculto, togglePago } = useEstadoFatura(userEmail);
   const { state, refresh } = useRelatorio(getAccessToken, authStatus, userName, categorias, regras);
-  const { historico, meses, upsert } = useHistorico();
+  const { historico, meses, upsert } = useHistorico(userEmail);
   const [mesSelecionado, setMesSelecionado] = useState('');
   const [showCategorias, setShowCategorias] = useState(false);
   const [showRegras, setShowRegras] = useState(false);

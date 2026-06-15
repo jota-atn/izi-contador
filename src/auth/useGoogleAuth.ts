@@ -4,7 +4,6 @@ import { GoogleSignin, isErrorWithCode, statusCodes } from '@react-native-google
 GoogleSignin.configure({
   scopes: ['https://www.googleapis.com/auth/gmail.readonly'],
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
-  androidClientId: process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID,
 });
 
 export type AuthStatus = 'loading' | 'unauthenticated' | 'authenticated';
@@ -17,6 +16,9 @@ export function useGoogleAuth() {
     const u = GoogleSignin.getCurrentUser();
     return u?.user.givenName ?? u?.user.name?.split(' ')[0] ?? 'Eu';
   });
+  const [userEmail, setUserEmail] = useState<string>(() => {
+    return GoogleSignin.getCurrentUser()?.user.email ?? '';
+  });
 
   const signIn = useCallback(async () => {
     try {
@@ -25,6 +27,7 @@ export function useGoogleAuth() {
       if (result.type === 'success') {
         const given = result.data.user.givenName ?? result.data.user.name?.split(' ')[0] ?? 'Eu';
         setUserName(given);
+        setUserEmail(result.data.user.email ?? '');
       }
       setStatus('authenticated');
     } catch (error) {
@@ -41,6 +44,8 @@ export function useGoogleAuth() {
       console.error('[GoogleSignin] signOut error:', error);
     }
     setStatus('unauthenticated');
+    setUserName('Eu');
+    setUserEmail('');
   }, []);
 
   const getAccessToken = useCallback(async (): Promise<string | null> => {
@@ -59,5 +64,5 @@ export function useGoogleAuth() {
     }
   }, []);
 
-  return { status, userName, signIn, signOut, getAccessToken };
+  return { status, userName, userEmail, signIn, signOut, getAccessToken };
 }

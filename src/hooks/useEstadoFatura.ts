@@ -1,14 +1,20 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { EstadoPessoa, EstadoFaturas, loadEstado, upsertEstadoPessoa } from '../storage/estadoFatura';
 
 const DEFAULT: EstadoPessoa = { oculto: false, pago: false };
 
-export function useEstadoFatura() {
+export function useEstadoFatura(userEmail: string) {
   const [estado, setEstado] = useState<EstadoFaturas>({});
+  const emailRef = useRef(userEmail);
+  useEffect(() => { emailRef.current = userEmail; }, [userEmail]);
 
   useEffect(() => {
-    loadEstado().then(setEstado);
-  }, []);
+    if (!userEmail) {
+      setEstado({});
+      return;
+    }
+    loadEstado(userEmail).then(setEstado);
+  }, [userEmail]);
 
   function getEstado(mes: string, dono: string): EstadoPessoa {
     return estado[mes]?.[dono] ?? DEFAULT;
@@ -18,7 +24,7 @@ export function useEstadoFatura() {
     setEstado((prev) => {
       const curr = prev[mes]?.[dono] ?? DEFAULT;
       const next = { ...curr, oculto: !curr.oculto };
-      upsertEstadoPessoa(mes, dono, next);
+      upsertEstadoPessoa(emailRef.current, mes, dono, next);
       return { ...prev, [mes]: { ...prev[mes], [dono]: next } };
     });
   }, []);
@@ -27,7 +33,7 @@ export function useEstadoFatura() {
     setEstado((prev) => {
       const curr = prev[mes]?.[dono] ?? DEFAULT;
       const next = { ...curr, pago: !curr.pago };
-      upsertEstadoPessoa(mes, dono, next);
+      upsertEstadoPessoa(emailRef.current, mes, dono, next);
       return { ...prev, [mes]: { ...prev[mes], [dono]: next } };
     });
   }, []);

@@ -8,17 +8,20 @@ export async function getDb(): Promise<SQLite.SQLiteDatabase> {
   _db = await SQLite.openDatabaseAsync('izicont.db');
 
   await _db.execAsync(`
-    CREATE TABLE IF NOT EXISTS faturas (
-      mes  TEXT PRIMARY KEY,
-      data TEXT NOT NULL
+    CREATE TABLE IF NOT EXISTS faturas_v2 (
+      user_id TEXT NOT NULL,
+      mes     TEXT NOT NULL,
+      data    TEXT NOT NULL,
+      PRIMARY KEY (user_id, mes)
     );
 
-    CREATE TABLE IF NOT EXISTS estado_pessoa (
-      mes    TEXT    NOT NULL,
-      dono   TEXT    NOT NULL,
-      oculto INTEGER NOT NULL DEFAULT 0,
-      pago   INTEGER NOT NULL DEFAULT 0,
-      PRIMARY KEY (mes, dono)
+    CREATE TABLE IF NOT EXISTS estado_v2 (
+      user_id TEXT    NOT NULL,
+      mes     TEXT    NOT NULL,
+      dono    TEXT    NOT NULL,
+      oculto  INTEGER NOT NULL DEFAULT 0,
+      pago    INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (user_id, mes, dono)
     );
   `);
 
