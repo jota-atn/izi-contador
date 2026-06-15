@@ -28,8 +28,8 @@ export function useGoogleAuth() {
         const given = result.data.user.givenName ?? result.data.user.name?.split(' ')[0] ?? 'Eu';
         setUserName(given);
         setUserEmail(result.data.user.email ?? '');
+        setStatus('authenticated');
       }
-      setStatus('authenticated');
     } catch (error) {
       if (isErrorWithCode(error) && error.code !== statusCodes.SIGN_IN_CANCELLED) {
         console.error('[GoogleSignin] signIn error:', error);
