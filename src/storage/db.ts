@@ -1,20 +1,13 @@
-import * as SQLite from 'expo-sqlite';
+import { SQLiteDatabase } from 'expo-sqlite';
 
-let _db: SQLite.SQLiteDatabase | null = null;
-
-export async function getDb(): Promise<SQLite.SQLiteDatabase> {
-  if (_db) return _db;
-
-  _db = await SQLite.openDatabaseAsync('izicont.db');
-
-  await _db.execAsync(`
+export async function migrateDbAsync(db: SQLiteDatabase): Promise<void> {
+  await db.execAsync(`
     CREATE TABLE IF NOT EXISTS faturas_v2 (
       user_id TEXT NOT NULL,
       mes     TEXT NOT NULL,
       data    TEXT NOT NULL,
       PRIMARY KEY (user_id, mes)
     );
-
     CREATE TABLE IF NOT EXISTS estado_v2 (
       user_id TEXT    NOT NULL,
       mes     TEXT    NOT NULL,
@@ -24,6 +17,4 @@ export async function getDb(): Promise<SQLite.SQLiteDatabase> {
       PRIMARY KEY (user_id, mes, dono)
     );
   `);
-
-  return _db;
 }

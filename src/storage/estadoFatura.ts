@@ -1,4 +1,4 @@
-import { getDb } from './db';
+import { SQLiteDatabase } from 'expo-sqlite';
 
 export interface EstadoPessoa {
   oculto: boolean;
@@ -7,8 +7,7 @@ export interface EstadoPessoa {
 
 export type EstadoFaturas = Record<string, Record<string, EstadoPessoa>>;
 
-export async function loadEstado(userEmail: string): Promise<EstadoFaturas> {
-  const db = await getDb();
+export async function loadEstado(db: SQLiteDatabase, userEmail: string): Promise<EstadoFaturas> {
   const rows = await db.getAllAsync<{ mes: string; dono: string; oculto: number; pago: number }>(
     'SELECT mes, dono, oculto, pago FROM estado_v2 WHERE user_id = ?',
     userEmail,
@@ -22,12 +21,12 @@ export async function loadEstado(userEmail: string): Promise<EstadoFaturas> {
 }
 
 export async function upsertEstadoPessoa(
+  db: SQLiteDatabase,
   userEmail: string,
   mes: string,
   dono: string,
   estado: EstadoPessoa,
 ): Promise<void> {
-  const db = await getDb();
   await db.runAsync(
     'INSERT OR REPLACE INTO estado_v2 (user_id, mes, dono, oculto, pago) VALUES (?, ?, ?, ?, ?)',
     userEmail,

@@ -3,7 +3,9 @@ import { useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, Share, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { SQLiteProvider } from 'expo-sqlite';
 
+import { migrateDbAsync } from './src/storage/db';
 import { useGoogleAuth } from './src/auth/useGoogleAuth';
 import { useRelatorio } from './src/hooks/useRelatorio';
 import { useCategorias } from './src/hooks/useCategorias';
@@ -24,6 +26,17 @@ import { MonthSelector } from './src/components/MonthSelector';
 import { SEM_CATEGORIA } from './src/parser/parseFatura';
 
 export default function App() {
+  return (
+    <SafeAreaProvider>
+      <StatusBar style="light" />
+      <SQLiteProvider databaseName="izicont.db" onInit={migrateDbAsync}>
+        <AppContent />
+      </SQLiteProvider>
+    </SafeAreaProvider>
+  );
+}
+
+function AppContent() {
   const { status: authStatus, userName, userEmail, signIn, signOut, getAccessToken } = useGoogleAuth();
   const { categorias, addKeyword, removeKeyword, addCategoria, removeCategoria, reset } = useCategorias(userEmail);
   const { regras, addRegra, removeRegra } = useRegrasAlocacao(userEmail);
@@ -83,82 +96,79 @@ export default function App() {
   };
 
   return (
-    <SafeAreaProvider>
-      <StatusBar style="light" />
-      <View style={{ flex: 1, backgroundColor: '#020617' }}>
+    <View style={{ flex: 1, backgroundColor: '#020617' }}>
 
-        {authStatus === 'loading' && <LoadingScreen message="Verificando autenticação..." />}
+      {authStatus === 'loading' && <LoadingScreen message="Verificando autenticação..." />}
 
-        {authStatus === 'unauthenticated' && <LoginScreen onSignIn={signIn} />}
+      {authStatus === 'unauthenticated' && <LoginScreen onSignIn={signIn} />}
 
-        {authStatus === 'authenticated' && state.status === 'auth_expired' && (
-          <ErrorScreen message="Sessão expirada. Faça login novamente." onRetry={signOut} />
-        )}
+      {authStatus === 'authenticated' && state.status === 'auth_expired' && (
+        <ErrorScreen message="Sessão expirada. Faça login novamente." onRetry={signOut} />
+      )}
 
-        {authStatus === 'authenticated' && (state.status === 'loading' || state.status === 'idle') && (
-          <LoadingScreen message="Sincronizando faturas..." />
-        )}
+      {authStatus === 'authenticated' && (state.status === 'loading' || state.status === 'idle') && (
+        <LoadingScreen message="Sincronizando faturas..." />
+      )}
 
-        {authStatus === 'authenticated' && state.status === 'error' && (
-          <ErrorScreen message={state.message} onRetry={refresh} />
-        )}
+      {authStatus === 'authenticated' && state.status === 'error' && (
+        <ErrorScreen message={state.message} onRetry={refresh} />
+      )}
 
-        {authStatus === 'authenticated' && state.status === 'success' && dadosExibidos && (
-          <SafeAreaView className="flex-1 bg-slate-950">
-            <View className="flex-row items-center justify-between px-6 py-4 border-b border-slate-800">
-              <Text className="text-white text-xl font-black tracking-tight">
-                Izi<Text className="text-purple-500">Contador</Text>
-              </Text>
-              <HeaderMenu
-                items={[
-                  { label: 'Compartilhar', onPress: compartilharResumo },
-                  { label: 'Categorias', onPress: () => setShowCategorias(true) },
-                  { label: 'Regras', onPress: () => setShowRegras(true) },
-                  { label: 'Sair', onPress: signOut, danger: true },
-                ]}
-              />
-            </View>
+      {authStatus === 'authenticated' && state.status === 'success' && dadosExibidos && (
+        <SafeAreaView className="flex-1 bg-slate-950">
+          <View className="flex-row items-center justify-between px-6 py-4 border-b border-slate-800">
+            <Text className="text-white text-xl font-black tracking-tight">
+              Izi<Text className="text-purple-500">Contador</Text>
+            </Text>
+            <HeaderMenu
+              items={[
+                { label: 'Compartilhar', onPress: compartilharResumo },
+                { label: 'Categorias', onPress: () => setShowCategorias(true) },
+                { label: 'Regras', onPress: () => setShowRegras(true) },
+                { label: 'Sair', onPress: signOut, danger: true },
+              ]}
+            />
+          </View>
 
-            {meses.length > 1 && (
-              <MonthSelector meses={meses} selected={mesSelecionado} onChange={setMesSelecionado} />
-            )}
+          {meses.length > 1 && (
+            <MonthSelector meses={meses} selected={mesSelecionado} onChange={setMesSelecionado} />
+          )}
 
-            <ScrollView
-              className="flex-1"
-              contentContainerStyle={{ padding: 16, gap: 16 }}
-              showsVerticalScrollIndicator={false}
-              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7c3aed" colors={['#7c3aed']} />}
-            >
-              <TotalCard
-                total={dadosExibidos.total_fatura}
-                numeroPessoas={pessoas.length}
-                totalAnterior={totalAnterior}
-                mesAnterior={mesAnterior}
-              />
-              <PieChartCard pessoas={pessoas} />
-              {semCategoria && <SemCategoriaCard grupo={semCategoria} />}
-              {pessoasOrdenadas.map((pessoa) => {
-                const ep = getEstado(mesSelecionado, pessoa.dono);
-                return (
-                  <PersonCard
-                    key={pessoa.dono}
-                    pessoa={pessoa}
-                    mes={dadosExibidos.mes}
-                    isMesAtual={isMesAtual}
-                    oculto={ep.oculto}
-                    pago={ep.pago}
-                    onToggleOculto={() => toggleOculto(mesSelecionado, pessoa.dono)}
-                    onTogglePago={() => togglePago(mesSelecionado, pessoa.dono)}
-                  />
-                );
-              })}
-              <Text className="text-slate-700 text-[10px] font-bold uppercase tracking-[0.2em] text-center py-4">
-                IziContador • Automático • {new Date().getFullYear()}
-              </Text>
-            </ScrollView>
-          </SafeAreaView>
-        )}
-      </View>
+          <ScrollView
+            className="flex-1"
+            contentContainerStyle={{ padding: 16, gap: 16 }}
+            showsVerticalScrollIndicator={false}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7c3aed" colors={['#7c3aed']} />}
+          >
+            <TotalCard
+              total={dadosExibidos.total_fatura}
+              numeroPessoas={pessoas.length}
+              totalAnterior={totalAnterior}
+              mesAnterior={mesAnterior}
+            />
+            <PieChartCard pessoas={pessoas} />
+            {semCategoria && <SemCategoriaCard grupo={semCategoria} />}
+            {pessoasOrdenadas.map((pessoa) => {
+              const ep = getEstado(mesSelecionado, pessoa.dono);
+              return (
+                <PersonCard
+                  key={pessoa.dono}
+                  pessoa={pessoa}
+                  mes={dadosExibidos.mes}
+                  isMesAtual={isMesAtual}
+                  oculto={ep.oculto}
+                  pago={ep.pago}
+                  onToggleOculto={() => toggleOculto(mesSelecionado, pessoa.dono)}
+                  onTogglePago={() => togglePago(mesSelecionado, pessoa.dono)}
+                />
+              );
+            })}
+            <Text className="text-slate-700 text-[10px] font-bold uppercase tracking-[0.2em] text-center py-4">
+              IziContador • Automático • {new Date().getFullYear()}
+            </Text>
+          </ScrollView>
+        </SafeAreaView>
+      )}
 
       <RegrasModal
         visible={showRegras}
@@ -177,6 +187,6 @@ export default function App() {
         removeCategoria={removeCategoria}
         reset={reset}
       />
-    </SafeAreaProvider>
+    </View>
   );
 }
