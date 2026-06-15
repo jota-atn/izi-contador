@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "11052536217",
+    "project_id": "izi-contador",
+    "storage_bucket": "izi-contador.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:11052536217:android:459f94436025468d7ac308",
+        "android_client_info": {
+          "package_name": "com.jota_atn.mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "11052536217-c9caccqv5tk1tu1pc5fuafn8fpm0nbnl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jota_atn.mobile",
+            "certificate_hash": "1a2947e22785144654c20a122253db688c53d660e"
+          }
+        },
+        {
+          "client_id": "11052536217-vb66ohnhvbdocfasb7m4pvigp5ssl2or.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCnepv9NNXwJzt8XCTQVjWYLrFaPBreP9I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "11052536217-vb66ohnhvbdocfasb7m4pvigp5ssl2or.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
