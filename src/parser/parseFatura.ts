@@ -1,5 +1,5 @@
 import Papa from 'papaparse';
-import { RelatorioFatura, RelatorioPessoa, Gasto } from '../types';
+import { RelatorioFatura, RelatorioPessoa, Gasto, AnotacaoInvalida } from '../types';
 import { Categorias, DEFAULT_CATEGORIAS } from '../config/categorias';
 import { RegrasAlocacao } from '../config/regrasAlocacao';
 
@@ -26,8 +26,9 @@ function parseAmount(raw: string): number {
   );
 }
 
-function expandSplitRows(rows: Row[], defaultOwner: string): Row[] {
+function expandSplitRows(rows: Row[], defaultOwner: string): { rows: Row[]; invalidas: AnotacaoInvalida[] } {
   const result: Row[] = [];
+  const invalidas: AnotacaoInvalida[] = [];
 
   for (const row of rows) {
     const multiMatch = SPLIT_MULTI.exec(row.title);
@@ -49,8 +50,9 @@ function expandSplitRows(rows: Row[], defaultOwner: string): Row[] {
         }
       }
 
-      // Se a soma explícita é menor que o total, a anotação está incompleta — não aplicar
       if (assignedTotal < row.amount - 0.01) {
+        // Anotação incompleta: soma < total → registra aviso, mantém item como normal
+        invalidas.push({ titulo: row.title, valor: row.amount, soma: parseFloat(assignedTotal.toFixed(2)) });
         result.push(row);
       } else {
         // \S+ em vez de \w+ para suportar nomes acentuados no sufixo - Nome
@@ -92,7 +94,7 @@ function expandSplitRows(rows: Row[], defaultOwner: string): Row[] {
     }
   }
 
-  return result;
+  return { rows: result, invalidas };
 }
 
 function categorizarItem(title: string, defaultOwner: string, categorias: Categorias, regras: RegrasAlocacao): { exibicao: string; dono: string } {
@@ -166,7 +168,8 @@ export function parseFatura(csvText: string, defaultOwnerRaw = 'EU', categorias:
     .map((r) => ({ date: r.date, title: r.title, amount: parseAmount(r.amount) }))
     .filter((r) => !isNaN(r.amount));
 
-  rows = expandSplitRows(rows, defaultOwner);
+  const { rows: expandedRows, invalidas } = expandSplitRows(rows, defaultOwner);
+  rows = expandedRows;
   const mes = inferirMes(rows);
 
   // Uppercase após expansão (preserva a lógica original do Python)
@@ -214,5 +217,6 @@ export function parseFatura(csvText: string, defaultOwnerRaw = 'EU', categorias:
     mes,
     total_fatura: parseFloat(totalFatura.toFixed(2)),
     relatorio_por_pessoa: relatorioPorPessoa,
+    ...(invalidas.length > 0 && { anotacoes_invalidas: invalidas }),
   };
 }

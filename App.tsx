@@ -19,6 +19,7 @@ import { TotalCard } from './src/components/TotalCard';
 import { PieChartCard } from './src/components/PieChartCard';
 import { PersonCard } from './src/components/PersonCard';
 import { SemCategoriaCard } from './src/components/SemCategoriaCard';
+import { AnotacoesInvalidasCard } from './src/components/AnotacoesInvalidasCard';
 import { RegrasModal } from './src/components/RegrasModal';
 import { CategoriasModal } from './src/components/CategoriasModal';
 import { HeaderMenu } from './src/components/HeaderMenu';
@@ -152,6 +153,9 @@ function AppContent() {
             />
             <PieChartCard pessoas={pessoas} />
             {semCategoria && <SemCategoriaCard grupo={semCategoria} />}
+            {dadosExibidos.anotacoes_invalidas && dadosExibidos.anotacoes_invalidas.length > 0 && (
+              <AnotacoesInvalidasCard itens={dadosExibidos.anotacoes_invalidas} />
+            )}
             {pessoasOrdenadas.map((pessoa) => {
               const ep = getEstado(mesSelecionado, pessoa.dono);
               return (
