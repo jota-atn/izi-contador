@@ -9,6 +9,7 @@ import { useRelatorio } from './src/hooks/useRelatorio';
 import { useCategorias } from './src/hooks/useCategorias';
 import { useHistorico } from './src/hooks/useHistorico';
 import { useRegrasAlocacao } from './src/hooks/useRegrasAlocacao';
+import { useEstadoFatura } from './src/hooks/useEstadoFatura';
 import { LoadingScreen } from './src/components/LoadingScreen';
 import { ErrorScreen } from './src/components/ErrorScreen';
 import { LoginScreen } from './src/components/LoginScreen';
@@ -26,6 +27,7 @@ export default function App() {
   const { status: authStatus, userName, signIn, signOut, getAccessToken } = useGoogleAuth();
   const { categorias, addKeyword, removeKeyword, addCategoria, removeCategoria, reset } = useCategorias();
   const { regras, addRegra, removeRegra } = useRegrasAlocacao();
+  const { getEstado, toggleOculto, togglePago } = useEstadoFatura();
   const { state, refresh } = useRelatorio(getAccessToken, authStatus, userName, categorias, regras);
   const { historico, meses, upsert } = useHistorico();
   const [mesSelecionado, setMesSelecionado] = useState('');
@@ -119,6 +121,7 @@ export default function App() {
               const idxMes = meses.indexOf(mesSelecionado);
               const mesAnterior = meses[idxMes + 1];
               const totalAnterior = mesAnterior ? historico[mesAnterior]?.total_fatura : undefined;
+              const isMesAtual = mesSelecionado === meses[0];
               return (
                 <>
                   <TotalCard
@@ -129,9 +132,25 @@ export default function App() {
                   />
                   <PieChartCard pessoas={pessoas} />
                   {semCategoria && <SemCategoriaCard grupo={semCategoria} />}
-                  {pessoas.map((pessoa) => (
-                    <PersonCard key={pessoa.dono} pessoa={pessoa} mes={dadosExibidos.mes} />
-                  ))}
+                  {[...pessoas].sort((a, b) => {
+                    const aPago = getEstado(mesSelecionado, a.dono).pago ? 1 : 0;
+                    const bPago = getEstado(mesSelecionado, b.dono).pago ? 1 : 0;
+                    return aPago - bPago;
+                  }).map((pessoa) => {
+                    const ep = getEstado(mesSelecionado, pessoa.dono);
+                    return (
+                      <PersonCard
+                        key={pessoa.dono}
+                        pessoa={pessoa}
+                        mes={dadosExibidos.mes}
+                        isMesAtual={isMesAtual}
+                        oculto={ep.oculto}
+                        pago={ep.pago}
+                        onToggleOculto={() => toggleOculto(mesSelecionado, pessoa.dono)}
+                        onTogglePago={() => togglePago(mesSelecionado, pessoa.dono)}
+                      />
+                    );
+                  })}
                 </>
               );
             })()}
