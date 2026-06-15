@@ -26,7 +26,7 @@ function parseAmount(raw: string): number {
   );
 }
 
-function expandSplitRows(rows: Row[]): Row[] {
+function expandSplitRows(rows: Row[], defaultOwner: string): Row[] {
   const result: Row[] = [];
 
   for (const row of rows) {
@@ -36,19 +36,24 @@ function expandSplitRows(rows: Row[]): Row[] {
     const dashMatch = SPLIT_DASH.exec(row.title);
 
     if (multiMatch) {
-      // (Joao=40, Maria=20) → uma linha por pessoa com o valor explícito
-      // Remove o bloco (…) e o sufixo "- Dono" da descrição base
+      // (Joao=40, Maria=20) → uma linha por pessoa; restante vai pro defaultOwner
       const baseTitle = row.title
         .replace(SPLIT_MULTI, '')
         .replace(/\s*-\s*\w+\s*$/, '')
         .trim();
       const pairs = multiMatch[1].split(',');
+      let assignedTotal = 0;
       for (const pair of pairs) {
         const [name, amountStr] = pair.trim().split('=');
         const amount = parseFloat(amountStr.replace(',', '.'));
         if (!isNaN(amount)) {
+          assignedTotal += amount;
           result.push({ ...row, amount, title: `${baseTitle} - ${normalizeName(name.trim())}` });
         }
+      }
+      const remainder = parseFloat((row.amount - assignedTotal).toFixed(2));
+      if (remainder > 0.01) {
+        result.push({ ...row, amount: remainder, title: `${baseTitle} - ${normalizeName(defaultOwner)}` });
       }
     } else if (fixedMatch) {
       const personAmount = parseFloat(fixedMatch[1].replace(',', '.'));
@@ -149,7 +154,7 @@ export function parseFatura(csvText: string, defaultOwner = 'EU', categorias: Ca
     .map((r) => ({ date: r.date, title: r.title, amount: parseAmount(r.amount) }))
     .filter((r) => !isNaN(r.amount));
 
-  rows = expandSplitRows(rows);
+  rows = expandSplitRows(rows, defaultOwner);
   const mes = inferirMes(rows);
 
   // Uppercase após expansão (preserva a lógica original do Python)
