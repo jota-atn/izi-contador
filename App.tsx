@@ -112,7 +112,7 @@ export default function App() {
             />
             <PieChartCard pessoas={dadosExibidos.relatorio_por_pessoa} />
             {dadosExibidos.relatorio_por_pessoa.map((pessoa) => (
-              <PersonCard key={pessoa.dono} pessoa={pessoa} />
+              <PersonCard key={pessoa.dono} pessoa={pessoa} mes={dadosExibidos.mes} />
             ))}
             <Text className="text-slate-700 text-[10px] font-bold uppercase tracking-[0.2em] text-center py-4">
               IziContador • Automático • {new Date().getFullYear()}

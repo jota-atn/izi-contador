@@ -1,19 +1,44 @@
 import { Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { RelatorioPessoa } from '../types';
+import { Gasto, RelatorioPessoa } from '../types';
+import { IconShare } from './icons/IconShare';
 
 interface Props {
   pessoa: RelatorioPessoa;
+  mes: string; // "YYYY-MM"
 }
 
-async function compartilharPessoa(pessoa: RelatorioPessoa) {
-  const itens = pessoa.itens
-    .map((i) => `  ${i.descricao} — R$ ${i.valor.toFixed(2)}`)
-    .join('\n');
-  const texto = `${pessoa.dono}, sua parte ficou R$ ${pessoa.total_individual.toFixed(2)}:\n${itens}`;
+const MESES = [
+  'JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO',
+  'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO',
+];
+
+function formatMes(mes: string): string {
+  const [year, month] = mes.split('-');
+  return `${MESES[parseInt(month, 10) - 1]} ${year}`;
+}
+
+function formatItemShare(item: Gasto): string {
+  const parcelaMatch = / - (\d+\/\d+)$/.exec(item.descricao);
+  if (parcelaMatch) {
+    const base = item.descricao.slice(0, parcelaMatch.index);
+    return `- ${base} - ${item.valor.toFixed(2)} - ${parcelaMatch[1]}`;
+  }
+  return `- ${item.descricao} - ${item.valor.toFixed(2)}`;
+}
+
+async function compartilharPessoa(pessoa: RelatorioPessoa, mes: string) {
+  const itens = pessoa.itens.map(formatItemShare).join('\n');
+  const texto = [
+    `*FATURA ${formatMes(mes)}*`,
+    `*${pessoa.dono.toUpperCase()}*`,
+    itens,
+    '————————',
+    `*TOTAL = R$${pessoa.total_individual.toFixed(2)}*`,
+  ].join('\n');
   await Share.share({ message: texto });
 }
 
-export function PersonCard({ pessoa }: Props) {
+export function PersonCard({ pessoa, mes }: Props) {
   return (
     <View className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden">
       <View className="bg-slate-800/50 px-6 py-4 flex-row items-center justify-between border-b border-slate-800">
@@ -27,8 +52,12 @@ export function PersonCard({ pessoa }: Props) {
           <Text className="text-purple-400 font-mono font-bold text-lg">
             R$ {pessoa.total_individual.toFixed(2)}
           </Text>
-          <TouchableOpacity onPress={() => compartilharPessoa(pessoa)} style={s.shareBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text style={s.shareIcon}>↑</Text>
+          <TouchableOpacity
+            onPress={() => compartilharPessoa(pessoa, mes)}
+            style={s.shareBtn}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <IconShare size={14} color="#a78bfa" />
           </TouchableOpacity>
         </View>
       </View>
@@ -67,10 +96,5 @@ const s = StyleSheet.create({
     backgroundColor: '#1e293b',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  shareIcon: {
-    color: '#a78bfa',
-    fontSize: 14,
-    fontWeight: '800',
   },
 });
