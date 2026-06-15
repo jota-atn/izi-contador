@@ -1,5 +1,6 @@
 import { Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Gasto, RelatorioPessoa } from '../types';
+import { formatMesAnoUpper } from '../utils/meses';
 import { IconShare } from './icons/IconShare';
 import { IconChevron } from './icons/IconChevron';
 import { IconCheck } from './icons/IconCheck';
@@ -14,16 +15,6 @@ interface Props {
   onTogglePago: () => void;
 }
 
-const MESES = [
-  'JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO',
-  'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO',
-];
-
-function formatMes(mes: string): string {
-  const [year, month] = mes.split('-');
-  return `${MESES[parseInt(month, 10) - 1]} ${year}`;
-}
-
 function formatItemShare(item: Gasto): string {
   const parcelaMatch = / - (\d+\/\d+)$/.exec(item.descricao);
   if (parcelaMatch) {
@@ -36,8 +27,8 @@ function formatItemShare(item: Gasto): string {
 async function compartilharPessoa(pessoa: RelatorioPessoa, mes: string) {
   const itens = pessoa.itens.map(formatItemShare).join('\n');
   const texto = [
-    `*FATURA ${formatMes(mes)}*`,
-    `*${pessoa.dono.toUpperCase()}*`,
+    `*FATURA ${formatMesAnoUpper(mes)}*`,
+    `*${pessoa.dono}*`,
     itens,
     '————————',
     `*TOTAL = R$${pessoa.total_individual.toFixed(2)}*`,
@@ -62,31 +53,16 @@ export function PersonCard({ pessoa, mes, isMesAtual, oculto, pago, onToggleOcul
             R$ {pessoa.total_individual.toFixed(2)}
           </Text>
 
-          {/* Botão pago */}
-          <TouchableOpacity
-            onPress={onTogglePago}
-            style={[s.iconBtn, pago && s.iconBtnPago]}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
+          <TouchableOpacity onPress={onTogglePago} style={[s.iconBtn, pago && s.iconBtnPago]} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <IconCheck size={12} color={pago ? '#4ade80' : '#334155'} />
           </TouchableOpacity>
 
-          {/* Share */}
-          <TouchableOpacity
-            onPress={() => compartilharPessoa(pessoa, mes)}
-            style={s.iconBtn}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
+          <TouchableOpacity onPress={() => compartilharPessoa(pessoa, mes)} style={s.iconBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <IconShare size={13} color="#a78bfa" />
           </TouchableOpacity>
 
-          {/* Chevron — só no mês atual */}
           {isMesAtual && (
-            <TouchableOpacity
-              onPress={onToggleOculto}
-              style={s.iconBtn}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
+            <TouchableOpacity onPress={onToggleOculto} style={s.iconBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <IconChevron size={14} color="#475569" up={expanded} />
             </TouchableOpacity>
           )}
@@ -120,9 +96,7 @@ const s = StyleSheet.create({
     borderColor: '#1e293b',
     overflow: 'hidden',
   },
-  cardPago: {
-    borderColor: '#14532d',
-  },
+  cardPago: { borderColor: '#14532d' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -133,88 +107,19 @@ const s = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#1e293b',
   },
-  left: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    flex: 1,
-  },
-  bar: {
-    width: 6,
-    height: 20,
-    borderRadius: 3,
-  },
-  name: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: -0.3,
-  },
-  right: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  total: {
-    color: '#a78bfa',
-    fontFamily: 'monospace',
-    fontWeight: '700',
-    fontSize: 16,
-    marginRight: 4,
-  },
-  totalPago: {
-    color: '#4ade80',
-  },
-  iconBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: '#1e293b',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconBtnPago: {
-    backgroundColor: '#052e16',
-    borderWidth: 1,
-    borderColor: '#14532d',
-  },
-  body: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    gap: 12,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-  },
-  descCol: {
-    flex: 1,
-    marginRight: 16,
-  },
-  desc: {
-    color: '#cbd5e1',
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  date: {
-    color: '#475569',
-    fontSize: 10,
-    marginTop: 2,
-  },
-  badge: {
-    backgroundColor: '#1e293b',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  badgeText: {
-    color: '#94a3b8',
-    fontFamily: 'monospace',
-    fontSize: 11,
-    fontWeight: '700',
-  },
+  left: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  bar: { width: 6, height: 20, borderRadius: 3 },
+  name: { color: '#fff', fontSize: 16, fontWeight: '900', textTransform: 'uppercase', letterSpacing: -0.3 },
+  right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  total: { color: '#a78bfa', fontFamily: 'monospace', fontWeight: '700', fontSize: 16, marginRight: 4 },
+  totalPago: { color: '#4ade80' },
+  iconBtn: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#1e293b', alignItems: 'center', justifyContent: 'center' },
+  iconBtnPago: { backgroundColor: '#052e16', borderWidth: 1, borderColor: '#14532d' },
+  body: { paddingHorizontal: 24, paddingVertical: 16, gap: 12 },
+  row: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  descCol: { flex: 1, marginRight: 16 },
+  desc: { color: '#cbd5e1', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.3 },
+  date: { color: '#475569', fontSize: 10, marginTop: 2 },
+  badge: { backgroundColor: '#1e293b', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  badgeText: { color: '#94a3b8', fontFamily: 'monospace', fontSize: 11, fontWeight: '700' },
 });

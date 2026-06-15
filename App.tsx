@@ -46,6 +46,18 @@ export default function App() {
     (mesSelecionado && historico[mesSelecionado]) ||
     (state.status === 'success' ? state.data : null);
 
+  const pessoas = dadosExibidos?.relatorio_por_pessoa.filter(p => p.dono !== SEM_CATEGORIA) ?? [];
+  const semCategoria = dadosExibidos?.relatorio_por_pessoa.find(p => p.dono === SEM_CATEGORIA);
+  const idxMes = meses.indexOf(mesSelecionado);
+  const mesAnterior = meses[idxMes + 1];
+  const totalAnterior = mesAnterior ? historico[mesAnterior]?.total_fatura : undefined;
+  const isMesAtual = mesSelecionado === meses[0];
+  const pessoasOrdenadas = [...pessoas].sort((a, b) => {
+    const aPago = getEstado(mesSelecionado, a.dono).pago ? 1 : 0;
+    const bPago = getEstado(mesSelecionado, b.dono).pago ? 1 : 0;
+    return aPago - bPago;
+  });
+
   async function onRefresh() {
     setRefreshing(true);
     await refresh();
@@ -68,99 +80,79 @@ export default function App() {
       <StatusBar style="light" />
       <View style={{ flex: 1, backgroundColor: '#020617' }}>
 
-      {authStatus === 'loading' && <LoadingScreen message="Verificando autenticação..." />}
+        {authStatus === 'loading' && <LoadingScreen message="Verificando autenticação..." />}
 
-      {authStatus === 'unauthenticated' && <LoginScreen onSignIn={signIn} />}
+        {authStatus === 'unauthenticated' && <LoginScreen onSignIn={signIn} />}
 
-      {authStatus === 'authenticated' && state.status === 'auth_expired' && (
-        <ErrorScreen message="Sessão expirada. Faça login novamente." onRetry={signOut} />
-      )}
+        {authStatus === 'authenticated' && state.status === 'auth_expired' && (
+          <ErrorScreen message="Sessão expirada. Faça login novamente." onRetry={signOut} />
+        )}
 
-      {authStatus === 'authenticated' &&
-        (state.status === 'loading' || state.status === 'idle') && (
+        {authStatus === 'authenticated' && (state.status === 'loading' || state.status === 'idle') && (
           <LoadingScreen message="Sincronizando faturas..." />
         )}
 
-      {authStatus === 'authenticated' && state.status === 'error' && (
-        <ErrorScreen message={state.message} onRetry={refresh} />
-      )}
+        {authStatus === 'authenticated' && state.status === 'error' && (
+          <ErrorScreen message={state.message} onRetry={refresh} />
+        )}
 
-      {authStatus === 'authenticated' && state.status === 'success' && dadosExibidos && (
-        <SafeAreaView className="flex-1 bg-slate-950">
-          <View className="flex-row items-center justify-between px-6 py-4 border-b border-slate-800">
-            <Text className="text-white text-xl font-black tracking-tight">
-              Izi<Text className="text-purple-500">Contador</Text>
-            </Text>
-            <HeaderMenu
-              items={[
-                { label: 'Compartilhar', onPress: compartilharResumo },
-                { label: 'Categorias', onPress: () => setShowCategorias(true) },
-                { label: 'Regras', onPress: () => setShowRegras(true) },
-                { label: 'Sair', onPress: signOut, danger: true },
-              ]}
-            />
-          </View>
+        {authStatus === 'authenticated' && state.status === 'success' && dadosExibidos && (
+          <SafeAreaView className="flex-1 bg-slate-950">
+            <View className="flex-row items-center justify-between px-6 py-4 border-b border-slate-800">
+              <Text className="text-white text-xl font-black tracking-tight">
+                Izi<Text className="text-purple-500">Contador</Text>
+              </Text>
+              <HeaderMenu
+                items={[
+                  { label: 'Compartilhar', onPress: compartilharResumo },
+                  { label: 'Categorias', onPress: () => setShowCategorias(true) },
+                  { label: 'Regras', onPress: () => setShowRegras(true) },
+                  { label: 'Sair', onPress: signOut, danger: true },
+                ]}
+              />
+            </View>
 
-          {meses.length > 1 && (
-            <MonthSelector
-              meses={meses}
-              selected={mesSelecionado}
-              onChange={setMesSelecionado}
-            />
-          )}
+            {meses.length > 1 && (
+              <MonthSelector meses={meses} selected={mesSelecionado} onChange={setMesSelecionado} />
+            )}
 
-          <ScrollView
-            className="flex-1"
-            contentContainerStyle={{ padding: 16, gap: 16 }}
-            showsVerticalScrollIndicator={false}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7c3aed" colors={['#7c3aed']} />}
-          >
-            {(() => {
-              const pessoas = dadosExibidos.relatorio_por_pessoa.filter(p => p.dono !== SEM_CATEGORIA);
-              const semCategoria = dadosExibidos.relatorio_por_pessoa.find(p => p.dono === SEM_CATEGORIA);
-              const idxMes = meses.indexOf(mesSelecionado);
-              const mesAnterior = meses[idxMes + 1];
-              const totalAnterior = mesAnterior ? historico[mesAnterior]?.total_fatura : undefined;
-              const isMesAtual = mesSelecionado === meses[0];
-              return (
-                <>
-                  <TotalCard
-                    total={dadosExibidos.total_fatura}
-                    numeroPessoas={pessoas.length}
-                    totalAnterior={totalAnterior}
-                    mesAnterior={mesAnterior}
+            <ScrollView
+              className="flex-1"
+              contentContainerStyle={{ padding: 16, gap: 16 }}
+              showsVerticalScrollIndicator={false}
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7c3aed" colors={['#7c3aed']} />}
+            >
+              <TotalCard
+                total={dadosExibidos.total_fatura}
+                numeroPessoas={pessoas.length}
+                totalAnterior={totalAnterior}
+                mesAnterior={mesAnterior}
+              />
+              <PieChartCard pessoas={pessoas} />
+              {semCategoria && <SemCategoriaCard grupo={semCategoria} />}
+              {pessoasOrdenadas.map((pessoa) => {
+                const ep = getEstado(mesSelecionado, pessoa.dono);
+                return (
+                  <PersonCard
+                    key={pessoa.dono}
+                    pessoa={pessoa}
+                    mes={dadosExibidos.mes}
+                    isMesAtual={isMesAtual}
+                    oculto={ep.oculto}
+                    pago={ep.pago}
+                    onToggleOculto={() => toggleOculto(mesSelecionado, pessoa.dono)}
+                    onTogglePago={() => togglePago(mesSelecionado, pessoa.dono)}
                   />
-                  <PieChartCard pessoas={pessoas} />
-                  {semCategoria && <SemCategoriaCard grupo={semCategoria} />}
-                  {[...pessoas].sort((a, b) => {
-                    const aPago = getEstado(mesSelecionado, a.dono).pago ? 1 : 0;
-                    const bPago = getEstado(mesSelecionado, b.dono).pago ? 1 : 0;
-                    return aPago - bPago;
-                  }).map((pessoa) => {
-                    const ep = getEstado(mesSelecionado, pessoa.dono);
-                    return (
-                      <PersonCard
-                        key={pessoa.dono}
-                        pessoa={pessoa}
-                        mes={dadosExibidos.mes}
-                        isMesAtual={isMesAtual}
-                        oculto={ep.oculto}
-                        pago={ep.pago}
-                        onToggleOculto={() => toggleOculto(mesSelecionado, pessoa.dono)}
-                        onTogglePago={() => togglePago(mesSelecionado, pessoa.dono)}
-                      />
-                    );
-                  })}
-                </>
-              );
-            })()}
-            <Text className="text-slate-700 text-[10px] font-bold uppercase tracking-[0.2em] text-center py-4">
-              IziContador • Automático • {new Date().getFullYear()}
-            </Text>
-          </ScrollView>
-        </SafeAreaView>
-      )}
+                );
+              })}
+              <Text className="text-slate-700 text-[10px] font-bold uppercase tracking-[0.2em] text-center py-4">
+                IziContador • Automático • {new Date().getFullYear()}
+              </Text>
+            </ScrollView>
+          </SafeAreaView>
+        )}
       </View>
+
       <RegrasModal
         visible={showRegras}
         onClose={() => setShowRegras(false)}

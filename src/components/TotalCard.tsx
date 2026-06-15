@@ -1,15 +1,6 @@
 import { Text, View } from 'react-native';
 import { IconUsers } from './icons/IconUsers';
-
-const MESES = [
-  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
-];
-
-function nomeMes(mes: string): string {
-  const month = parseInt(mes.split('-')[1], 10);
-  return MESES[month - 1] ?? mes;
-}
+import { nomeMes } from '../utils/meses';
 
 interface Props {
   total: number;

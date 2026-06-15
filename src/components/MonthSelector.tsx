@@ -1,14 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
-const MESES = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
-];
-
-function formatMes(mes: string): string {
-  const [year, month] = mes.split('-');
-  return `${MESES[parseInt(month, 10) - 1]} ${year}`;
-}
+import { formatMesAno } from '../utils/meses';
 
 interface Props {
   meses: string[];
@@ -32,7 +23,7 @@ export function MonthSelector({ meses, selected, onChange }: Props) {
         <Text style={[s.arrowText, !canPrev && s.arrowTextDisabled]}>←</Text>
       </TouchableOpacity>
 
-      <Text style={s.label}>{selected ? formatMes(selected) : '—'}</Text>
+      <Text style={s.label}>{selected ? formatMesAno(selected) : '—'}</Text>
 
       <TouchableOpacity
         onPress={() => onChange(meses[idx - 1])}
@@ -64,17 +55,9 @@ const s = StyleSheet.create({
     backgroundColor: '#1e293b',
     marginHorizontal: 12,
   },
-  arrowDisabled: {
-    backgroundColor: '#0f172a',
-  },
-  arrowText: {
-    color: '#a78bfa',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  arrowTextDisabled: {
-    color: '#334155',
-  },
+  arrowDisabled: { backgroundColor: '#0f172a' },
+  arrowText: { color: '#a78bfa', fontSize: 18, fontWeight: '700' },
+  arrowTextDisabled: { color: '#334155' },
   label: {
     color: '#fff',
     fontSize: 15,
