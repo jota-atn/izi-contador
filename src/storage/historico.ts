@@ -1,33 +1,26 @@
-import * as SecureStore from 'expo-secure-store';
 import { RelatorioFatura } from '../types';
-
-const INDEX_KEY = 'historico_meses_v1';
-
-function mesKey(mes: string) {
-  return `historico_fatura_${mes}`;
-}
+import { getDb } from './db';
 
 export async function loadMeses(): Promise<string[]> {
-  try {
-    const raw = await SecureStore.getItemAsync(INDEX_KEY);
-    if (raw) return JSON.parse(raw) as string[];
-  } catch {}
-  return [];
+  const db = await getDb();
+  const rows = await db.getAllAsync<{ mes: string }>('SELECT mes FROM faturas ORDER BY mes DESC');
+  return rows.map(r => r.mes);
 }
 
 export async function loadFatura(mes: string): Promise<RelatorioFatura | null> {
-  try {
-    const raw = await SecureStore.getItemAsync(mesKey(mes));
-    if (raw) return JSON.parse(raw) as RelatorioFatura;
-  } catch {}
-  return null;
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ data: string }>(
+    'SELECT data FROM faturas WHERE mes = ?',
+    mes,
+  );
+  return row ? (JSON.parse(row.data) as RelatorioFatura) : null;
 }
 
 export async function upsertFatura(mes: string, data: RelatorioFatura): Promise<void> {
-  await SecureStore.setItemAsync(mesKey(mes), JSON.stringify(data));
-
-  const meses = await loadMeses();
-  if (!meses.includes(mes)) {
-    await SecureStore.setItemAsync(INDEX_KEY, JSON.stringify([...meses, mes]));
-  }
+  const db = await getDb();
+  await db.runAsync(
+    'INSERT OR REPLACE INTO faturas (mes, data) VALUES (?, ?)',
+    mes,
+    JSON.stringify(data),
+  );
 }
