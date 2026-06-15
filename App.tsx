@@ -117,9 +117,14 @@ function AppContent() {
       {authStatus === 'authenticated' && state.status === 'success' && dadosExibidos && (
         <SafeAreaView className="flex-1 bg-slate-950">
           <View className="flex-row items-center justify-between px-6 py-4 border-b border-slate-800">
-            <Text className="text-white text-xl font-black tracking-tight">
-              Izi<Text className="text-purple-500">Contador</Text>
-            </Text>
+            <View>
+              <Text className="text-white text-xl font-black tracking-tight">
+                Izi<Text className="text-purple-500">Contador</Text>
+              </Text>
+              <Text className="text-slate-500 text-xs font-semibold tracking-wide">
+                {userName.split(' ')[0]}
+              </Text>
+            </View>
             <HeaderMenu
               items={[
                 { label: 'Compartilhar', onPress: compartilharResumo },
