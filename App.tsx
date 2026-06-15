@@ -73,6 +73,7 @@ export default function App() {
   const compartilharResumo = async () => {
     if (!dadosExibidos) return;
     const texto = dadosExibidos.relatorio_por_pessoa
+      .filter((p) => p.dono !== SEM_CATEGORIA)
       .map((p) => {
         const itens = p.itens.map((i) => `${i.descricao} - ${i.valor.toFixed(2)}`).join('\n');
         return `${p.dono}\n${itens}\nTotal = ${p.total_individual.toFixed(2)}`;

@@ -11,7 +11,7 @@ const SPLIT_PARENS = /\(metade\s+(\w+)\)/i;
 const SPLIT_DASH = /\s*-\s*metade\s+(\w+)\s*$/i;
 const SPLIT_FIXED = /\((?:menos\s+)?(\d+(?:[.,]\d+)?)\s+(\w+)\)/i;
 // Formato: (Nome=40, Maria=20, ...) — divide explicitamente por pessoa
-const SPLIT_MULTI = /\((\w+=\d+(?:[.,]\d+)?(?:,\s*\w+=\d+(?:[.,]\d+)?)*)\)/i;
+const SPLIT_MULTI = /\(([^\s=(),]+=\d+(?:[.,]\d+)?(?:,\s*[^\s=(),]+=\d+(?:[.,]\d+)?)*)\)/i;
 const PARCELA_SUFFIX = /\s*-\s*parcela\s+\d+\/\d+\s*$/i;
 
 interface Row {
@@ -141,7 +141,8 @@ function inferirMes(rows: Row[]): string {
   return [...contagem.entries()].sort((a, b) => b[1] - a[1])[0][0];
 }
 
-export function parseFatura(csvText: string, defaultOwner = 'EU', categorias: Categorias = DEFAULT_CATEGORIAS, regrasAlocacao: RegrasAlocacao = {}): RelatorioFatura {
+export function parseFatura(csvText: string, defaultOwnerRaw = 'EU', categorias: Categorias = DEFAULT_CATEGORIAS, regrasAlocacao: RegrasAlocacao = {}): RelatorioFatura {
+  const defaultOwner = normalizeName(defaultOwnerRaw);
   const { data } = Papa.parse<Record<string, string>>(csvText, {
     header: true,
     skipEmptyLines: true,
