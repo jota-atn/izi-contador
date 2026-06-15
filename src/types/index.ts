@@ -11,6 +11,7 @@ export interface RelatorioPessoa {
 }
 
 export interface RelatorioFatura {
+  mes: string; // "YYYY-MM"
   total_fatura: number;
   relatorio_por_pessoa: RelatorioPessoa[];
 }

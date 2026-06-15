@@ -1,5 +1,5 @@
 import './global.css';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, Share, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useGoogleAuth } from './src/auth/useGoogleAuth';
 import { useRelatorio } from './src/hooks/useRelatorio';
 import { useCategorias } from './src/hooks/useCategorias';
+import { useHistorico } from './src/hooks/useHistorico';
 import { LoadingScreen } from './src/components/LoadingScreen';
 import { ErrorScreen } from './src/components/ErrorScreen';
 import { LoginScreen } from './src/components/LoginScreen';
@@ -15,13 +16,27 @@ import { PieChartCard } from './src/components/PieChartCard';
 import { PersonCard } from './src/components/PersonCard';
 import { CategoriasModal } from './src/components/CategoriasModal';
 import { HeaderMenu } from './src/components/HeaderMenu';
+import { MonthSelector } from './src/components/MonthSelector';
 
 export default function App() {
   const { status: authStatus, userName, signIn, signOut, getAccessToken } = useGoogleAuth();
   const { categorias, addKeyword, removeKeyword, addCategoria, removeCategoria, reset } = useCategorias();
   const { state, refresh } = useRelatorio(getAccessToken, authStatus, userName, categorias);
+  const { historico, meses, upsert } = useHistorico();
+  const [mesSelecionado, setMesSelecionado] = useState('');
   const [showCategorias, setShowCategorias] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (state.status === 'success') {
+      upsert(state.data.mes, state.data);
+      setMesSelecionado(state.data.mes);
+    }
+  }, [state, upsert]);
+
+  const dadosExibidos =
+    (mesSelecionado && historico[mesSelecionado]) ||
+    (state.status === 'success' ? state.data : null);
 
   async function onRefresh() {
     setRefreshing(true);
@@ -30,8 +45,8 @@ export default function App() {
   }
 
   const compartilharResumo = async () => {
-    if (state.status !== 'success') return;
-    const texto = state.data.relatorio_por_pessoa
+    if (!dadosExibidos) return;
+    const texto = dadosExibidos.relatorio_por_pessoa
       .map((p) => {
         const itens = p.itens.map((i) => `${i.descricao} - ${i.valor.toFixed(2)}`).join('\n');
         return `${p.dono}\n${itens}\nTotal = ${p.total_individual.toFixed(2)}`;
@@ -62,7 +77,7 @@ export default function App() {
         <ErrorScreen message={state.message} onRetry={refresh} />
       )}
 
-      {authStatus === 'authenticated' && state.status === 'success' && (
+      {authStatus === 'authenticated' && state.status === 'success' && dadosExibidos && (
         <SafeAreaView className="flex-1 bg-slate-950">
           <View className="flex-row items-center justify-between px-6 py-4 border-b border-slate-800">
             <Text className="text-white text-xl font-black tracking-tight">
@@ -77,6 +92,14 @@ export default function App() {
             />
           </View>
 
+          {meses.length > 1 && (
+            <MonthSelector
+              meses={meses}
+              selected={mesSelecionado}
+              onChange={setMesSelecionado}
+            />
+          )}
+
           <ScrollView
             className="flex-1"
             contentContainerStyle={{ padding: 16, gap: 16 }}
@@ -84,11 +107,11 @@ export default function App() {
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7c3aed" colors={['#7c3aed']} />}
           >
             <TotalCard
-              total={state.data.total_fatura}
-              numeroPessoas={state.data.relatorio_por_pessoa.length}
+              total={dadosExibidos.total_fatura}
+              numeroPessoas={dadosExibidos.relatorio_por_pessoa.length}
             />
-            <PieChartCard pessoas={state.data.relatorio_por_pessoa} />
-            {state.data.relatorio_por_pessoa.map((pessoa) => (
+            <PieChartCard pessoas={dadosExibidos.relatorio_por_pessoa} />
+            {dadosExibidos.relatorio_por_pessoa.map((pessoa) => (
               <PersonCard key={pessoa.dono} pessoa={pessoa} />
             ))}
             <Text className="text-slate-700 text-[10px] font-bold uppercase tracking-[0.2em] text-center py-4">

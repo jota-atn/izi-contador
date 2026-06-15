@@ -115,6 +115,23 @@ function normalizeName(s: string): string {
   return capitalize(s.normalize('NFD').replace(/[̀-ͯ]/g, ''));
 }
 
+function inferirMes(rows: Row[]): string {
+  const contagem = new Map<string, number>();
+  for (const row of rows) {
+    const d = row.date ?? '';
+    const iso = /^(\d{4}-\d{2})-\d{2}$/.exec(d)?.[1]
+      ?? ((/^\d{2}\/(\d{2})\/(\d{4})$/.exec(d) ?? [])[2]
+        ? `${(/^\d{2}\/(\d{2})\/(\d{4})$/.exec(d)!)[2]}-${(/^\d{2}\/(\d{2})\/(\d{4})$/.exec(d)!)[1]}`
+        : null);
+    if (iso) contagem.set(iso, (contagem.get(iso) ?? 0) + 1);
+  }
+  if (contagem.size === 0) {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }
+  return [...contagem.entries()].sort((a, b) => b[1] - a[1])[0][0];
+}
+
 export function parseFatura(csvText: string, defaultOwner = 'EU', categorias: Categorias = DEFAULT_CATEGORIAS): RelatorioFatura {
   const { data } = Papa.parse<Record<string, string>>(csvText, {
     header: true,
@@ -129,6 +146,7 @@ export function parseFatura(csvText: string, defaultOwner = 'EU', categorias: Ca
     .filter((r) => !isNaN(r.amount));
 
   rows = expandSplitRows(rows);
+  const mes = inferirMes(rows);
 
   // Uppercase após expansão (preserva a lógica original do Python)
   rows = rows.map((r) => ({ ...r, title: r.title.toUpperCase() }));
@@ -174,6 +192,7 @@ export function parseFatura(csvText: string, defaultOwner = 'EU', categorias: Ca
   }
 
   return {
+    mes,
     total_fatura: parseFloat(totalFatura.toFixed(2)),
     relatorio_por_pessoa: relatorioPorPessoa,
   };
