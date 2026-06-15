@@ -17,6 +17,7 @@ import { TotalCard } from './src/components/TotalCard';
 import { PieChartCard } from './src/components/PieChartCard';
 import { PersonCard } from './src/components/PersonCard';
 import { SemCategoriaCard } from './src/components/SemCategoriaCard';
+import { TendenciaCard } from './src/components/TendenciaCard';
 import { RegrasModal } from './src/components/RegrasModal';
 import { CategoriasModal } from './src/components/CategoriasModal';
 import { HeaderMenu } from './src/components/HeaderMenu';
@@ -131,6 +132,7 @@ export default function App() {
                     mesAnterior={mesAnterior}
                   />
                   <PieChartCard pessoas={pessoas} />
+                  <TendenciaCard historico={historico} meses={meses} />
                   {semCategoria && <SemCategoriaCard grupo={semCategoria} />}
                   {[...pessoas].sort((a, b) => {
                     const aPago = getEstado(mesSelecionado, a.dono).pago ? 1 : 0;
