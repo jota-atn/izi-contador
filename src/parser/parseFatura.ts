@@ -36,24 +36,35 @@ function expandSplitRows(rows: Row[], defaultOwner: string): Row[] {
     const dashMatch = SPLIT_DASH.exec(row.title);
 
     if (multiMatch) {
-      // (Joao=40, Maria=20) → uma linha por pessoa; restante vai pro defaultOwner
-      const baseTitle = row.title
-        .replace(SPLIT_MULTI, '')
-        .replace(/\s*-\s*\w+\s*$/, '')
-        .trim();
+      // (Joao=40, Maria=20) → parse primeiro, valida soma, depois gera linhas
       const pairs = multiMatch[1].split(',');
+      const parsed: { name: string; amount: number }[] = [];
       let assignedTotal = 0;
       for (const pair of pairs) {
         const [name, amountStr] = pair.trim().split('=');
         const amount = parseFloat(amountStr.replace(',', '.'));
         if (!isNaN(amount)) {
           assignedTotal += amount;
-          result.push({ ...row, amount, title: `${baseTitle} - ${normalizeName(name.trim())}` });
+          parsed.push({ name: name.trim(), amount });
         }
       }
-      const remainder = parseFloat((row.amount - assignedTotal).toFixed(2));
-      if (remainder > 0.01) {
-        result.push({ ...row, amount: remainder, title: `${baseTitle} - ${normalizeName(defaultOwner)}` });
+
+      // Se a soma explícita é menor que o total, a anotação está incompleta — não aplicar
+      if (assignedTotal < row.amount - 0.01) {
+        result.push(row);
+      } else {
+        // \S+ em vez de \w+ para suportar nomes acentuados no sufixo - Nome
+        const baseTitle = row.title
+          .replace(SPLIT_MULTI, '')
+          .replace(/\s*-\s*\S+\s*$/, '')
+          .trim();
+        for (const { name, amount } of parsed) {
+          result.push({ ...row, amount, title: `${baseTitle} - ${normalizeName(name)}` });
+        }
+        const remainder = parseFloat((row.amount - assignedTotal).toFixed(2));
+        if (remainder > 0.01) {
+          result.push({ ...row, amount: remainder, title: `${baseTitle} - ${normalizeName(defaultOwner)}` });
+        }
       }
     } else if (fixedMatch) {
       const personAmount = parseFloat(fixedMatch[1].replace(',', '.'));
