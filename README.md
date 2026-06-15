@@ -1,6 +1,6 @@
 # IziContador
 
-App mobile que lê o extrato da fatura Nubank via Gmail e exibe um relatório de gastos por pessoa — sem backend, direto do celular.
+App mobile que lê o extrato da fatura Nubank via Gmail e divide os gastos por pessoa — sem backend, direto do celular.
 
 ## Como funciona
 
@@ -9,20 +9,41 @@ App mobile que lê o extrato da fatura Nubank via Gmail e exibe um relatório de
 3. Baixa o anexo CSV da fatura
 4. Parseia e exibe os gastos agrupados por pessoa, com gráfico de pizza e total individual
 
+### Sintaxe de anotação no Nubank
+
+Para dividir gastos, edite a descrição da compra diretamente no app do Nubank:
+
+| Sintaxe | Resultado |
+|---|---|
+| `Compra - Maria` | 100% para Maria |
+| `Compra (metade Maria)` | 50% para você, 50% para Maria |
+| `Compra (menos 30 Maria)` | R$ 30 para Maria, restante para você |
+| `Compra (Joao=40, Maria=20)` | R$ 40 para João, R$ 20 para Maria |
+
 ## Stack
 
 - **React Native** 0.85 + **Expo** SDK 56
-- **NativeWind** (Tailwind CSS para RN) + tema escuro fixo
-- **@react-native-google-signin/google-signin** v16 — autenticação
+- **@react-native-google-signin/google-signin** v16 — autenticação Google
 - **Gmail API** — busca e download do extrato diretamente no cliente
 - **papaparse** — parse do CSV da fatura
+- **expo-sqlite** — histórico de faturas e estado pago/oculto
+- **expo-secure-store** — categorias e regras de alocação
 - **react-native-svg** + **react-native-chart-kit** — gráfico de pizza
+- **NativeWind** (Tailwind CSS para RN) + tema escuro fixo
 
-## Pré-requisitos
+## Funcionalidades
 
-- Node.js 18+
-- Android SDK com NDK 27.1 e CMake 3.22 (para build local)
-- Conta Google com e-mails de extrato Nubank
+- Relatório por pessoa com total individual
+- Gráfico de pizza com divisão de gastos
+- **Categorias** configuráveis (TRANSPORTE, ALMOÇO, STREAMING…)
+- **Regras de alocação** — mapeia palavra-chave para pessoa (ex: `MERCADO → João`)
+- **Histórico de faturas** — navega entre meses anteriores com `←` / `→`
+- **Comparativo mensal** — mostra se você gastou mais ou menos que o mês anterior
+- **Marcar como pago** — controle de quem já acertou a parte dele
+- **Ocultar card** — colapsa o card de uma pessoa no mês atual
+- Card de **"Não identificados"** — gastos que não foram categorizados nem alocados
+- Compartilhamento por pessoa (formato WhatsApp com markdown)
+- Pull-to-refresh para recarregar a fatura
 
 ## Variáveis de ambiente
 
@@ -30,70 +51,72 @@ Crie um `.env` na raiz com:
 
 ```env
 EXPO_PUBLIC_GOOGLE_CLIENT_ID=<web_application_client_id>
-EXPO_PUBLIC_GOOGLE_CLIENT_SECRET=<client_secret>
-EXPO_PUBLIC_ANDROID_CLIENT_ID=<android_client_id>
 ```
 
-Os client IDs são gerados no [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → Credentials:
+O client ID é gerado no [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → Credentials. Deve ser do tipo **Web application** (não Android nem Desktop).
 
-| Variável | Tipo do cliente OAuth |
-|---|---|
-| `EXPO_PUBLIC_GOOGLE_CLIENT_ID` | **Web application** (obrigatório para `webClientId`) |
-| `EXPO_PUBLIC_ANDROID_CLIENT_ID` | Android (package `com.jota_atn.mobile` + SHA-1 do keystore) |
+## Rodando
 
-## Rodando localmente (Android)
+### Desenvolvimento (recomendado)
 
 ```bash
-npm install        # também roda o postinstall automaticamente
-npx expo start     # inicia o Metro Bundler
+npm install
+npx expo start
 ```
 
-Em outro terminal (com dispositivo USB conectado e depuração ativada):
+Use um **EAS Development Build** no celular para ter todos os módulos nativos com hot reload:
 
 ```bash
-npm run android                  # build + install no dispositivo
-adb reverse tcp:8081 tcp:8081   # conecta o dispositivo ao Metro
+npx eas-cli build --profile development --platform android
 ```
 
-> **Nota sobre o build local:** vários pacotes npm desta stack (react-native-reanimated, react-native-svg, react-native-gesture-handler) omitem arquivos da extração padrão do npm. O script `scripts/postinstall.js` restaura automaticamente esses arquivos dos tarballs oficiais após o `npm install`.
+Instale o APK gerado no celular. A partir daí, `npx expo start` conecta automaticamente.
 
-### SHA-1 do keystore de debug
-
-Para o Google Sign-In funcionar no build local, o SHA-1 do `android/app/debug.keystore` precisa estar registrado no Google Cloud Console como um cliente Android:
+### Build de preview (APK interno)
 
 ```bash
-keytool -list -v \
-  -keystore android/app/debug.keystore \
-  -alias androiddebugkey \
-  -storepass android -keypass android
+npx eas-cli build --profile preview --platform android
 ```
 
-## Build EAS (nuvem)
-
-```bash
-eas build --profile preview --platform android
-```
-
-O perfil `preview` gera um APK interno. As variáveis de ambiente precisam estar configuradas no painel EAS (eas.expo.dev → projeto → Environment Variables).
+As variáveis de ambiente precisam estar configuradas no painel EAS (eas.expo.dev → projeto → Environment Variables).
 
 ## Estrutura
 
 ```
 src/
   auth/
-    useGoogleAuth.ts     # hook de autenticação Google
+    useGoogleAuth.ts          # hook de autenticação Google
   components/
-    LoginScreen.tsx
-    PersonCard.tsx       # card de gastos por pessoa
-    PieChartCard.tsx     # gráfico de pizza
-    TotalCard.tsx        # total geral da fatura
-    LoadingScreen.tsx
-    ErrorScreen.tsx
-  types.ts
+    HeaderMenu.tsx            # menu dropdown ☰
+    PersonCard.tsx            # card de gastos por pessoa
+    SemCategoriaCard.tsx      # itens não identificados
+    PieChartCard.tsx          # gráfico de pizza
+    TotalCard.tsx             # total geral + comparativo mensal
+    MonthSelector.tsx         # navegação entre meses
+    CategoriasModal.tsx       # CRUD de categorias
+    RegrasModal.tsx           # CRUD de regras de alocação
+    icons/                    # ícones SVG nativos
+  config/
+    categorias.ts             # categorias padrão + SecureStore
+    regrasAlocacao.ts         # regras padrão + SecureStore
+  gmail/
+    gmailApi.ts               # busca e download do extrato
+  hooks/
+    useRelatorio.ts           # fetch + parse da fatura
+    useHistorico.ts           # histórico de faturas
+    useEstadoFatura.ts        # estado pago/oculto por pessoa
+    useCategorias.ts          # CRUD de categorias
+    useRegrasAlocacao.ts      # CRUD de regras de alocação
+  parser/
+    parseFatura.ts            # parse do CSV com divisão por pessoa
+  storage/
+    db.ts                     # singleton SQLite
+    historico.ts              # CRUD de faturas no SQLite
+    estadoFatura.ts           # CRUD de estado no SQLite
+  types/
+    index.ts                  # tipos compartilhados
+  utils/
+    meses.ts                  # helpers de formatação de mês
 scripts/
-  postinstall.js         # restaura arquivos npm faltantes pós-install
+  postinstall.js              # restaura arquivos npm faltantes pós-install
 ```
-
-## Status
-
-Em desenvolvimento. O fluxo principal (login → busca → relatório) está funcionando. Visual e UX em progresso.
