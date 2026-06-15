@@ -1,8 +1,16 @@
-import { Text, View } from 'react-native';
+import { Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { RelatorioPessoa } from '../types';
 
 interface Props {
   pessoa: RelatorioPessoa;
+}
+
+async function compartilharPessoa(pessoa: RelatorioPessoa) {
+  const itens = pessoa.itens
+    .map((i) => `  ${i.descricao} — R$ ${i.valor.toFixed(2)}`)
+    .join('\n');
+  const texto = `${pessoa.dono}, sua parte ficou R$ ${pessoa.total_individual.toFixed(2)}:\n${itens}`;
+  await Share.share({ message: texto });
 }
 
 export function PersonCard({ pessoa }: Props) {
@@ -15,9 +23,14 @@ export function PersonCard({ pessoa }: Props) {
             {pessoa.dono}
           </Text>
         </View>
-        <Text className="text-purple-400 font-mono font-bold text-lg">
-          R$ {pessoa.total_individual.toFixed(2)}
-        </Text>
+        <View style={s.right}>
+          <Text className="text-purple-400 font-mono font-bold text-lg">
+            R$ {pessoa.total_individual.toFixed(2)}
+          </Text>
+          <TouchableOpacity onPress={() => compartilharPessoa(pessoa)} style={s.shareBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Text style={s.shareIcon}>↑</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View className="px-6 py-4 gap-3">
@@ -40,3 +53,24 @@ export function PersonCard({ pessoa }: Props) {
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  right: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  shareBtn: {
+    marginLeft: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#1e293b',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  shareIcon: {
+    color: '#a78bfa',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+});
