@@ -177,11 +177,9 @@ export function parseFatura(csvText: string, defaultOwner = 'EU', categorias: Ca
   let totalFatura = 0;
 
   for (const [, { display: dono, itensMap }] of porDono.entries()) {
-    const itens: Gasto[] = Array.from(itensMap.entries()).map(([descricao, { total, date }]) => ({
-      descricao,
-      valor: total,
-      data: date,
-    }));
+    const itens: Gasto[] = Array.from(itensMap.entries())
+      .map(([descricao, { total, date }]) => ({ descricao, valor: total, data: date }))
+      .sort((a, b) => b.valor - a.valor);
 
     const totalIndividual = parseFloat(
       itens.reduce((s, i) => s + i.valor, 0).toFixed(2),
