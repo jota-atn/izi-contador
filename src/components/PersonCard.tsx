@@ -8,7 +8,6 @@ import { IconCheck } from './icons/IconCheck';
 interface Props {
   pessoa: RelatorioPessoa;
   mes: string;
-  isMesAtual: boolean;
   oculto: boolean;
   pago: boolean;
   onToggleOculto: () => void;
@@ -36,7 +35,7 @@ async function compartilharPessoa(pessoa: RelatorioPessoa, mes: string) {
   await Share.share({ message: texto });
 }
 
-export function PersonCard({ pessoa, mes, isMesAtual, oculto, pago, onToggleOculto, onTogglePago }: Props) {
+export function PersonCard({ pessoa, mes, oculto, pago, onToggleOculto, onTogglePago }: Props) {
   const accentColor = pago ? '#4ade80' : '#7c3aed';
   const expanded = !oculto;
 
@@ -61,11 +60,9 @@ export function PersonCard({ pessoa, mes, isMesAtual, oculto, pago, onToggleOcul
             <IconShare size={13} color="#a78bfa" />
           </TouchableOpacity>
 
-          {isMesAtual && (
-            <TouchableOpacity onPress={onToggleOculto} style={s.iconBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <IconChevron size={14} color="#475569" up={expanded} />
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity onPress={onToggleOculto} style={s.iconBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <IconChevron size={14} color="#475569" up={expanded} />
+          </TouchableOpacity>
         </View>
       </View>
 

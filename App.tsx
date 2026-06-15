@@ -70,7 +70,6 @@ function AppContent() {
   const idxMes = meses.indexOf(mesSelecionado);
   const mesAnterior = meses[idxMes + 1];
   const totalAnterior = mesAnterior ? historico[mesAnterior]?.total_fatura : undefined;
-  const isMesAtual = mesSelecionado === meses[0];
   const pessoasOrdenadas = [...pessoas].sort((a, b) => {
     const aPago = getEstado(mesSelecionado, a.dono).pago ? 1 : 0;
     const bPago = getEstado(mesSelecionado, b.dono).pago ? 1 : 0;
@@ -160,7 +159,6 @@ function AppContent() {
                   key={pessoa.dono}
                   pessoa={pessoa}
                   mes={dadosExibidos.mes}
-                  isMesAtual={isMesAtual}
                   oculto={ep.oculto}
                   pago={ep.pago}
                   onToggleOculto={() => toggleOculto(mesSelecionado, pessoa.dono)}
