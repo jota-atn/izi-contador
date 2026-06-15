@@ -1,12 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { RegrasAlocacao, loadRegras, saveRegras } from '../config/regrasAlocacao';
 
-export function useRegrasAlocacao() {
+export function useRegrasAlocacao(userEmail: string) {
   const [regras, setRegras] = useState<RegrasAlocacao>({});
+  const emailRef = useRef(userEmail);
+  useEffect(() => { emailRef.current = userEmail; }, [userEmail]);
 
   useEffect(() => {
-    loadRegras().then(setRegras);
-  }, []);
+    if (!userEmail) {
+      setRegras({});
+      return;
+    }
+    loadRegras(userEmail).then(setRegras);
+  }, [userEmail]);
 
   const addRegra = useCallback((keyword: string, pessoa: string) => {
     const kw = keyword.trim().toUpperCase();
@@ -14,7 +20,7 @@ export function useRegrasAlocacao() {
     if (!kw || !p) return;
     setRegras((prev) => {
       const next = { ...prev, [kw]: p };
-      saveRegras(next);
+      saveRegras(emailRef.current, next);
       return next;
     });
   }, []);
@@ -22,7 +28,7 @@ export function useRegrasAlocacao() {
   const removeRegra = useCallback((keyword: string) => {
     setRegras((prev) => {
       const { [keyword]: _, ...next } = prev;
-      saveRegras(next);
+      saveRegras(emailRef.current, next);
       return next;
     });
   }, []);

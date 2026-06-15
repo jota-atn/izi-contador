@@ -1,18 +1,19 @@
 import * as SecureStore from 'expo-secure-store';
 
-// keyword (uppercase) → nome da pessoa
 export type RegrasAlocacao = Record<string, string>;
 
-const KEY = 'regras_alocacao_v1';
+function key(userEmail: string) {
+  return `regras_v1_${userEmail}`;
+}
 
-export async function loadRegras(): Promise<RegrasAlocacao> {
+export async function loadRegras(userEmail: string): Promise<RegrasAlocacao> {
   try {
-    const raw = await SecureStore.getItemAsync(KEY);
+    const raw = await SecureStore.getItemAsync(key(userEmail));
     if (raw) return JSON.parse(raw) as RegrasAlocacao;
   } catch {}
   return {};
 }
 
-export async function saveRegras(regras: RegrasAlocacao): Promise<void> {
-  await SecureStore.setItemAsync(KEY, JSON.stringify(regras));
+export async function saveRegras(userEmail: string, regras: RegrasAlocacao): Promise<void> {
+  await SecureStore.setItemAsync(key(userEmail), JSON.stringify(regras));
 }

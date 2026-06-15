@@ -25,8 +25,8 @@ import { SEM_CATEGORIA } from './src/parser/parseFatura';
 
 export default function App() {
   const { status: authStatus, userName, userEmail, signIn, signOut, getAccessToken } = useGoogleAuth();
-  const { categorias, addKeyword, removeKeyword, addCategoria, removeCategoria, reset } = useCategorias();
-  const { regras, addRegra, removeRegra } = useRegrasAlocacao();
+  const { categorias, addKeyword, removeKeyword, addCategoria, removeCategoria, reset } = useCategorias(userEmail);
+  const { regras, addRegra, removeRegra } = useRegrasAlocacao(userEmail);
   const { getEstado, toggleOculto, togglePago } = useEstadoFatura(userEmail);
   const { state, refresh } = useRelatorio(getAccessToken, authStatus, userName, categorias, regras);
   const { historico, meses, upsert } = useHistorico(userEmail);

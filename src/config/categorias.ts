@@ -9,16 +9,18 @@ export const DEFAULT_CATEGORIAS: Categorias = {
   STREAMING: ['HBO', 'PRIME VIDEO', 'SPOTIFY', 'CRUNCHYROLL', 'NETFLIX', 'DISNEY', 'YOUTUBE PREMIUM'],
 };
 
-const KEY = 'categorias_v1';
+function key(userEmail: string) {
+  return `categorias_v1_${userEmail}`;
+}
 
-export async function loadCategorias(): Promise<Categorias> {
+export async function loadCategorias(userEmail: string): Promise<Categorias> {
   try {
-    const raw = await SecureStore.getItemAsync(KEY);
+    const raw = await SecureStore.getItemAsync(key(userEmail));
     if (raw) return JSON.parse(raw) as Categorias;
   } catch {}
   return DEFAULT_CATEGORIAS;
 }
 
-export async function saveCategorias(cat: Categorias): Promise<void> {
-  await SecureStore.setItemAsync(KEY, JSON.stringify(cat));
+export async function saveCategorias(userEmail: string, cat: Categorias): Promise<void> {
+  await SecureStore.setItemAsync(key(userEmail), JSON.stringify(cat));
 }
