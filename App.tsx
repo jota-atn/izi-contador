@@ -116,11 +116,16 @@ export default function App() {
             {(() => {
               const pessoas = dadosExibidos.relatorio_por_pessoa.filter(p => p.dono !== SEM_CATEGORIA);
               const semCategoria = dadosExibidos.relatorio_por_pessoa.find(p => p.dono === SEM_CATEGORIA);
+              const idxMes = meses.indexOf(mesSelecionado);
+              const mesAnterior = meses[idxMes + 1];
+              const totalAnterior = mesAnterior ? historico[mesAnterior]?.total_fatura : undefined;
               return (
                 <>
                   <TotalCard
                     total={dadosExibidos.total_fatura}
                     numeroPessoas={pessoas.length}
+                    totalAnterior={totalAnterior}
+                    mesAnterior={mesAnterior}
                   />
                   <PieChartCard pessoas={pessoas} />
                   {semCategoria && <SemCategoriaCard grupo={semCategoria} />}
