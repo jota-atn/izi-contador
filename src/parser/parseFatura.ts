@@ -1,6 +1,9 @@
 import Papa from 'papaparse';
 import { RelatorioFatura, RelatorioPessoa, Gasto } from '../types';
 import { Categorias, DEFAULT_CATEGORIAS } from '../config/categorias';
+import { RegrasAlocacao } from '../config/regrasAlocacao';
+
+export const SEM_CATEGORIA = '__SEM_CATEGORIA__';
 
 const NON_PERSONS = new Set(['NUPAY']);
 
@@ -76,7 +79,7 @@ function expandSplitRows(rows: Row[]): Row[] {
   return result;
 }
 
-function categorizarItem(title: string, defaultOwner: string, categorias: Categorias): { exibicao: string; dono: string } {
+function categorizarItem(title: string, defaultOwner: string, categorias: Categorias, regras: RegrasAlocacao): { exibicao: string; dono: string } {
   const parcelaMatch = PARCELA_SUFFIX.exec(title);
   const parcelaStr = parcelaMatch
     ? ` - ${(/(\d+\/\d+)/.exec(parcelaMatch[0])?.[1] ?? '')}`
@@ -103,16 +106,17 @@ function categorizarItem(title: string, defaultOwner: string, categorias: Catego
     return { exibicao: (titleDisplay || titleClean) + parcelaStr, dono: explicitDono };
   }
 
-  return { exibicao: titleClean + parcelaStr, dono: defaultOwner };
+  for (const [keyword, pessoa] of Object.entries(regras)) {
+    if (titleBase.includes(keyword.toUpperCase())) {
+      return { exibicao: titleClean + parcelaStr, dono: normalizeName(pessoa) };
+    }
+  }
+
+  return { exibicao: titleClean + parcelaStr, dono: SEM_CATEGORIA };
 }
 
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
-}
-
-// Remove acentos e normaliza capitalização — "João" e "Joao" viram "Joao"
 function normalizeName(s: string): string {
-  return capitalize(s.normalize('NFD').replace(/[̀-ͯ]/g, ''));
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
 }
 
 function inferirMes(rows: Row[]): string {
@@ -132,7 +136,7 @@ function inferirMes(rows: Row[]): string {
   return [...contagem.entries()].sort((a, b) => b[1] - a[1])[0][0];
 }
 
-export function parseFatura(csvText: string, defaultOwner = 'EU', categorias: Categorias = DEFAULT_CATEGORIAS): RelatorioFatura {
+export function parseFatura(csvText: string, defaultOwner = 'EU', categorias: Categorias = DEFAULT_CATEGORIAS, regrasAlocacao: RegrasAlocacao = {}): RelatorioFatura {
   const { data } = Papa.parse<Record<string, string>>(csvText, {
     header: true,
     skipEmptyLines: true,
@@ -156,7 +160,7 @@ export function parseFatura(csvText: string, defaultOwner = 'EU', categorias: Ca
   const porDono = new Map<string, { display: string; itensMap: Map<string, { total: number; date: string }> }>();
 
   for (const row of rows) {
-    const { exibicao, dono } = categorizarItem(row.title, defaultOwner, categorias);
+    const { exibicao, dono } = categorizarItem(row.title, defaultOwner, categorias, regrasAlocacao);
     const key = normalizeName(dono);
 
     if (!porDono.has(key)) porDono.set(key, { display: dono, itensMap: new Map() });

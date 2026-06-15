@@ -8,23 +8,29 @@ import { useGoogleAuth } from './src/auth/useGoogleAuth';
 import { useRelatorio } from './src/hooks/useRelatorio';
 import { useCategorias } from './src/hooks/useCategorias';
 import { useHistorico } from './src/hooks/useHistorico';
+import { useRegrasAlocacao } from './src/hooks/useRegrasAlocacao';
 import { LoadingScreen } from './src/components/LoadingScreen';
 import { ErrorScreen } from './src/components/ErrorScreen';
 import { LoginScreen } from './src/components/LoginScreen';
 import { TotalCard } from './src/components/TotalCard';
 import { PieChartCard } from './src/components/PieChartCard';
 import { PersonCard } from './src/components/PersonCard';
+import { SemCategoriaCard } from './src/components/SemCategoriaCard';
+import { RegrasModal } from './src/components/RegrasModal';
 import { CategoriasModal } from './src/components/CategoriasModal';
 import { HeaderMenu } from './src/components/HeaderMenu';
 import { MonthSelector } from './src/components/MonthSelector';
+import { SEM_CATEGORIA } from './src/parser/parseFatura';
 
 export default function App() {
   const { status: authStatus, userName, signIn, signOut, getAccessToken } = useGoogleAuth();
   const { categorias, addKeyword, removeKeyword, addCategoria, removeCategoria, reset } = useCategorias();
-  const { state, refresh } = useRelatorio(getAccessToken, authStatus, userName, categorias);
+  const { regras, addRegra, removeRegra } = useRegrasAlocacao();
+  const { state, refresh } = useRelatorio(getAccessToken, authStatus, userName, categorias, regras);
   const { historico, meses, upsert } = useHistorico();
   const [mesSelecionado, setMesSelecionado] = useState('');
   const [showCategorias, setShowCategorias] = useState(false);
+  const [showRegras, setShowRegras] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -87,6 +93,7 @@ export default function App() {
               items={[
                 { label: 'Compartilhar', onPress: compartilharResumo },
                 { label: 'Categorias', onPress: () => setShowCategorias(true) },
+                { label: 'Regras', onPress: () => setShowRegras(true) },
                 { label: 'Sair', onPress: signOut, danger: true },
               ]}
             />
@@ -106,14 +113,23 @@ export default function App() {
             showsVerticalScrollIndicator={false}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7c3aed" colors={['#7c3aed']} />}
           >
-            <TotalCard
-              total={dadosExibidos.total_fatura}
-              numeroPessoas={dadosExibidos.relatorio_por_pessoa.length}
-            />
-            <PieChartCard pessoas={dadosExibidos.relatorio_por_pessoa} />
-            {dadosExibidos.relatorio_por_pessoa.map((pessoa) => (
-              <PersonCard key={pessoa.dono} pessoa={pessoa} mes={dadosExibidos.mes} />
-            ))}
+            {(() => {
+              const pessoas = dadosExibidos.relatorio_por_pessoa.filter(p => p.dono !== SEM_CATEGORIA);
+              const semCategoria = dadosExibidos.relatorio_por_pessoa.find(p => p.dono === SEM_CATEGORIA);
+              return (
+                <>
+                  <TotalCard
+                    total={dadosExibidos.total_fatura}
+                    numeroPessoas={pessoas.length}
+                  />
+                  <PieChartCard pessoas={pessoas} />
+                  {semCategoria && <SemCategoriaCard grupo={semCategoria} />}
+                  {pessoas.map((pessoa) => (
+                    <PersonCard key={pessoa.dono} pessoa={pessoa} mes={dadosExibidos.mes} />
+                  ))}
+                </>
+              );
+            })()}
             <Text className="text-slate-700 text-[10px] font-bold uppercase tracking-[0.2em] text-center py-4">
               IziContador • Automático • {new Date().getFullYear()}
             </Text>
@@ -121,6 +137,13 @@ export default function App() {
         </SafeAreaView>
       )}
       </View>
+      <RegrasModal
+        visible={showRegras}
+        onClose={() => setShowRegras(false)}
+        regras={regras}
+        addRegra={addRegra}
+        removeRegra={removeRegra}
+      />
       <CategoriasModal
         visible={showCategorias}
         onClose={() => setShowCategorias(false)}

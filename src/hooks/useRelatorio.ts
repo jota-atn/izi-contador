@@ -1,8 +1,9 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { RelatorioFatura } from '../types';
 import { findLatestFaturaMessage, downloadCsvAttachment } from '../gmail/gmailApi';
 import { parseFatura } from '../parser/parseFatura';
 import { Categorias } from '../config/categorias';
+import { RegrasAlocacao } from '../config/regrasAlocacao';
 
 type State =
   | { status: 'idle' }
@@ -16,8 +17,19 @@ export function useRelatorio(
   authStatus: 'loading' | 'unauthenticated' | 'authenticated',
   ownerName: string,
   categorias: Categorias,
+  regrasAlocacao: RegrasAlocacao,
 ) {
   const [state, setState] = useState<State>({ status: 'idle' });
+
+  // Refs garantem que carregar() sempre usa os valores mais recentes
+  // sem precisar entrar no dep array (o que causaria re-fetch a cada edição)
+  const categoriasRef = useRef(categorias);
+  const regrasRef = useRef(regrasAlocacao);
+  const ownerRef = useRef(ownerName);
+
+  useEffect(() => { categoriasRef.current = categorias; }, [categorias]);
+  useEffect(() => { regrasRef.current = regrasAlocacao; }, [regrasAlocacao]);
+  useEffect(() => { ownerRef.current = ownerName; }, [ownerName]);
 
   const carregar = useCallback(async () => {
     setState({ status: 'loading' });
@@ -36,7 +48,7 @@ export function useRelatorio(
       }
 
       const csvText = await downloadCsvAttachment(token, messageId);
-      const data = parseFatura(csvText, ownerName, categorias);
+      const data = parseFatura(csvText, ownerRef.current, categoriasRef.current, regrasRef.current);
       setState({ status: 'success', data });
     } catch (err: any) {
       if (err?.status === 401) {
