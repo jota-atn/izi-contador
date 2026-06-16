@@ -1,5 +1,5 @@
 declare module 'react-native-svg' {
-  import { ComponentProps, ComponentType } from 'react';
+  import { ComponentType } from 'react';
   import { ViewProps } from 'react-native';
 
   interface CommonProps {

@@ -53,7 +53,7 @@ function AppContent() {
   const { state, refresh } = useRelatorio(getAccessToken, authStatus, userName, categorias, regras);
   const { historico, meses, upsert } = useHistorico(userEmail);
   const [mesSelecionado, setMesSelecionado] = useState('');
-  const { edicoes, salvar: salvarEdicao, remover: removerEdicao, limparMes } = useEdicoesFatura(userEmail, mesSelecionado);
+  const { edicoes, salvar: salvarEdicao, limparMes } = useEdicoesFatura(userEmail, mesSelecionado);
   const [showCategorias, setShowCategorias] = useState(false);
   const [showRegras, setShowRegras] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
