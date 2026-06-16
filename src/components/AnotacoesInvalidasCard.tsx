@@ -15,7 +15,7 @@ export function AnotacoesInvalidasCard({ itens }: Props) {
         <View>
           <Text style={s.title}>Anotações inválidas</Text>
           <Text style={s.subtitle}>
-            {itens.length === 1 ? '1 item ignorado' : `${itens.length} itens ignorados`} · soma menor que o total
+            {itens.length === 1 ? '1 item com anotação divergente' : `${itens.length} itens com anotação divergente`}
           </Text>
         </View>
       </View>
