@@ -26,6 +26,7 @@ import { AnotacoesInvalidasCard } from './src/components/AnotacoesInvalidasCard'
 import { RegrasModal } from './src/components/RegrasModal';
 import { CategoriasModal } from './src/components/CategoriasModal';
 import { EditarItemModal } from './src/components/EditarItemModal';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { HeaderMenu } from './src/components/HeaderMenu';
 import { MonthSelector } from './src/components/MonthSelector';
 import { SearchBar } from './src/components/SearchBar';
@@ -39,7 +40,9 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar style="light" />
       <SQLiteProvider databaseName="izicont.db" onInit={migrateDbAsync}>
-        <AppContent />
+        <ErrorBoundary>
+          <AppContent />
+        </ErrorBoundary>
       </SQLiteProvider>
     </SafeAreaProvider>
   );
