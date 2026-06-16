@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Gasto } from '../types';
+import { haptic } from '../utils/haptic';
 import { IconClose } from './icons/IconClose';
 
 interface Props {
@@ -62,6 +63,7 @@ export function EditarItemModal({
         text: 'Deletar',
         style: 'destructive',
         onPress: () => {
+          haptic.warning();
           onDeletar();
           onClose();
         },

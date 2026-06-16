@@ -9,6 +9,7 @@
     "babel-preset-expo": "^56.0.14",
     "expo": "~56.0.9",
     "expo-clipboard": "~56.0.4",
+    "expo-haptics": "~56.0.3",
     "expo-modules-core": "56.0.16",
     "expo-secure-store": "~56.0.4",
     "expo-sqlite": "~56.0.5",

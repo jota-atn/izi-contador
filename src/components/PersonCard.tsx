@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 import { Gasto, RelatorioPessoa } from '../types';
 import { formatMesAnoUpper } from '../utils/meses';
+import { haptic } from '../utils/haptic';
 import { IconShare } from './icons/IconShare';
 import { IconChevron } from './icons/IconChevron';
 import { IconCheck } from './icons/IconCheck';
@@ -50,6 +51,7 @@ export function PersonCard({
     ].join('\n');
     const result = await Share.share({ message: texto });
     if (result.action === Share.sharedAction) {
+      haptic.success();
       setShared(true);
       setTimeout(() => setShared(false), 1500);
     }
@@ -76,7 +78,10 @@ export function PersonCard({
           </View>
 
           <TouchableOpacity
-            onPress={onTogglePago}
+            onPress={() => {
+              haptic.light();
+              onTogglePago();
+            }}
             style={[s.iconBtn, pago && s.iconBtnPago]}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >

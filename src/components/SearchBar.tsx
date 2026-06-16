@@ -1,4 +1,5 @@
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { haptic } from '../utils/haptic';
 
 interface Props {
   value: string;
@@ -27,7 +28,10 @@ export function SearchBar({ value, onChange, totalItens, totalFiltrados }: Props
         />
         {ativo && (
           <TouchableOpacity
-            onPress={() => onChange('')}
+            onPress={() => {
+              haptic.light();
+              onChange('');
+            }}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Text style={s.clear}>✕</Text>
