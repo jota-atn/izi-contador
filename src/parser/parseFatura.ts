@@ -50,28 +50,20 @@ function expandSplitRows(rows: Row[], defaultOwner: string): { rows: Row[]; inva
         }
       }
 
-      // \S+ em vez de \w+ para suportar nomes acentuados no sufixo - Nome
-      const baseTitle = row.title
-        .replace(SPLIT_MULTI, '')
-        .replace(/\s*-\s*\S+\s*$/, '')
-        .trim();
-
-      // Se soma > total: anotação está errada, registra aviso e ignora o split
-      if (assignedTotal > row.amount + 0.01) {
+      if (assignedTotal < row.amount - 0.01) {
+        // soma < total → anotação incompleta: não divide, registra aviso
         invalidas.push({ titulo: row.title, valor: row.amount, soma: parseFloat(assignedTotal.toFixed(2)) });
         const cleanTitle = row.title.replace(SPLIT_MULTI, '').replace(/\s{2,}/g, ' ').trim();
         result.push({ ...row, title: cleanTitle || row.title });
       } else {
-        // Aplica split; se soma < total, resto vai pro defaultOwner e registra aviso informativo
-        if (assignedTotal < row.amount - 0.01) {
-          invalidas.push({ titulo: row.title, valor: row.amount, soma: parseFloat(assignedTotal.toFixed(2)) });
-        }
+        // soma >= total → divide pelos valores anotados (sem aviso, sem resto)
+        // \S+ em vez de \w+ para suportar nomes acentuados no sufixo - Nome
+        const baseTitle = row.title
+          .replace(SPLIT_MULTI, '')
+          .replace(/\s*-\s*\S+\s*$/, '')
+          .trim();
         for (const { name, amount } of parsed) {
           result.push({ ...row, amount, title: `${baseTitle} - ${normalizeName(name)}` });
-        }
-        const remainder = parseFloat((row.amount - assignedTotal).toFixed(2));
-        if (remainder > 0.01) {
-          result.push({ ...row, amount: remainder, title: `${baseTitle} - ${normalizeName(defaultOwner)}` });
         }
       }
     } else if (fixedMatch) {
