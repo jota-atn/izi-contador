@@ -80,6 +80,20 @@ function AppContent() {
     return b.total_individual - a.total_individual;
   });
 
+  const pagamentoStatus = pessoas.reduce(
+    (acc, p) => {
+      if (getEstado(mesSelecionado, p.dono).pago) {
+        acc.totalPago += p.total_individual;
+        acc.numPago += 1;
+      } else {
+        acc.totalPendente += p.total_individual;
+        acc.numPendente += 1;
+      }
+      return acc;
+    },
+    { totalPago: 0, numPago: 0, totalPendente: 0, numPendente: 0 },
+  );
+
   async function onRefresh() {
     setRefreshing(true);
     await refresh();
@@ -158,6 +172,7 @@ function AppContent() {
               numeroPessoas={pessoas.length}
               totalAnterior={totalAnterior}
               mesAnterior={mesAnterior}
+              {...pagamentoStatus}
             />
             <PieChartCard pessoas={pessoas} />
             {semCategoria && <SemCategoriaCard grupo={semCategoria} />}
