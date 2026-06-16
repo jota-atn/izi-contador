@@ -1,0 +1,48 @@
+import { Gasto, RelatorioFatura, RelatorioPessoa } from '../types';
+import { Edicao } from '../storage/edicoesFatura';
+
+function chave(item: Gasto): string {
+  return `${item.descricao}|${item.data}|${item.valor}`;
+}
+
+export function aplicarEdicoes(dados: RelatorioFatura, edicoes: Edicao[]): RelatorioFatura {
+  if (edicoes.length === 0) return dados;
+
+  const mapaEdicoes = new Map<string, Edicao>();
+  for (const ed of edicoes) {
+    mapaEdicoes.set(`${ed.item_desc}|${ed.item_data}|${ed.item_valor}`, ed);
+  }
+
+  const pessoasMap = new Map<string, RelatorioPessoa>();
+
+  for (const pessoa of dados.relatorio_por_pessoa) {
+    for (const item of pessoa.itens) {
+      const ed = mapaEdicoes.get(chave(item));
+
+      if (ed?.deletado) continue;
+
+      const dono = ed?.novo_dono ?? pessoa.dono;
+      const desc = ed?.nova_desc ?? item.descricao;
+      const gastoFinal: Gasto = { ...item, descricao: desc };
+
+      if (!pessoasMap.has(dono)) {
+        pessoasMap.set(dono, { dono, itens: [], total_individual: 0 });
+      }
+      const p = pessoasMap.get(dono)!;
+      p.itens.push(gastoFinal);
+      p.total_individual = parseFloat((p.total_individual + item.valor).toFixed(2));
+    }
+  }
+
+  const total_fatura = parseFloat(
+    [...pessoasMap.values()]
+      .reduce((s, p) => s + p.total_individual, 0)
+      .toFixed(2),
+  );
+
+  return {
+    ...dados,
+    total_fatura,
+    relatorio_por_pessoa: [...pessoasMap.values()],
+  };
+}

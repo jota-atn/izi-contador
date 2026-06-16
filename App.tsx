@@ -13,6 +13,7 @@ import { useCategorias } from './src/hooks/useCategorias';
 import { useHistorico } from './src/hooks/useHistorico';
 import { useRegrasAlocacao } from './src/hooks/useRegrasAlocacao';
 import { useEstadoFatura } from './src/hooks/useEstadoFatura';
+import { useEdicoesFatura } from './src/hooks/useEdicoesFatura';
 import { LoadingScreen } from './src/components/LoadingScreen';
 import { ErrorScreen } from './src/components/ErrorScreen';
 import { LoginScreen } from './src/components/LoginScreen';
@@ -27,6 +28,7 @@ import { HeaderMenu } from './src/components/HeaderMenu';
 import { MonthSelector } from './src/components/MonthSelector';
 import { SEM_CATEGORIA } from './src/parser/parseFatura';
 import { formatSincronizacao } from './src/utils/meses';
+import { aplicarEdicoes } from './src/utils/aplicarEdicoes';
 
 export default function App() {
   return (
@@ -47,6 +49,7 @@ function AppContent() {
   const { state, refresh } = useRelatorio(getAccessToken, authStatus, userName, categorias, regras);
   const { historico, meses, upsert } = useHistorico(userEmail);
   const [mesSelecionado, setMesSelecionado] = useState('');
+  const { edicoes, salvar: salvarEdicao, remover: removerEdicao, limparMes } = useEdicoesFatura(userEmail, mesSelecionado);
   const [showCategorias, setShowCategorias] = useState(false);
   const [showRegras, setShowRegras] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -60,13 +63,16 @@ function AppContent() {
   useEffect(() => {
     if (state.status === 'success') {
       upsert(state.data.mes, { ...state.data, sincronizadoEm: new Date().toISOString() });
+      limparMes(state.data.mes);
       setMesSelecionado(state.data.mes);
     }
-  }, [state, upsert]);
+  }, [state, upsert, limparMes]);
 
-  const dadosExibidos =
+  const dadosBrutos =
     (mesSelecionado && historico[mesSelecionado]) ||
     (state.status === 'success' ? state.data : null);
+
+  const dadosExibidos = dadosBrutos ? aplicarEdicoes(dadosBrutos, edicoes) : null;
 
   const pessoas = dadosExibidos?.relatorio_por_pessoa.filter(p => p.dono !== SEM_CATEGORIA) ?? [];
   const semCategoria = dadosExibidos?.relatorio_por_pessoa.find(p => p.dono === SEM_CATEGORIA);
