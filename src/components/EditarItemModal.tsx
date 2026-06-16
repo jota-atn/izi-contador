@@ -1,0 +1,208 @@
+import { useEffect, useState } from 'react';
+import {
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Gasto } from '../types';
+import { IconClose } from './icons/IconClose';
+
+interface Props {
+  visible: boolean;
+  item: Gasto | null;
+  donoAtual: string;
+  pessoas: string[];
+  onSalvar: (novaDono: string, novaDesc: string) => void;
+  onDeletar: () => void;
+  onClose: () => void;
+}
+
+export function EditarItemModal({ visible, item, donoAtual, pessoas, onSalvar, onDeletar, onClose }: Props) {
+  const [desc, setDesc] = useState('');
+  const [donoPicker, setDonoPicker] = useState('');
+  const [donoCustom, setDonoCustom] = useState('');
+  const [modoCustom, setModoCustom] = useState(false);
+
+  useEffect(() => {
+    if (item) {
+      setDesc(item.descricao);
+      setDonoPicker(donoAtual);
+      setDonoCustom('');
+      setModoCustom(false);
+    }
+  }, [item, donoAtual]);
+
+  if (!item) return null;
+
+  function handleSalvar() {
+    const donoFinal = modoCustom ? donoCustom.trim().toUpperCase() : donoPicker;
+    if (!donoFinal) return;
+    onSalvar(donoFinal, desc.trim() || item!.descricao);
+    onClose();
+  }
+
+  function handleDeletar() {
+    Alert.alert('Deletar item', `Remover "${item!.descricao}" da fatura?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Deletar', style: 'destructive', onPress: () => { onDeletar(); onClose(); } },
+    ]);
+  }
+
+  function handleSelecionarPessoa(p: string) {
+    setDonoPicker(p);
+    setModoCustom(false);
+    setDonoCustom('');
+  }
+
+  function handleNovoNome() {
+    setModoCustom(true);
+    setDonoPicker('');
+  }
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <SafeAreaView style={s.container}>
+        <View style={s.header}>
+          <Text style={s.title}>Editar item</Text>
+          <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <IconClose size={18} color="#64748b" />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView style={s.scroll} contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+          <Text style={s.valorDisplay}>R$ {item.valor.toFixed(2)}</Text>
+          <Text style={s.dataDisplay}>{item.data}</Text>
+
+          <Text style={s.label}>Descrição</Text>
+          <TextInput
+            style={s.input}
+            value={desc}
+            onChangeText={setDesc}
+            autoCapitalize="characters"
+            placeholderTextColor="#475569"
+          />
+
+          <Text style={s.label}>Dono</Text>
+
+          <View style={s.pickerGrid}>
+            {pessoas.map(p => (
+              <TouchableOpacity
+                key={p}
+                style={[s.chip, donoPicker === p && !modoCustom && s.chipAtivo]}
+                onPress={() => handleSelecionarPessoa(p)}
+              >
+                <Text style={[s.chipText, donoPicker === p && !modoCustom && s.chipTextAtivo]}>{p}</Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={[s.chip, modoCustom && s.chipAtivo]}
+              onPress={handleNovoNome}
+            >
+              <Text style={[s.chipText, modoCustom && s.chipTextAtivo]}>+ Novo nome</Text>
+            </TouchableOpacity>
+          </View>
+
+          {modoCustom && (
+            <View>
+              <TextInput
+                style={[s.input, { marginTop: 8 }]}
+                value={donoCustom}
+                onChangeText={setDonoCustom}
+                placeholder="Nome do novo dono"
+                autoCapitalize="characters"
+                placeholderTextColor="#475569"
+                autoFocus
+              />
+              <Text style={s.aviso}>
+                ⚠️ Novos nomes não são reconhecidos pelo parser. Use com cuidado.
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+
+        <View style={s.footer}>
+          <TouchableOpacity style={s.btnDeletar} onPress={handleDeletar}>
+            <Text style={s.btnDeletarText}>Deletar item</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={s.btnSalvar} onPress={handleSalvar}>
+            <Text style={s.btnSalvarText}>Salvar</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
+const s = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#020617' },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1e293b',
+  },
+  title: { color: '#fff', fontSize: 17, fontWeight: '800' },
+  scroll: { flex: 1 },
+  content: { padding: 24, gap: 8 },
+  valorDisplay: { color: '#a78bfa', fontSize: 32, fontWeight: '900', fontFamily: 'monospace', marginBottom: 2 },
+  dataDisplay: { color: '#475569', fontSize: 12, fontWeight: '600', marginBottom: 16 },
+  label: { color: '#64748b', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 8, marginBottom: 6 },
+  input: {
+    backgroundColor: '#0f172a',
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    color: '#e2e8f0',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  pickerGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#0f172a',
+    borderWidth: 1,
+    borderColor: '#1e293b',
+  },
+  chipAtivo: { backgroundColor: '#4c1d95', borderColor: '#7c3aed' },
+  chipText: { color: '#64748b', fontSize: 12, fontWeight: '700' },
+  chipTextAtivo: { color: '#e9d5ff' },
+  aviso: { color: '#f59e0b', fontSize: 11, fontWeight: '600', marginTop: 8, lineHeight: 16 },
+  footer: {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 24,
+    borderTopWidth: 1,
+    borderTopColor: '#1e293b',
+  },
+  btnDeletar: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: '#1c0707',
+    borderWidth: 1,
+    borderColor: '#7f1d1d',
+    alignItems: 'center',
+  },
+  btnDeletarText: { color: '#f87171', fontSize: 14, fontWeight: '800' },
+  btnSalvar: {
+    flex: 2,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: '#4c1d95',
+    alignItems: 'center',
+  },
+  btnSalvarText: { color: '#fff', fontSize: 14, fontWeight: '800' },
+});
