@@ -1,6 +1,7 @@
 import './global.css';
 import { useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, Share, Text, View } from 'react-native';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { SQLiteProvider } from 'expo-sqlite';
@@ -166,15 +167,16 @@ function AppContent() {
             {pessoasOrdenadas.map((pessoa) => {
               const ep = getEstado(mesSelecionado, pessoa.dono);
               return (
-                <PersonCard
-                  key={pessoa.dono}
-                  pessoa={pessoa}
-                  mes={dadosExibidos.mes}
-                  oculto={ep.oculto}
-                  pago={ep.pago}
-                  onToggleOculto={() => toggleOculto(mesSelecionado, pessoa.dono)}
-                  onTogglePago={() => togglePago(mesSelecionado, pessoa.dono)}
-                />
+                <Animated.View key={pessoa.dono} layout={LinearTransition.duration(300)}>
+                  <PersonCard
+                    pessoa={pessoa}
+                    mes={dadosExibidos.mes}
+                    oculto={ep.oculto}
+                    pago={ep.pago}
+                    onToggleOculto={() => toggleOculto(mesSelecionado, pessoa.dono)}
+                    onTogglePago={() => togglePago(mesSelecionado, pessoa.dono)}
+                  />
+                </Animated.View>
               );
             })}
             <Text className="text-slate-700 text-[10px] font-bold uppercase tracking-[0.2em] text-center py-4">

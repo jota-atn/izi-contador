@@ -1,5 +1,6 @@
 import { Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useState } from 'react';
+import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 import { Gasto, RelatorioPessoa } from '../types';
 import { formatMesAnoUpper } from '../utils/meses';
 import { IconShare } from './icons/IconShare';
@@ -46,7 +47,7 @@ export function PersonCard({ pessoa, mes, oculto, pago, onToggleOculto, onToggle
   };
 
   return (
-    <View style={[s.card, pago && s.cardPago]}>
+    <Animated.View style={[s.card, pago && s.cardPago]} layout={LinearTransition.duration(300)}>
       <View style={s.header}>
         <View style={s.left}>
           <View style={[s.bar, { backgroundColor: accentColor }]} />
@@ -81,7 +82,7 @@ export function PersonCard({ pessoa, mes, oculto, pago, onToggleOculto, onToggle
       </View>
 
       {expanded && (
-        <View style={s.body}>
+        <Animated.View entering={FadeIn.duration(150)} style={s.body}>
           {pessoa.itens.map((item, idx) => (
             <View key={idx} style={s.row}>
               <View style={s.descCol}>
@@ -93,9 +94,9 @@ export function PersonCard({ pessoa, mes, oculto, pago, onToggleOculto, onToggle
               </View>
             </View>
           ))}
-        </View>
+        </Animated.View>
       )}
-    </View>
+    </Animated.View>
   );
 }
 
