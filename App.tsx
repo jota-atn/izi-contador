@@ -28,9 +28,11 @@ import { CategoriasModal } from './src/components/CategoriasModal';
 import { EditarItemModal } from './src/components/EditarItemModal';
 import { HeaderMenu } from './src/components/HeaderMenu';
 import { MonthSelector } from './src/components/MonthSelector';
+import { SearchBar } from './src/components/SearchBar';
 import { SEM_CATEGORIA } from './src/parser/parseFatura';
 import { formatSincronizacao } from './src/utils/meses';
 import { aplicarEdicoes } from './src/utils/aplicarEdicoes';
+import { filtrarPessoas } from './src/utils/busca';
 
 export default function App() {
   return (
@@ -56,6 +58,7 @@ function AppContent() {
   const [showRegras, setShowRegras] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [itemEditando, setItemEditando] = useState<{ item: Gasto; donoAtual: string } | null>(null);
+  const [termoBusca, setTermoBusca] = useState('');
   const donoAtualRef = useRef('');
 
   useEffect(() => {
@@ -83,12 +86,19 @@ function AppContent() {
   const idxMes = meses.indexOf(mesSelecionado);
   const mesAnterior = meses[idxMes + 1];
   const totalAnterior = mesAnterior ? historico[mesAnterior]?.total_fatura : undefined;
-  const pessoasOrdenadas = [...pessoas].sort((a, b) => {
-    const aPago = getEstado(mesSelecionado, a.dono).pago ? 1 : 0;
-    const bPago = getEstado(mesSelecionado, b.dono).pago ? 1 : 0;
-    if (aPago !== bPago) return aPago - bPago;
-    return b.total_individual - a.total_individual;
-  });
+
+  const { pessoasFiltradas, totalItens, totalFiltrados } = filtrarPessoas(pessoas, termoBusca);
+  const buscaAtiva = termoBusca.trim().length > 0;
+
+  const pessoasOrdenadas = pessoasFiltradas
+    .map(pf => pf.pessoa)
+    .sort((a, b) => {
+      if (buscaAtiva) return b.total_individual - a.total_individual;
+      const aPago = getEstado(mesSelecionado, a.dono).pago ? 1 : 0;
+      const bPago = getEstado(mesSelecionado, b.dono).pago ? 1 : 0;
+      if (aPago !== bPago) return aPago - bPago;
+      return b.total_individual - a.total_individual;
+    });
 
   const pagamentoStatus = pessoas.reduce(
     (acc, p) => {
@@ -204,6 +214,13 @@ function AppContent() {
             <MonthSelector meses={meses} selected={mesSelecionado} onChange={setMesSelecionado} />
           )}
 
+          <SearchBar
+            value={termoBusca}
+            onChange={setTermoBusca}
+            totalItens={totalItens}
+            totalFiltrados={totalFiltrados}
+          />
+
           <ScrollView
             className="flex-1"
             contentContainerStyle={{ padding: 16, gap: 16 }}
@@ -229,7 +246,7 @@ function AppContent() {
                   <PersonCard
                     pessoa={pessoa}
                     mes={dadosExibidos.mes}
-                    oculto={ep.oculto}
+                    oculto={buscaAtiva ? false : ep.oculto}
                     pago={ep.pago}
                     onToggleOculto={() => toggleOculto(mesSelecionado, pessoa.dono)}
                     onTogglePago={() => togglePago(mesSelecionado, pessoa.dono)}
