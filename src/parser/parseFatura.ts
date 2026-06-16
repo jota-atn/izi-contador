@@ -51,9 +51,10 @@ function expandSplitRows(rows: Row[], defaultOwner: string): { rows: Row[]; inva
       }
 
       if (assignedTotal < row.amount - 0.01) {
-        // Anotação incompleta: soma < total → registra aviso, mantém item como normal
+        // Anotação incompleta: soma < total → registra aviso, mantém item sem a anotação
         invalidas.push({ titulo: row.title, valor: row.amount, soma: parseFloat(assignedTotal.toFixed(2)) });
-        result.push(row);
+        const cleanTitle = row.title.replace(SPLIT_MULTI, '').replace(/\s{2,}/g, ' ').trim();
+        result.push({ ...row, title: cleanTitle || row.title });
       } else {
         // \S+ em vez de \w+ para suportar nomes acentuados no sufixo - Nome
         const baseTitle = row.title
