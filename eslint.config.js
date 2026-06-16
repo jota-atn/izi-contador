@@ -13,4 +13,17 @@ module.exports = defineConfig([
       'react-hooks/set-state-in-effect': 'off',
     },
   },
+  {
+    files: ['__tests__/**', '__mocks__/**'],
+    languageOptions: {
+      globals: {
+        jest: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+      },
+    },
+  },
 ]);

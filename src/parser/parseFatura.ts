@@ -56,11 +56,12 @@ function expandSplitRows(
           valor: row.amount,
           soma: parseFloat(assignedTotal.toFixed(2)),
         });
-        const cleanTitle = row.title
-          .replace(SPLIT_MULTI, '')
-          .replace(/\s{2,}/g, ' ')
-          .trim();
-        result.push({ ...row, title: cleanTitle || row.title });
+        const cleanTitle =
+          row.title
+            .replace(SPLIT_MULTI, '')
+            .replace(/\s{2,}/g, ' ')
+            .trim() || row.title;
+        result.push({ ...row, title: `${cleanTitle} - ${defaultOwner}` });
       } else {
         // \S+ (não \w+) para nomes acentuados no sufixo "- Nome"
         const baseTitle = row.title

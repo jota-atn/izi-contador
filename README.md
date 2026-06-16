@@ -13,12 +13,12 @@ App mobile que lê o extrato da fatura Nubank via Gmail e divide os gastos por p
 
 Para dividir gastos, edite a descrição da compra diretamente no app do Nubank:
 
-| Sintaxe | Resultado |
-|---|---|
-| `Compra - Maria` | 100% para Maria |
-| `Compra (metade Maria)` | 50% para você, 50% para Maria |
-| `Compra (menos 30 Maria)` | R$ 30 para Maria, restante para você |
-| `Compra (Joao=40, Maria=20)` | R$ 40 para João, R$ 20 para Maria |
+| Sintaxe                      | Resultado                            |
+| ---------------------------- | ------------------------------------ |
+| `Compra - Maria`             | 100% para Maria                      |
+| `Compra (metade Maria)`      | 50% para você, 50% para Maria        |
+| `Compra (menos 30 Maria)`    | R$ 30 para Maria, restante para você |
+| `Compra (Joao=40, Maria=20)` | R$ 40 para João, R$ 20 para Maria    |
 
 ## Stack
 
