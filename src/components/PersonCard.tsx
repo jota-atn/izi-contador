@@ -48,9 +48,16 @@ export function PersonCard({ pessoa, mes, oculto, pago, onToggleOculto, onToggle
         </View>
 
         <View style={s.right}>
-          <Text style={[s.total, pago && s.totalPago]}>
-            R$ {pessoa.total_individual.toFixed(2)}
-          </Text>
+          <View style={s.totalCol}>
+            <Text style={[s.total, pago && s.totalPago]}>
+              R$ {pessoa.total_individual.toFixed(2)}
+            </Text>
+            {!expanded && (
+              <Text style={s.itemCount}>
+                {pessoa.itens.length} {pessoa.itens.length === 1 ? 'item' : 'itens'}
+              </Text>
+            )}
+          </View>
 
           <TouchableOpacity onPress={onTogglePago} style={[s.iconBtn, pago && s.iconBtnPago]} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <IconCheck size={12} color={pago ? '#4ade80' : '#334155'} />
@@ -64,6 +71,7 @@ export function PersonCard({ pessoa, mes, oculto, pago, onToggleOculto, onToggle
             <IconChevron size={14} color="#475569" up={expanded} />
           </TouchableOpacity>
         </View>
+
       </View>
 
       {expanded && (
@@ -108,8 +116,10 @@ const s = StyleSheet.create({
   bar: { width: 6, height: 20, borderRadius: 3 },
   name: { color: '#fff', fontSize: 16, fontWeight: '900', textTransform: 'uppercase', letterSpacing: -0.3 },
   right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  total: { color: '#a78bfa', fontFamily: 'monospace', fontWeight: '700', fontSize: 16, marginRight: 4 },
+  totalCol: { alignItems: 'flex-end', marginRight: 4 },
+  total: { color: '#a78bfa', fontFamily: 'monospace', fontWeight: '700', fontSize: 16 },
   totalPago: { color: '#4ade80' },
+  itemCount: { color: '#475569', fontSize: 9, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 1 },
   iconBtn: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#1e293b', alignItems: 'center', justifyContent: 'center' },
   iconBtnPago: { backgroundColor: '#052e16', borderWidth: 1, borderColor: '#14532d' },
   body: { paddingHorizontal: 24, paddingVertical: 16, gap: 12 },
