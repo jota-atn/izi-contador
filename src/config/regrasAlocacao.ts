@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 export type RegrasAlocacao = Record<string, string>;
 
 function key(userEmail: string) {
-  return `regras_v1_${userEmail}`;
+  return `regras_v1_${userEmail.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
 }
 
 export async function loadRegras(userEmail: string): Promise<RegrasAlocacao> {

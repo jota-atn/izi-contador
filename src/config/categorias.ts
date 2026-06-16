@@ -10,7 +10,7 @@ export const DEFAULT_CATEGORIAS: Categorias = {
 };
 
 function key(userEmail: string) {
-  return `categorias_v1_${userEmail}`;
+  return `categorias_v1_${userEmail.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
 }
 
 export async function loadCategorias(userEmail: string): Promise<Categorias> {
