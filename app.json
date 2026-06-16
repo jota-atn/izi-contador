@@ -27,7 +27,8 @@
     "plugins": [
       "expo-secure-store",
       "@react-native-google-signin/google-signin",
-      "expo-sqlite"
+      "expo-sqlite",
+      "react-native-reanimated"
     ],
     "extra": {
       "eas": {
