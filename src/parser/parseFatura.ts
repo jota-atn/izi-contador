@@ -71,21 +71,21 @@ function expandSplitRows(rows: Row[], defaultOwner: string): { rows: Row[]; inva
       const splitPerson = normalizeName(fixedMatch[2]);
       const baseTitle = row.title.replace(SPLIT_FIXED, '').trim();
 
-      result.push({ ...row, amount: row.amount - personAmount, title: baseTitle });
+      result.push({ ...row, amount: row.amount - personAmount, title: `${baseTitle} - ${normalizeName(defaultOwner)}` });
       result.push({ ...row, amount: personAmount, title: `${baseTitle} - ${splitPerson}` });
     } else if (parensMatch) {
       const half = row.amount / 2;
       const splitPerson = normalizeName(parensMatch[1]);
       const baseTitle = row.title.replace(SPLIT_PARENS, '').trim();
 
-      result.push({ ...row, amount: half, title: baseTitle });
+      result.push({ ...row, amount: half, title: `${baseTitle} - ${normalizeName(defaultOwner)}` });
       result.push({ ...row, amount: half, title: `${baseTitle} - ${splitPerson}` });
     } else if (dashMatch) {
       const half = row.amount / 2;
       const splitPerson = normalizeName(dashMatch[1]);
       const baseTitle = row.title.replace(SPLIT_DASH, '').trim();
 
-      result.push({ ...row, amount: half, title: baseTitle });
+      result.push({ ...row, amount: half, title: `${baseTitle} - ${normalizeName(defaultOwner)}` });
       result.push({ ...row, amount: half, title: `${baseTitle} - ${splitPerson}` });
     } else {
       result.push(row);
