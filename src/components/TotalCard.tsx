@@ -13,7 +13,16 @@ interface Props {
   numPendente: number;
 }
 
-export function TotalCard({ total, numeroPessoas, totalAnterior, mesAnterior, totalPago, numPago, totalPendente, numPendente }: Props) {
+export function TotalCard({
+  total,
+  numeroPessoas,
+  totalAnterior,
+  mesAnterior,
+  totalPago,
+  numPago,
+  totalPendente,
+  numPendente,
+}: Props) {
   const diff = totalAnterior !== undefined ? total - totalAnterior : null;
   const isUp = diff !== null && diff > 0;
   const isDown = diff !== null && diff < 0;
@@ -54,7 +63,8 @@ export function TotalCard({ total, numeroPessoas, totalAnterior, mesAnterior, to
                 fontWeight: '700',
               }}
             >
-              {isUp ? '↑' : isDown ? '↓' : '='} R$ {Math.abs(diff).toFixed(2)} vs {nomeMes(mesAnterior)}
+              {isUp ? '↑' : isDown ? '↓' : '='} R$ {Math.abs(diff).toFixed(2)} vs{' '}
+              {nomeMes(mesAnterior)}
             </Text>
           </View>
         )}

@@ -16,7 +16,15 @@ export function IconWarning({ size = 48, color = '#ffffff' }: Props) {
         strokeLinejoin="round"
       />
       <Line x1="12" y1="9" x2="12" y2="13" stroke={color} strokeWidth="2" strokeLinecap="round" />
-      <Line x1="12" y1="17" x2="12.01" y2="17" stroke={color} strokeWidth="2.5" strokeLinecap="round" />
+      <Line
+        x1="12"
+        y1="17"
+        x2="12.01"
+        y2="17"
+        stroke={color}
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
     </Svg>
   );
 }

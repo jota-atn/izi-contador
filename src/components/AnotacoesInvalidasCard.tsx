@@ -15,13 +15,17 @@ export function AnotacoesInvalidasCard({ itens }: Props) {
         <View>
           <Text style={s.title}>Anotações inválidas</Text>
           <Text style={s.subtitle}>
-            {itens.length === 1 ? '1 item com anotação divergente' : `${itens.length} itens com anotação divergente`}
+            {itens.length === 1
+              ? '1 item com anotação divergente'
+              : `${itens.length} itens com anotação divergente`}
           </Text>
         </View>
       </View>
       {itens.map((item, idx) => (
         <View key={idx} style={s.row}>
-          <Text style={s.itemTitle} numberOfLines={1}>{item.titulo}</Text>
+          <Text style={s.itemTitle} numberOfLines={1}>
+            {item.titulo}
+          </Text>
           <View style={s.amounts}>
             <Text style={s.soma}>Σ {item.soma.toFixed(2)}</Text>
             <Text style={s.sep}>vs</Text>
@@ -44,10 +48,22 @@ const s = StyleSheet.create({
   },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   icon: { fontSize: 18, color: '#fb923c' },
-  title: { color: '#fb923c', fontSize: 13, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
+  title: {
+    color: '#fb923c',
+    fontSize: 13,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
   subtitle: { color: '#92400e', fontSize: 11, fontWeight: '600', marginTop: 1 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  itemTitle: { color: '#fdba74', fontSize: 11, fontWeight: '700', flex: 1, textTransform: 'uppercase' },
+  itemTitle: {
+    color: '#fdba74',
+    fontSize: 11,
+    fontWeight: '700',
+    flex: 1,
+    textTransform: 'uppercase',
+  },
   amounts: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   soma: { color: '#f87171', fontSize: 11, fontWeight: '700', fontFamily: 'monospace' },
   sep: { color: '#92400e', fontSize: 10 },

@@ -10,7 +10,15 @@ export function IconUsers({ size = 20, color = '#fff' }: { size?: number; color?
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <Circle cx="9" cy="7" r="4" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+      <Circle
+        cx="9"
+        cy="7"
+        r="4"
+        stroke={color}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
       <Path
         d="M23 21v-2a4 4 0 0 0-3-3.87"
         stroke={color}

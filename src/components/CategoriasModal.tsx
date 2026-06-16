@@ -25,8 +25,14 @@ interface Props {
 }
 
 export function CategoriasModal({
-  visible, onClose, categorias,
-  addKeyword, removeKeyword, addCategoria, removeCategoria, reset,
+  visible,
+  onClose,
+  categorias,
+  addKeyword,
+  removeKeyword,
+  addCategoria,
+  removeCategoria,
+  reset,
 }: Props) {
   const [newCat, setNewCat] = useState('');
   const [kwInputs, setKwInputs] = useState<Record<string, string>>({});
@@ -52,16 +58,19 @@ export function CategoriasModal({
   }
 
   function handleReset() {
-    Alert.alert('Restaurar padrões', 'Todas as categorias serão substituídas pelos valores originais.', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Restaurar', style: 'destructive', onPress: reset },
-    ]);
+    Alert.alert(
+      'Restaurar padrões',
+      'Todas as categorias serão substituídas pelos valores originais.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Restaurar', style: 'destructive', onPress: reset },
+      ],
+    );
   }
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={s.root}>
-
         <View style={s.header}>
           <Text style={s.headerTitle}>Categorias</Text>
           <TouchableOpacity onPress={onClose} style={s.closeBtn}>

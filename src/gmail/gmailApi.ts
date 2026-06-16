@@ -13,8 +13,12 @@ async function get<T>(path: string, accessToken: string): Promise<T> {
   return res.json();
 }
 
-interface MessageRef { id: string }
-interface MessageList { messages?: MessageRef[] }
+interface MessageRef {
+  id: string;
+}
+interface MessageList {
+  messages?: MessageRef[];
+}
 
 interface MessagePart {
   filename?: string;
@@ -27,7 +31,9 @@ interface Message {
   payload: MessagePart;
 }
 
-interface AttachmentData { data: string }
+interface AttachmentData {
+  data: string;
+}
 
 export async function findLatestFaturaMessage(accessToken: string): Promise<string | null> {
   const query = 'subject:"Extrato da fatura do Cartão Nubank" has:attachment';

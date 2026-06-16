@@ -23,4 +23,3 @@ export interface RelatorioFatura {
   anotacoes_invalidas?: AnotacaoInvalida[];
   sincronizadoEm?: string; // ISO timestamp da última sincronização
 }
-

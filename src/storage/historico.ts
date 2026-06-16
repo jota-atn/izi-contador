@@ -6,10 +6,14 @@ export async function loadMeses(db: SQLiteDatabase, userEmail: string): Promise<
     'SELECT mes FROM faturas_v2 WHERE user_id = ? ORDER BY mes DESC',
     userEmail,
   );
-  return rows.map(r => r.mes);
+  return rows.map((r) => r.mes);
 }
 
-export async function loadFatura(db: SQLiteDatabase, userEmail: string, mes: string): Promise<RelatorioFatura | null> {
+export async function loadFatura(
+  db: SQLiteDatabase,
+  userEmail: string,
+  mes: string,
+): Promise<RelatorioFatura | null> {
   const row = await db.getFirstAsync<{ data: string }>(
     'SELECT data FROM faturas_v2 WHERE user_id = ? AND mes = ?',
     userEmail,
@@ -18,7 +22,12 @@ export async function loadFatura(db: SQLiteDatabase, userEmail: string, mes: str
   return row ? (JSON.parse(row.data) as RelatorioFatura) : null;
 }
 
-export async function upsertFatura(db: SQLiteDatabase, userEmail: string, mes: string, data: RelatorioFatura): Promise<void> {
+export async function upsertFatura(
+  db: SQLiteDatabase,
+  userEmail: string,
+  mes: string,
+  data: RelatorioFatura,
+): Promise<void> {
   await db.runAsync(
     'INSERT OR REPLACE INTO faturas_v2 (user_id, mes, data) VALUES (?, ?, ?)',
     userEmail,

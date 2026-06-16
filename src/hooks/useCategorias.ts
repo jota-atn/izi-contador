@@ -1,11 +1,18 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Categorias, DEFAULT_CATEGORIAS, loadCategorias, saveCategorias } from '../config/categorias';
+import {
+  Categorias,
+  DEFAULT_CATEGORIAS,
+  loadCategorias,
+  saveCategorias,
+} from '../config/categorias';
 
 export function useCategorias(userEmail: string) {
   const [categorias, setCategorias] = useState<Categorias>(DEFAULT_CATEGORIAS);
   const [loaded, setLoaded] = useState(false);
   const emailRef = useRef(userEmail);
-  useEffect(() => { emailRef.current = userEmail; }, [userEmail]);
+  useEffect(() => {
+    emailRef.current = userEmail;
+  }, [userEmail]);
 
   useEffect(() => {
     if (!userEmail) {

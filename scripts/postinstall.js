@@ -4,13 +4,13 @@ const path = require('path');
 // Fix 1: Remove foojay toolchain resolver (incompatible with Gradle 9)
 const foojayFile = path.join(
   __dirname,
-  '../node_modules/@react-native/gradle-plugin/settings.gradle.kts'
+  '../node_modules/@react-native/gradle-plugin/settings.gradle.kts',
 );
 if (fs.existsSync(foojayFile)) {
   const content = fs.readFileSync(foojayFile, 'utf8');
   const patched = content.replace(
     /plugins\s*\{\s*id\("org\.gradle\.toolchains\.foojay-resolver-convention"\)\.version\("[^"]*"\)\s*\}/,
-    '// foojay toolchain resolver removed'
+    '// foojay toolchain resolver removed',
   );
   if (patched !== content) {
     fs.writeFileSync(foojayFile, patched);
@@ -22,7 +22,7 @@ if (fs.existsSync(foojayFile)) {
 // The file exists in the expo GitHub repo but is missing from the npm package.
 const pluginDir = path.join(
   __dirname,
-  '../node_modules/expo-modules-core/expo-module-gradle-plugin'
+  '../node_modules/expo-modules-core/expo-module-gradle-plugin',
 );
 const buildFile = path.join(pluginDir, 'build.gradle.kts');
 if (fs.existsSync(pluginDir) && !fs.existsSync(buildFile)) {
@@ -119,7 +119,9 @@ tasks.withType<Test>().configureEach {
 const pluginSrcDir = path.join(pluginDir, 'src/main/kotlin/expo/modules/plugin');
 const versionFile = path.join(pluginSrcDir, 'Version.kt');
 if (fs.existsSync(pluginSrcDir) && !fs.existsSync(versionFile)) {
-  fs.writeFileSync(versionFile, `package expo.modules.plugin
+  fs.writeFileSync(
+    versionFile,
+    `package expo.modules.plugin
 
 data class Version(
   val major: Int,
@@ -149,14 +151,17 @@ data class Version(
     }
   }
 }
-`);
+`,
+  );
   console.log('[postinstall] Created Version.kt for expo-module-gradle-plugin');
 }
 
 // Fix 4: Create missing Warnings.kt for expo-module-gradle-plugin
 const warningsFile = path.join(pluginSrcDir, 'Warnings.kt');
 if (fs.existsSync(pluginSrcDir) && !fs.existsSync(warningsFile)) {
-  fs.writeFileSync(warningsFile, `package expo.modules.plugin
+  fs.writeFileSync(
+    warningsFile,
+    `package expo.modules.plugin
 
 import org.slf4j.Logger
 
@@ -169,7 +174,8 @@ fun <T> Logger.warnIfNotDefined(name: String, defaultValue: T): T = synchronized
   }
   return defaultValue
 }
-`);
+`,
+  );
   console.log('[postinstall] Created Warnings.kt for expo-module-gradle-plugin');
 }
 
@@ -181,16 +187,18 @@ const { execSync } = require('child_process');
 
 function extractSpecsFromTarball(tarballUrl, destDir, tarSubdir) {
   if (!fs.existsSync(destDir)) return;
-  const existing = fs.readdirSync(destDir).filter(f => f.endsWith('.ts'));
+  const existing = fs.readdirSync(destDir).filter((f) => f.endsWith('.ts'));
   if (existing.length > 0) return; // already have spec files
 
   try {
     const tmpDir = require('os').tmpdir() + '/izi-postinstall-' + Date.now();
     fs.mkdirSync(tmpDir, { recursive: true });
-    execSync(`curl -sf "${tarballUrl}" | tar -xz -C "${tmpDir}" 2>/dev/null`, { shell: '/bin/bash' });
+    execSync(`curl -sf "${tarballUrl}" | tar -xz -C "${tmpDir}" 2>/dev/null`, {
+      shell: '/bin/bash',
+    });
     const srcDir = path.join(tmpDir, 'package', tarSubdir);
     if (fs.existsSync(srcDir)) {
-      fs.readdirSync(srcDir).forEach(f => {
+      fs.readdirSync(srcDir).forEach((f) => {
         fs.copyFileSync(path.join(srcDir, f), path.join(destDir, f));
       });
       console.log(`[postinstall] Extracted ${tarSubdir} specs from ${tarballUrl.split('/').pop()}`);
@@ -206,7 +214,7 @@ const nm = path.join(__dirname, '../node_modules');
 extractSpecsFromTarball(
   'https://registry.npmjs.org/react-native-reanimated/-/react-native-reanimated-4.3.1.tgz',
   path.join(nm, 'react-native-reanimated/src/specs'),
-  'src/specs'
+  'src/specs',
 );
 // Also restore missing android files (CMakeLists.txt, AndroidManifest.xml)
 (function restoreReanimatedAndroid() {
@@ -221,7 +229,10 @@ extractSpecsFromTarball(
     const tmpDir = require('os').tmpdir() + '/izi-reanimated-' + Date.now();
     fs.mkdirSync(tmpDir, { recursive: true });
     const { execSync } = require('child_process');
-    execSync(`curl -sf "https://registry.npmjs.org/react-native-reanimated/-/react-native-reanimated-4.3.1.tgz" | tar -xz -C "${tmpDir}" 2>/dev/null`, { shell: '/bin/bash' });
+    execSync(
+      `curl -sf "https://registry.npmjs.org/react-native-reanimated/-/react-native-reanimated-4.3.1.tgz" | tar -xz -C "${tmpDir}" 2>/dev/null`,
+      { shell: '/bin/bash' },
+    );
     missingFiles.forEach(([rel, src]) => {
       const dest = path.join(baseDir, rel);
       const source = path.join(tmpDir, 'package', src);
@@ -239,7 +250,7 @@ extractSpecsFromTarball(
 extractSpecsFromTarball(
   'https://registry.npmjs.org/react-native-svg/-/react-native-svg-15.15.4.tgz',
   path.join(nm, 'react-native-svg/src/fabric'),
-  'src/fabric'
+  'src/fabric',
 );
 // Also restore missing src/ files for react-native-svg
 // The package.json "react-native" field points to src/index.ts which Metro uses,
@@ -250,11 +261,14 @@ extractSpecsFromTarball(
     try {
       const tmpDir = require('os').tmpdir() + '/izi-svg-src-' + Date.now();
       fs.mkdirSync(tmpDir, { recursive: true });
-      execSync(`curl -sf "https://registry.npmjs.org/react-native-svg/-/react-native-svg-15.15.4.tgz" | tar -xz -C "${tmpDir}" 2>/dev/null`, { shell: '/bin/bash' });
+      execSync(
+        `curl -sf "https://registry.npmjs.org/react-native-svg/-/react-native-svg-15.15.4.tgz" | tar -xz -C "${tmpDir}" 2>/dev/null`,
+        { shell: '/bin/bash' },
+      );
       const srcInTarball = path.join(tmpDir, 'package/src');
       function copyDirIfMissing(srcDir, destDir) {
         fs.mkdirSync(destDir, { recursive: true });
-        fs.readdirSync(srcDir).forEach(entry => {
+        fs.readdirSync(srcDir).forEach((entry) => {
           const s = path.join(srcDir, entry);
           const d = path.join(destDir, entry);
           if (fs.statSync(s).isDirectory()) {
@@ -275,16 +289,17 @@ extractSpecsFromTarball(
 // Also restore missing android/src/main/jni files for react-native-svg
 (function restoreSvgJni() {
   const svgBase = path.join(nm, 'react-native-svg');
-  const missingJni = [
-    'android/src/main/jni/CMakeLists.txt',
-  ];
-  const anyMissing = missingJni.some(f => !fs.existsSync(path.join(svgBase, f)));
+  const missingJni = ['android/src/main/jni/CMakeLists.txt'];
+  const anyMissing = missingJni.some((f) => !fs.existsSync(path.join(svgBase, f)));
   if (!anyMissing) return;
   try {
     const tmpDir = require('os').tmpdir() + '/izi-svg-' + Date.now();
     fs.mkdirSync(tmpDir, { recursive: true });
-    execSync(`curl -sf "https://registry.npmjs.org/react-native-svg/-/react-native-svg-15.15.4.tgz" | tar -xz -C "${tmpDir}" 2>/dev/null`, { shell: '/bin/bash' });
-    missingJni.forEach(rel => {
+    execSync(
+      `curl -sf "https://registry.npmjs.org/react-native-svg/-/react-native-svg-15.15.4.tgz" | tar -xz -C "${tmpDir}" 2>/dev/null`,
+      { shell: '/bin/bash' },
+    );
+    missingJni.forEach((rel) => {
       const dest = path.join(svgBase, rel);
       const src = path.join(tmpDir, 'package', rel);
       if (!fs.existsSync(dest) && fs.existsSync(src)) {
@@ -301,7 +316,7 @@ extractSpecsFromTarball(
 extractSpecsFromTarball(
   'https://registry.npmjs.org/react-native-gesture-handler/-/react-native-gesture-handler-2.31.2.tgz',
   path.join(nm, 'react-native-gesture-handler/src/specs'),
-  'src/specs'
+  'src/specs',
 );
 // Also restore missing android/src/main/jni files for react-native-gesture-handler
 (function restoreGestureHandlerJni() {
@@ -310,13 +325,16 @@ extractSpecsFromTarball(
     'android/src/main/jni/CMakeLists.txt',
     'android/src/main/jni/cpp-adapter.cpp',
   ];
-  const anyMissing = missingJni.some(f => !fs.existsSync(path.join(ghBase, f)));
+  const anyMissing = missingJni.some((f) => !fs.existsSync(path.join(ghBase, f)));
   if (!anyMissing) return;
   try {
     const tmpDir = require('os').tmpdir() + '/izi-gh-' + Date.now();
     fs.mkdirSync(tmpDir, { recursive: true });
-    execSync(`curl -sf "https://registry.npmjs.org/react-native-gesture-handler/-/react-native-gesture-handler-2.31.2.tgz" | tar -xz -C "${tmpDir}" 2>/dev/null`, { shell: '/bin/bash' });
-    missingJni.forEach(rel => {
+    execSync(
+      `curl -sf "https://registry.npmjs.org/react-native-gesture-handler/-/react-native-gesture-handler-2.31.2.tgz" | tar -xz -C "${tmpDir}" 2>/dev/null`,
+      { shell: '/bin/bash' },
+    );
+    missingJni.forEach((rel) => {
       const dest = path.join(ghBase, rel);
       const src = path.join(tmpDir, 'package', rel);
       if (!fs.existsSync(dest) && fs.existsSync(src)) {
@@ -338,12 +356,15 @@ function restoreSrcFromTarball(tarballUrl, pkgBase, sentinel) {
   try {
     const tmpDir = require('os').tmpdir() + '/izi-src-' + Date.now();
     fs.mkdirSync(tmpDir, { recursive: true });
-    execSync(`curl -sf "${tarballUrl}" | tar -xz -C "${tmpDir}" 2>/dev/null`, { shell: '/bin/bash' });
+    execSync(`curl -sf "${tarballUrl}" | tar -xz -C "${tmpDir}" 2>/dev/null`, {
+      shell: '/bin/bash',
+    });
     const srcInTarball = path.join(tmpDir, 'package/src');
     function copyDirIfMissing(s, d) {
       fs.mkdirSync(d, { recursive: true });
-      fs.readdirSync(s).forEach(entry => {
-        const ss = path.join(s, entry), dd = path.join(d, entry);
+      fs.readdirSync(s).forEach((entry) => {
+        const ss = path.join(s, entry),
+          dd = path.join(d, entry);
         if (fs.statSync(ss).isDirectory()) copyDirIfMissing(ss, dd);
         else if (!fs.existsSync(dd)) fs.copyFileSync(ss, dd);
       });
@@ -352,34 +373,43 @@ function restoreSrcFromTarball(tarballUrl, pkgBase, sentinel) {
     execSync(`rm -rf "${tmpDir}"`);
     console.log(`[postinstall] Restored ${path.basename(pkgBase)}/src/ from tarball`);
   } catch (e) {
-    console.warn(`[postinstall] Warning: could not restore ${path.basename(pkgBase)}/src/:`, e.message);
+    console.warn(
+      `[postinstall] Warning: could not restore ${path.basename(pkgBase)}/src/:`,
+      e.message,
+    );
   }
 }
 restoreSrcFromTarball(
   'https://registry.npmjs.org/react-native-reanimated/-/react-native-reanimated-4.3.1.tgz',
   path.join(nm, 'react-native-reanimated'),
-  'src/index.ts'
+  'src/index.ts',
 );
 restoreSrcFromTarball(
   'https://registry.npmjs.org/react-native-gesture-handler/-/react-native-gesture-handler-2.31.2.tgz',
   path.join(nm, 'react-native-gesture-handler'),
-  'src/index.ts'
+  'src/index.ts',
 );
 
 // Fix 7: Disable IPO/LTO check in ReactNative-application.cmake
 // check_ipo_supported() uses try_compile() which doesn't propagate CMAKE_ANDROID_NDK_VERSION.
 // Clang.cmake then defaults to -fuse-ld=gold which fails on Linux ARM cross-compilation.
 // LTO is a release performance optimization — not needed for local debug builds.
-const rnAppCmake = path.join(nm, 'react-native/ReactAndroid/cmake-utils/ReactNative-application.cmake');
+const rnAppCmake = path.join(
+  nm,
+  'react-native/ReactAndroid/cmake-utils/ReactNative-application.cmake',
+);
 if (fs.existsSync(rnAppCmake)) {
   let cmakeContent = fs.readFileSync(rnAppCmake, 'utf8');
-  if (cmakeContent.includes('check_ipo_supported(RESULT IPO_SUPPORT)') && !cmakeContent.includes('# IPO_DISABLED_LINUX')) {
+  if (
+    cmakeContent.includes('check_ipo_supported(RESULT IPO_SUPPORT)') &&
+    !cmakeContent.includes('# IPO_DISABLED_LINUX')
+  ) {
     cmakeContent = cmakeContent.replace(
       /# If the user toolchain supports IPO, we enable it for the app build\ninclude\(CheckIPOSupported\)\ncheck_ipo_supported\(RESULT IPO_SUPPORT\)\nif \(IPO_SUPPORT\)\n  set\(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE\)\nendif\(\)/,
       '# IPO_DISABLED_LINUX: check_ipo_supported fails on Linux/ARM cross-compilation\n' +
-      '# (CMake 3.22 + NDK r27 try_compile does not propagate CMAKE_ANDROID_NDK_VERSION,\n' +
-      '#  so Clang.cmake defaults to -fuse-ld=gold which the system linker can\'t use for ARM)\n' +
-      '# set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)'
+        '# (CMake 3.22 + NDK r27 try_compile does not propagate CMAKE_ANDROID_NDK_VERSION,\n' +
+        "#  so Clang.cmake defaults to -fuse-ld=gold which the system linker can't use for ARM)\n" +
+        '# set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)',
     );
     fs.writeFileSync(rnAppCmake, cmakeContent);
     console.log('[postinstall] Disabled IPO check in ReactNative-application.cmake');

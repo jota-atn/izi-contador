@@ -34,7 +34,6 @@ export function RegrasModal({ visible, onClose, regras, addRegra, removeRegra }:
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={s.root}>
-
         <View style={s.header}>
           <Text style={s.headerTitle}>Regras de Pessoa</Text>
           <TouchableOpacity onPress={onClose} style={s.closeBtn}>
@@ -48,8 +47,8 @@ export function RegrasModal({ visible, onClose, regras, addRegra, removeRegra }:
           keyboardShouldPersistTaps="handled"
         >
           <Text style={s.hint}>
-            Define que compras com certa palavra vão para uma pessoa específica.
-            Tem prioridade menor que categorias e dono explícito no título.
+            Define que compras com certa palavra vão para uma pessoa específica. Tem prioridade
+            menor que categorias e dono explícito no título.
           </Text>
 
           {Object.entries(regras).map(([kw, p]) => (
@@ -59,7 +58,11 @@ export function RegrasModal({ visible, onClose, regras, addRegra, removeRegra }:
                 <Text style={s.arrow}>→</Text>
                 <Text style={s.pessoa}>{p}</Text>
               </View>
-              <TouchableOpacity onPress={() => removeRegra(kw)} style={s.removeBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <TouchableOpacity
+                onPress={() => removeRegra(kw)}
+                style={s.removeBtn}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
                 <IconClose size={12} color="#f87171" />
               </TouchableOpacity>
             </View>

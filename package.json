@@ -29,6 +29,7 @@
     "@types/react": "~19.2.2",
     "eslint": "^9.39.4",
     "eslint-config-expo": "^56.0.4",
+    "prettier": "^3.8.4",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -38,6 +39,8 @@
     "web": "expo start --web",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "postinstall": "node scripts/postinstall.js"
   },
   "private": true

@@ -46,8 +46,16 @@ export default function App() {
 }
 
 function AppContent() {
-  const { status: authStatus, userName, userEmail, signIn, signOut, getAccessToken } = useGoogleAuth();
-  const { categorias, addKeyword, removeKeyword, addCategoria, removeCategoria, reset } = useCategorias(userEmail);
+  const {
+    status: authStatus,
+    userName,
+    userEmail,
+    signIn,
+    signOut,
+    getAccessToken,
+  } = useGoogleAuth();
+  const { categorias, addKeyword, removeKeyword, addCategoria, removeCategoria, reset } =
+    useCategorias(userEmail);
   const { regras, addRegra, removeRegra } = useRegrasAlocacao(userEmail);
   const { getEstado, toggleOculto, togglePago } = useEstadoFatura(userEmail);
   const { state, refresh } = useRelatorio(getAccessToken, authStatus, userName, categorias, regras);
@@ -81,8 +89,8 @@ function AppContent() {
 
   const dadosExibidos = dadosBrutos ? aplicarEdicoes(dadosBrutos, edicoes) : null;
 
-  const pessoas = dadosExibidos?.relatorio_por_pessoa.filter(p => p.dono !== SEM_CATEGORIA) ?? [];
-  const semCategoria = dadosExibidos?.relatorio_por_pessoa.find(p => p.dono === SEM_CATEGORIA);
+  const pessoas = dadosExibidos?.relatorio_por_pessoa.filter((p) => p.dono !== SEM_CATEGORIA) ?? [];
+  const semCategoria = dadosExibidos?.relatorio_por_pessoa.find((p) => p.dono === SEM_CATEGORIA);
   const idxMes = meses.indexOf(mesSelecionado);
   const mesAnterior = meses[idxMes + 1];
   const totalAnterior = mesAnterior ? historico[mesAnterior]?.total_fatura : undefined;
@@ -91,7 +99,7 @@ function AppContent() {
   const buscaAtiva = termoBusca.trim().length > 0;
 
   const pessoasOrdenadas = pessoasFiltradas
-    .map(pf => pf.pessoa)
+    .map((pf) => pf.pessoa)
     .sort((a, b) => {
       if (buscaAtiva) return b.total_individual - a.total_individual;
       const aPago = getEstado(mesSelecionado, a.dono).pago ? 1 : 0;
@@ -167,7 +175,6 @@ function AppContent() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#020617' }}>
-
       {authStatus === 'loading' && <LoadingScreen message="Verificando autenticação..." />}
 
       {authStatus === 'unauthenticated' && <LoginScreen onSignIn={signIn} />}
@@ -176,9 +183,10 @@ function AppContent() {
         <ErrorScreen message="Sessão expirada. Faça login novamente." onRetry={signOut} />
       )}
 
-      {authStatus === 'authenticated' && (state.status === 'loading' || state.status === 'idle') && (
-        <LoadingScreen message="Sincronizando faturas..." />
-      )}
+      {authStatus === 'authenticated' &&
+        (state.status === 'loading' || state.status === 'idle') && (
+          <LoadingScreen message="Sincronizando faturas..." />
+        )}
 
       {authStatus === 'authenticated' && state.status === 'error' && (
         <ErrorScreen message={state.message} onRetry={refresh} />
@@ -225,7 +233,14 @@ function AppContent() {
             className="flex-1"
             contentContainerStyle={{ padding: 16, gap: 16 }}
             showsVerticalScrollIndicator={false}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7c3aed" colors={['#7c3aed']} />}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor="#7c3aed"
+                colors={['#7c3aed']}
+              />
+            }
           >
             <TotalCard
               total={dadosExibidos.total_fatura}
@@ -283,7 +298,7 @@ function AppContent() {
         visible={itemEditando !== null}
         item={itemEditando?.item ?? null}
         donoAtual={itemEditando?.donoAtual ?? ''}
-        pessoas={pessoas.map(p => p.dono)}
+        pessoas={pessoas.map((p) => p.dono)}
         onSalvar={handleSalvarEdicao}
         onDeletar={handleDeletarItem}
         onClose={() => setItemEditando(null)}

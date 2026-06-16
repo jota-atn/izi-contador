@@ -26,9 +26,15 @@ export function useRelatorio(
   const regrasRef = useRef(regrasAlocacao);
   const ownerRef = useRef(ownerName);
 
-  useEffect(() => { categoriasRef.current = categorias; }, [categorias]);
-  useEffect(() => { regrasRef.current = regrasAlocacao; }, [regrasAlocacao]);
-  useEffect(() => { ownerRef.current = ownerName; }, [ownerName]);
+  useEffect(() => {
+    categoriasRef.current = categorias;
+  }, [categorias]);
+  useEffect(() => {
+    regrasRef.current = regrasAlocacao;
+  }, [regrasAlocacao]);
+  useEffect(() => {
+    ownerRef.current = ownerName;
+  }, [ownerName]);
 
   const carregar = useCallback(async () => {
     setState({ status: 'loading' });

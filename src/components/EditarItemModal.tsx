@@ -23,7 +23,15 @@ interface Props {
   onClose: () => void;
 }
 
-export function EditarItemModal({ visible, item, donoAtual, pessoas, onSalvar, onDeletar, onClose }: Props) {
+export function EditarItemModal({
+  visible,
+  item,
+  donoAtual,
+  pessoas,
+  onSalvar,
+  onDeletar,
+  onClose,
+}: Props) {
   const [desc, setDesc] = useState('');
   const [donoPicker, setDonoPicker] = useState('');
   const [donoCustom, setDonoCustom] = useState('');
@@ -50,7 +58,14 @@ export function EditarItemModal({ visible, item, donoAtual, pessoas, onSalvar, o
   function handleDeletar() {
     Alert.alert('Deletar item', `Remover "${item!.descricao}" da fatura?`, [
       { text: 'Cancelar', style: 'cancel' },
-      { text: 'Deletar', style: 'destructive', onPress: () => { onDeletar(); onClose(); } },
+      {
+        text: 'Deletar',
+        style: 'destructive',
+        onPress: () => {
+          onDeletar();
+          onClose();
+        },
+      },
     ]);
   }
 
@@ -66,16 +81,28 @@ export function EditarItemModal({ visible, item, donoAtual, pessoas, onSalvar, o
   }
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
       <SafeAreaView style={s.container}>
         <View style={s.header}>
           <Text style={s.title}>Editar item</Text>
-          <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <TouchableOpacity
+            onPress={onClose}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <IconClose size={18} color="#64748b" />
           </TouchableOpacity>
         </View>
 
-        <ScrollView style={s.scroll} contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          style={s.scroll}
+          contentContainerStyle={s.content}
+          keyboardShouldPersistTaps="handled"
+        >
           <Text style={s.valorDisplay}>R$ {item.valor.toFixed(2)}</Text>
           <Text style={s.dataDisplay}>{item.data}</Text>
 
@@ -91,19 +118,18 @@ export function EditarItemModal({ visible, item, donoAtual, pessoas, onSalvar, o
           <Text style={s.label}>Dono</Text>
 
           <View style={s.pickerGrid}>
-            {pessoas.map(p => (
+            {pessoas.map((p) => (
               <TouchableOpacity
                 key={p}
                 style={[s.chip, donoPicker === p && !modoCustom && s.chipAtivo]}
                 onPress={() => handleSelecionarPessoa(p)}
               >
-                <Text style={[s.chipText, donoPicker === p && !modoCustom && s.chipTextAtivo]}>{p}</Text>
+                <Text style={[s.chipText, donoPicker === p && !modoCustom && s.chipTextAtivo]}>
+                  {p}
+                </Text>
               </TouchableOpacity>
             ))}
-            <TouchableOpacity
-              style={[s.chip, modoCustom && s.chipAtivo]}
-              onPress={handleNovoNome}
-            >
+            <TouchableOpacity style={[s.chip, modoCustom && s.chipAtivo]} onPress={handleNovoNome}>
               <Text style={[s.chipText, modoCustom && s.chipTextAtivo]}>+ Novo nome</Text>
             </TouchableOpacity>
           </View>
@@ -153,9 +179,23 @@ const s = StyleSheet.create({
   title: { color: '#fff', fontSize: 17, fontWeight: '800' },
   scroll: { flex: 1 },
   content: { padding: 24, gap: 8 },
-  valorDisplay: { color: '#a78bfa', fontSize: 32, fontWeight: '900', fontFamily: 'monospace', marginBottom: 2 },
+  valorDisplay: {
+    color: '#a78bfa',
+    fontSize: 32,
+    fontWeight: '900',
+    fontFamily: 'monospace',
+    marginBottom: 2,
+  },
   dataDisplay: { color: '#475569', fontSize: 12, fontWeight: '600', marginBottom: 16 },
-  label: { color: '#64748b', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 8, marginBottom: 6 },
+  label: {
+    color: '#64748b',
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 8,
+    marginBottom: 6,
+  },
   input: {
     backgroundColor: '#0f172a',
     borderWidth: 1,

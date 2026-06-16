@@ -1,10 +1,7 @@
 import { RelatorioPessoa } from '../types';
 
 function normalizar(s: string): string {
-  return s
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase();
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 }
 
 export interface PessoaFiltrada {
@@ -20,7 +17,7 @@ export function filtrarPessoas(
 
   if (!termo.trim()) {
     return {
-      pessoasFiltradas: pessoas.map(p => ({ pessoa: p, totalItensOriginais: p.itens.length })),
+      pessoasFiltradas: pessoas.map((p) => ({ pessoa: p, totalItensOriginais: p.itens.length })),
       totalItens,
       totalFiltrados: totalItens,
     };
@@ -31,7 +28,7 @@ export function filtrarPessoas(
   const pessoasFiltradas: PessoaFiltrada[] = [];
 
   for (const p of pessoas) {
-    const itensFiltrados = p.itens.filter(i => normalizar(i.descricao).includes(termoNorm));
+    const itensFiltrados = p.itens.filter((i) => normalizar(i.descricao).includes(termoNorm));
     if (itensFiltrados.length === 0) continue;
 
     totalFiltrados += itensFiltrados.length;

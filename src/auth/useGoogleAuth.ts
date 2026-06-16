@@ -1,5 +1,9 @@
 import { useState, useCallback } from 'react';
-import { GoogleSignin, isErrorWithCode, statusCodes } from '@react-native-google-signin/google-signin';
+import {
+  GoogleSignin,
+  isErrorWithCode,
+  statusCodes,
+} from '@react-native-google-signin/google-signin';
 
 GoogleSignin.configure({
   scopes: ['https://www.googleapis.com/auth/gmail.readonly'],
@@ -10,7 +14,7 @@ export type AuthStatus = 'loading' | 'unauthenticated' | 'authenticated';
 
 export function useGoogleAuth() {
   const [status, setStatus] = useState<AuthStatus>(() =>
-    GoogleSignin.hasPreviousSignIn() ? 'authenticated' : 'unauthenticated'
+    GoogleSignin.hasPreviousSignIn() ? 'authenticated' : 'unauthenticated',
   );
   const [userName, setUserName] = useState<string>(() => {
     const u = GoogleSignin.getCurrentUser();

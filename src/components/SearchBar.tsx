@@ -26,16 +26,17 @@ export function SearchBar({ value, onChange, totalItens, totalFiltrados }: Props
           returnKeyType="search"
         />
         {ativo && (
-          <TouchableOpacity onPress={() => onChange('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity
+            onPress={() => onChange('')}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
             <Text style={s.clear}>✕</Text>
           </TouchableOpacity>
         )}
       </View>
       {ativo && (
         <Text style={[s.resultado, semResultado && s.resultadoVazio]}>
-          {semResultado
-            ? 'Nenhum item encontrado'
-            : `${totalFiltrados} de ${totalItens} itens`}
+          {semResultado ? 'Nenhum item encontrado' : `${totalFiltrados} de ${totalItens} itens`}
         </Text>
       )}
     </View>

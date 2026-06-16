@@ -35,9 +35,7 @@ export function aplicarEdicoes(dados: RelatorioFatura, edicoes: Edicao[]): Relat
   }
 
   const total_fatura = parseFloat(
-    [...pessoasMap.values()]
-      .reduce((s, p) => s + p.total_individual, 0)
-      .toFixed(2),
+    [...pessoasMap.values()].reduce((s, p) => s + p.total_individual, 0).toFixed(2),
   );
 
   return {

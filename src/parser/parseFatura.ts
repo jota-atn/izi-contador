@@ -20,12 +20,13 @@ interface Row {
 }
 
 function parseAmount(raw: string): number {
-  return parseFloat(
-    raw.trim().replace(/\s+/g, '').replace(/\./g, '').replace(',', '.'),
-  );
+  return parseFloat(raw.trim().replace(/\s+/g, '').replace(/\./g, '').replace(',', '.'));
 }
 
-function expandSplitRows(rows: Row[], defaultOwner: string): { rows: Row[]; invalidas: AnotacaoInvalida[] } {
+function expandSplitRows(
+  rows: Row[],
+  defaultOwner: string,
+): { rows: Row[]; invalidas: AnotacaoInvalida[] } {
   const result: Row[] = [];
   const invalidas: AnotacaoInvalida[] = [];
 
@@ -50,8 +51,15 @@ function expandSplitRows(rows: Row[], defaultOwner: string): { rows: Row[]; inva
 
       if (assignedTotal < row.amount - 0.01) {
         // soma < total → anotação incompleta: não divide, registra aviso
-        invalidas.push({ titulo: row.title, valor: row.amount, soma: parseFloat(assignedTotal.toFixed(2)) });
-        const cleanTitle = row.title.replace(SPLIT_MULTI, '').replace(/\s{2,}/g, ' ').trim();
+        invalidas.push({
+          titulo: row.title,
+          valor: row.amount,
+          soma: parseFloat(assignedTotal.toFixed(2)),
+        });
+        const cleanTitle = row.title
+          .replace(SPLIT_MULTI, '')
+          .replace(/\s{2,}/g, ' ')
+          .trim();
         result.push({ ...row, title: cleanTitle || row.title });
       } else {
         // \S+ (não \w+) para nomes acentuados no sufixo "- Nome"
@@ -68,7 +76,11 @@ function expandSplitRows(rows: Row[], defaultOwner: string): { rows: Row[]; inva
       const splitPerson = normalizeName(fixedMatch[2]);
       const baseTitle = row.title.replace(SPLIT_FIXED, '').trim();
 
-      result.push({ ...row, amount: row.amount - personAmount, title: `${baseTitle} - ${normalizeName(defaultOwner)}` });
+      result.push({
+        ...row,
+        amount: row.amount - personAmount,
+        title: `${baseTitle} - ${normalizeName(defaultOwner)}`,
+      });
       result.push({ ...row, amount: personAmount, title: `${baseTitle} - ${splitPerson}` });
     } else if (parensMatch) {
       const half = row.amount / 2;
@@ -92,11 +104,14 @@ function expandSplitRows(rows: Row[], defaultOwner: string): { rows: Row[]; inva
   return { rows: result, invalidas };
 }
 
-function categorizarItem(title: string, defaultOwner: string, categorias: Categorias, regras: RegrasAlocacao): { exibicao: string; dono: string } {
+function categorizarItem(
+  title: string,
+  defaultOwner: string,
+  categorias: Categorias,
+  regras: RegrasAlocacao,
+): { exibicao: string; dono: string } {
   const parcelaMatch = PARCELA_SUFFIX.exec(title);
-  const parcelaStr = parcelaMatch
-    ? ` - ${(/(\d+\/\d+)/.exec(parcelaMatch[0])?.[1] ?? '')}`
-    : '';
+  const parcelaStr = parcelaMatch ? ` - ${/(\d+\/\d+)/.exec(parcelaMatch[0])?.[1] ?? ''}` : '';
 
   const titleClean = title.replace(PARCELA_SUFFIX, '').trim();
   const donoMatch = /\s*-\s*([^-()\n]+)$/.exec(titleClean);
@@ -136,9 +151,10 @@ function inferirMes(rows: Row[]): string {
   const contagem = new Map<string, number>();
   for (const row of rows) {
     const d = row.date ?? '';
-    const iso = /^(\d{4}-\d{2})-\d{2}$/.exec(d)?.[1]
-      ?? ((/^\d{2}\/(\d{2})\/(\d{4})$/.exec(d) ?? [])[2]
-        ? `${(/^\d{2}\/(\d{2})\/(\d{4})$/.exec(d)!)[2]}-${(/^\d{2}\/(\d{2})\/(\d{4})$/.exec(d)!)[1]}`
+    const iso =
+      /^(\d{4}-\d{2})-\d{2}$/.exec(d)?.[1] ??
+      ((/^\d{2}\/(\d{2})\/(\d{4})$/.exec(d) ?? [])[2]
+        ? `${/^\d{2}\/(\d{2})\/(\d{4})$/.exec(d)![2]}-${/^\d{2}\/(\d{2})\/(\d{4})$/.exec(d)![1]}`
         : null);
     if (iso) contagem.set(iso, (contagem.get(iso) ?? 0) + 1);
   }
@@ -149,7 +165,12 @@ function inferirMes(rows: Row[]): string {
   return [...contagem.entries()].sort((a, b) => b[1] - a[1])[0][0];
 }
 
-export function parseFatura(csvText: string, defaultOwnerRaw = 'EU', categorias: Categorias = DEFAULT_CATEGORIAS, regrasAlocacao: RegrasAlocacao = {}): RelatorioFatura {
+export function parseFatura(
+  csvText: string,
+  defaultOwnerRaw = 'EU',
+  categorias: Categorias = DEFAULT_CATEGORIAS,
+  regrasAlocacao: RegrasAlocacao = {},
+): RelatorioFatura {
   const defaultOwner = normalizeName(defaultOwnerRaw);
   const { data } = Papa.parse<Record<string, string>>(csvText, {
     header: true,
@@ -170,7 +191,10 @@ export function parseFatura(csvText: string, defaultOwnerRaw = 'EU', categorias:
   rows = rows.map((r) => ({ ...r, title: r.title.toUpperCase() }));
 
   // chave interna = nome normalizado (sem acentos); display = primeira forma vista
-  const porDono = new Map<string, { display: string; itensMap: Map<string, { total: number; date: string }> }>();
+  const porDono = new Map<
+    string,
+    { display: string; itensMap: Map<string, { total: number; date: string }> }
+  >();
 
   for (const row of rows) {
     const { exibicao, dono } = categorizarItem(row.title, defaultOwner, categorias, regrasAlocacao);
@@ -198,9 +222,7 @@ export function parseFatura(csvText: string, defaultOwnerRaw = 'EU', categorias:
       .map(([descricao, { total, date }]) => ({ descricao, valor: total, data: date }))
       .sort((a, b) => b.valor - a.valor);
 
-    const totalIndividual = parseFloat(
-      itens.reduce((s, i) => s + i.valor, 0).toFixed(2),
-    );
+    const totalIndividual = parseFloat(itens.reduce((s, i) => s + i.valor, 0).toFixed(2));
 
     totalFatura += totalIndividual;
     relatorioPorPessoa.push({ dono, itens, total_individual: totalIndividual });

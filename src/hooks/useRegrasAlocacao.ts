@@ -4,7 +4,9 @@ import { RegrasAlocacao, loadRegras, saveRegras } from '../config/regrasAlocacao
 export function useRegrasAlocacao(userEmail: string) {
   const [regras, setRegras] = useState<RegrasAlocacao>({});
   const emailRef = useRef(userEmail);
-  useEffect(() => { emailRef.current = userEmail; }, [userEmail]);
+  useEffect(() => {
+    emailRef.current = userEmail;
+  }, [userEmail]);
 
   useEffect(() => {
     if (!userEmail) {

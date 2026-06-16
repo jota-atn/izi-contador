@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSQLiteContext } from 'expo-sqlite';
-import { EstadoPessoa, EstadoFaturas, loadEstado, upsertEstadoPessoa } from '../storage/estadoFatura';
+import {
+  EstadoPessoa,
+  EstadoFaturas,
+  loadEstado,
+  upsertEstadoPessoa,
+} from '../storage/estadoFatura';
 
 const DEFAULT: EstadoPessoa = { oculto: false, pago: false };
 
@@ -10,8 +15,12 @@ export function useEstadoFatura(userEmail: string) {
   const emailRef = useRef(userEmail);
   const estadoRef = useRef<EstadoFaturas>({});
 
-  useEffect(() => { emailRef.current = userEmail; }, [userEmail]);
-  useEffect(() => { estadoRef.current = estado; }, [estado]);
+  useEffect(() => {
+    emailRef.current = userEmail;
+  }, [userEmail]);
+  useEffect(() => {
+    estadoRef.current = estado;
+  }, [estado]);
 
   useEffect(() => {
     if (!userEmail) {
@@ -28,23 +37,29 @@ export function useEstadoFatura(userEmail: string) {
   }
 
   // lê pelo ref para evitar que StrictMode invoque o updater 2× e dispare writes duplicados
-  const toggleOculto = useCallback((mes: string, dono: string) => {
-    const curr = estadoRef.current[mes]?.[dono] ?? DEFAULT;
-    const next = { ...curr, oculto: !curr.oculto };
-    setEstado((prev) => ({ ...prev, [mes]: { ...prev[mes], [dono]: next } }));
-    upsertEstadoPessoa(db, emailRef.current, mes, dono, next).catch((e) =>
-      console.error('[useEstadoFatura] toggleOculto falhou:', e),
-    );
-  }, [db]);
+  const toggleOculto = useCallback(
+    (mes: string, dono: string) => {
+      const curr = estadoRef.current[mes]?.[dono] ?? DEFAULT;
+      const next = { ...curr, oculto: !curr.oculto };
+      setEstado((prev) => ({ ...prev, [mes]: { ...prev[mes], [dono]: next } }));
+      upsertEstadoPessoa(db, emailRef.current, mes, dono, next).catch((e) =>
+        console.error('[useEstadoFatura] toggleOculto falhou:', e),
+      );
+    },
+    [db],
+  );
 
-  const togglePago = useCallback((mes: string, dono: string) => {
-    const curr = estadoRef.current[mes]?.[dono] ?? DEFAULT;
-    const next = { ...curr, pago: !curr.pago };
-    setEstado((prev) => ({ ...prev, [mes]: { ...prev[mes], [dono]: next } }));
-    upsertEstadoPessoa(db, emailRef.current, mes, dono, next).catch((e) =>
-      console.error('[useEstadoFatura] togglePago falhou:', e),
-    );
-  }, [db]);
+  const togglePago = useCallback(
+    (mes: string, dono: string) => {
+      const curr = estadoRef.current[mes]?.[dono] ?? DEFAULT;
+      const next = { ...curr, pago: !curr.pago };
+      setEstado((prev) => ({ ...prev, [mes]: { ...prev[mes], [dono]: next } }));
+      upsertEstadoPessoa(db, emailRef.current, mes, dono, next).catch((e) =>
+        console.error('[useEstadoFatura] togglePago falhou:', e),
+      );
+    },
+    [db],
+  );
 
   return { getEstado, toggleOculto, togglePago };
 }

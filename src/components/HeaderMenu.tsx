@@ -1,5 +1,13 @@
 import { useRef, useState } from 'react';
-import { Modal, Pressable, StyleSheet, TouchableOpacity, View, Text, type MeasureInWindowOnSuccessCallback } from 'react-native';
+import {
+  Modal,
+  Pressable,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  Text,
+  type MeasureInWindowOnSuccessCallback,
+} from 'react-native';
 
 interface Item {
   label: string;
@@ -17,11 +25,11 @@ export function HeaderMenu({ items }: Props) {
   const btnRef = useRef<React.ElementRef<typeof TouchableOpacity>>(null);
 
   function openMenu() {
-    btnRef.current?.measureInWindow(((...args: Parameters<MeasureInWindowOnSuccessCallback>) => {
+    btnRef.current?.measureInWindow((...args: Parameters<MeasureInWindowOnSuccessCallback>) => {
       const [, y, , height] = args;
       setTop(y + height + 8);
       setOpen(true);
-    }));
+    });
   }
 
   function handleItem(fn: () => void) {
