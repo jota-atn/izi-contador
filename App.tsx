@@ -75,7 +75,8 @@ function AppContent() {
   const pessoasOrdenadas = [...pessoas].sort((a, b) => {
     const aPago = getEstado(mesSelecionado, a.dono).pago ? 1 : 0;
     const bPago = getEstado(mesSelecionado, b.dono).pago ? 1 : 0;
-    return aPago - bPago;
+    if (aPago !== bPago) return aPago - bPago;
+    return b.total_individual - a.total_individual;
   });
 
   async function onRefresh() {
