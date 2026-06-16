@@ -62,7 +62,6 @@ export function CategoriasModal({
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={s.root}>
 
-        {/* Header */}
         <View style={s.header}>
           <Text style={s.headerTitle}>Categorias</Text>
           <TouchableOpacity onPress={onClose} style={s.closeBtn}>
@@ -77,8 +76,6 @@ export function CategoriasModal({
         >
           {Object.entries(categorias).map(([nome, palavras]) => (
             <View key={nome} style={s.card}>
-
-              {/* Cabeçalho da categoria */}
               <View style={s.catHeader}>
                 <Text style={s.catName}>{nome}</Text>
                 <TouchableOpacity onPress={() => handleRemoveCategoria(nome)} style={s.removeBtn}>
@@ -87,7 +84,6 @@ export function CategoriasModal({
               </View>
 
               <View style={s.cardBody}>
-                {/* Chips das palavras-chave */}
                 <View style={s.chips}>
                   {palavras.map((kw) => (
                     <TouchableOpacity
@@ -101,7 +97,6 @@ export function CategoriasModal({
                   ))}
                 </View>
 
-                {/* Input para nova palavra */}
                 <View style={s.inputRow}>
                   <TextInput
                     style={s.input}
@@ -121,7 +116,6 @@ export function CategoriasModal({
             </View>
           ))}
 
-          {/* Nova categoria */}
           <View style={[s.card, { marginTop: 8 }]}>
             <Text style={s.newCatLabel}>Nova categoria</Text>
             <View style={[s.inputRow, { marginTop: 8 }]}>
@@ -141,7 +135,6 @@ export function CategoriasModal({
             </View>
           </View>
 
-          {/* Restaurar padrões */}
           <TouchableOpacity onPress={handleReset} style={s.resetBtn}>
             <Text style={s.resetBtnText}>Restaurar padrões</Text>
           </TouchableOpacity>

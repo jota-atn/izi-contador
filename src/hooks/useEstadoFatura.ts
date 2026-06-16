@@ -11,7 +11,6 @@ export function useEstadoFatura(userEmail: string) {
   const estadoRef = useRef<EstadoFaturas>({});
 
   useEffect(() => { emailRef.current = userEmail; }, [userEmail]);
-  // mantém ref sempre sincronizado para leitura síncrona fora do updater
   useEffect(() => { estadoRef.current = estado; }, [estado]);
 
   useEffect(() => {
@@ -28,8 +27,7 @@ export function useEstadoFatura(userEmail: string) {
     return estado[mes]?.[dono] ?? DEFAULT;
   }
 
-  // Lê estado atual pelo ref (síncrono) e chama setEstado + DB fora do updater
-  // Evita que o React 19 StrictMode invoque o updater 2x e dispare 2 writes concorrentes
+  // lê pelo ref para evitar que StrictMode invoque o updater 2× e dispare writes duplicados
   const toggleOculto = useCallback((mes: string, dono: string) => {
     const curr = estadoRef.current[mes]?.[dono] ?? DEFAULT;
     const next = { ...curr, oculto: !curr.oculto };

@@ -10,7 +10,6 @@ const NON_PERSONS = new Set(['NUPAY']);
 const SPLIT_PARENS = /\(metade\s+(\w+)\)/i;
 const SPLIT_DASH = /\s*-\s*metade\s+(\w+)\s*$/i;
 const SPLIT_FIXED = /\((?:menos\s+)?(\d+(?:[.,]\d+)?)\s+(\w+)\)/i;
-// Formato: (Nome=40, Maria=20, ...) — divide explicitamente por pessoa; separador: vírgula ou espaço
 const SPLIT_MULTI = /\(([^\s=(),]+=\d+(?:[.,]\d+)?(?:[,\s]+[^\s=(),]+=\d+(?:[.,]\d+)?)*)\)/i;
 const PARCELA_SUFFIX = /\s*-\s*parcela\s+\d+\/\d+\s*$/i;
 
@@ -37,7 +36,6 @@ function expandSplitRows(rows: Row[], defaultOwner: string): { rows: Row[]; inva
     const dashMatch = SPLIT_DASH.exec(row.title);
 
     if (multiMatch) {
-      // (Joao=40, Maria=20) → parse primeiro, valida soma, depois gera linhas
       const pairs = multiMatch[1].split(/[,\s]+/);
       const parsed: { name: string; amount: number }[] = [];
       let assignedTotal = 0;
@@ -56,8 +54,7 @@ function expandSplitRows(rows: Row[], defaultOwner: string): { rows: Row[]; inva
         const cleanTitle = row.title.replace(SPLIT_MULTI, '').replace(/\s{2,}/g, ' ').trim();
         result.push({ ...row, title: cleanTitle || row.title });
       } else {
-        // soma >= total → divide pelos valores anotados (sem aviso, sem resto)
-        // \S+ em vez de \w+ para suportar nomes acentuados no sufixo - Nome
+        // \S+ (não \w+) para nomes acentuados no sufixo "- Nome"
         const baseTitle = row.title
           .replace(SPLIT_MULTI, '')
           .replace(/\s*-\s*\S+\s*$/, '')
@@ -170,11 +167,9 @@ export function parseFatura(csvText: string, defaultOwnerRaw = 'EU', categorias:
   rows = expandedRows;
   const mes = inferirMes(rows);
 
-  // Uppercase após expansão (preserva a lógica original do Python)
   rows = rows.map((r) => ({ ...r, title: r.title.toUpperCase() }));
 
-  // Categoriza e agrupa por dono → exibicao
-  // Chave interna = nome normalizado (sem acentos); display = primeira forma vista
+  // chave interna = nome normalizado (sem acentos); display = primeira forma vista
   const porDono = new Map<string, { display: string; itensMap: Map<string, { total: number; date: string }> }>();
 
   for (const row of rows) {

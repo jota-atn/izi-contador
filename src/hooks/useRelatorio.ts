@@ -21,8 +21,7 @@ export function useRelatorio(
 ) {
   const [state, setState] = useState<State>({ status: 'idle' });
 
-  // Refs garantem que carregar() sempre usa os valores mais recentes
-  // sem precisar entrar no dep array (o que causaria re-fetch a cada edição)
+  // refs evitam que mudanças nessas deps causem re-fetch
   const categoriasRef = useRef(categorias);
   const regrasRef = useRef(regrasAlocacao);
   const ownerRef = useRef(ownerName);
