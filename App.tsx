@@ -256,7 +256,7 @@ function AppContent() {
 
           <ScrollView
             className="flex-1"
-            contentContainerStyle={{ padding: 16, gap: 16 }}
+            contentContainerStyle={{ paddingTop: 0, paddingHorizontal: 16, paddingBottom: 16, gap: 16 }}
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
