@@ -50,7 +50,7 @@ export function SearchBar({ value, onChange, totalItens, totalFiltrados }: Props
 }
 
 const s = StyleSheet.create({
-  wrap: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, gap: 6 },
+  wrap: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 4, gap: 6 },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
