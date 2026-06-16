@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { IconWarning } from './icons/IconWarning';
 
 interface Props {
   children: React.ReactNode;
@@ -25,7 +26,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     return (
       <SafeAreaView style={s.container}>
         <View style={s.content}>
-          <Text style={s.emoji}>⚠️</Text>
+          <IconWarning size={48} color="#f87171" />
           <Text style={s.title}>Algo deu errado</Text>
           <Text style={s.message}>{this.state.error.message}</Text>
           <TouchableOpacity style={s.btn} onPress={this.reset}>
@@ -40,7 +41,6 @@ export class ErrorBoundary extends React.Component<Props, State> {
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020617', justifyContent: 'center' },
   content: { alignItems: 'center', paddingHorizontal: 32, gap: 16 },
-  emoji: { fontSize: 48 },
   title: { color: '#f1f5f9', fontSize: 20, fontWeight: '800', textAlign: 'center' },
   message: {
     color: '#64748b',

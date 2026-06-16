@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Gasto } from '../types';
 import { haptic } from '../utils/haptic';
 import { IconClose } from './icons/IconClose';
+import { IconWarning } from './icons/IconWarning';
 
 interface Props {
   visible: boolean;
@@ -147,9 +148,12 @@ export function EditarItemModal({
                 placeholderTextColor="#475569"
                 autoFocus
               />
-              <Text style={s.aviso}>
-                ⚠️ Novos nomes não são reconhecidos pelo parser. Use com cuidado.
-              </Text>
+              <View style={s.aviso}>
+                <IconWarning size={13} color="#f59e0b" />
+                <Text style={s.avisoText}>
+                  Novos nomes não são reconhecidos pelo parser. Use com cuidado.
+                </Text>
+              </View>
             </View>
           )}
         </ScrollView>
@@ -221,7 +225,8 @@ const s = StyleSheet.create({
   chipAtivo: { backgroundColor: '#4c1d95', borderColor: '#7c3aed' },
   chipText: { color: '#64748b', fontSize: 12, fontWeight: '700' },
   chipTextAtivo: { color: '#e9d5ff' },
-  aviso: { color: '#f59e0b', fontSize: 11, fontWeight: '600', marginTop: 8, lineHeight: 16 },
+  aviso: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 8 },
+  avisoText: { color: '#f59e0b', fontSize: 11, fontWeight: '600', lineHeight: 16, flex: 1 },
   footer: {
     flexDirection: 'row',
     gap: 12,

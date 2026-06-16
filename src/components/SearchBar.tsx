@@ -1,5 +1,7 @@
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TextInput, TouchableOpacity, View, Text } from 'react-native';
 import { haptic } from '../utils/haptic';
+import { IconSearch } from './icons/IconSearch';
+import { IconClose } from './icons/IconClose';
 
 interface Props {
   value: string;
@@ -15,7 +17,7 @@ export function SearchBar({ value, onChange, totalItens, totalFiltrados }: Props
   return (
     <View style={s.wrap}>
       <View style={[s.inputWrap, ativo && s.inputWrapAtivo]}>
-        <Text style={s.icon}>🔍</Text>
+        <IconSearch size={14} color="#475569" />
         <TextInput
           style={s.input}
           value={value}
@@ -34,7 +36,7 @@ export function SearchBar({ value, onChange, totalItens, totalFiltrados }: Props
             }}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Text style={s.clear}>✕</Text>
+            <IconClose size={14} color="#475569" />
           </TouchableOpacity>
         )}
       </View>
@@ -48,7 +50,7 @@ export function SearchBar({ value, onChange, totalItens, totalFiltrados }: Props
 }
 
 const s = StyleSheet.create({
-  wrap: { paddingHorizontal: 16, paddingBottom: 4, gap: 6 },
+  wrap: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, gap: 6 },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -61,14 +63,12 @@ const s = StyleSheet.create({
     gap: 10,
   },
   inputWrapAtivo: { borderColor: '#7c3aed' },
-  icon: { fontSize: 14 },
   input: {
     flex: 1,
     color: '#e2e8f0',
     fontSize: 14,
     fontWeight: '600',
   },
-  clear: { color: '#475569', fontSize: 14, fontWeight: '700' },
   resultado: { color: '#64748b', fontSize: 11, fontWeight: '600', paddingHorizontal: 4 },
   resultadoVazio: { color: '#f87171' },
 });
