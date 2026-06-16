@@ -32,10 +32,11 @@ import { HeaderMenu } from './src/components/HeaderMenu';
 import { MonthSelector } from './src/components/MonthSelector';
 import { SearchBar } from './src/components/SearchBar';
 import { SEM_CATEGORIA } from './src/parser/parseFatura';
-import { formatSincronizacao } from './src/utils/meses';
+import { formatSincronizacao, nomeMes } from './src/utils/meses';
 import { aplicarEdicoes } from './src/utils/aplicarEdicoes';
 import { filtrarPessoas } from './src/utils/busca';
 import { haptic } from './src/utils/haptic';
+import { hashFatura } from './src/utils/hashFatura';
 
 export default function App() {
   return (
@@ -74,6 +75,12 @@ function AppContent() {
   const [itemEditando, setItemEditando] = useState<{ item: Gasto; donoAtual: string } | null>(null);
   const [termoBusca, setTermoBusca] = useState('');
   const donoAtualRef = useRef('');
+  const historicoRef = useRef(historico);
+  const promptadoRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    historicoRef.current = historico;
+  }, [historico]);
 
   useEffect(() => {
     if (!userEmail) {
@@ -82,11 +89,35 @@ function AppContent() {
   }, [userEmail]);
 
   useEffect(() => {
-    if (state.status === 'success') {
-      upsert(state.data.mes, { ...state.data, sincronizadoEm: new Date().toISOString() });
-      limparMes(state.data.mes);
-      setMesSelecionado(state.data.mes);
+    if (state.status !== 'success') return;
+    const { mes } = state.data;
+    setMesSelecionado(mes);
+
+    const existing = historicoRef.current[mes];
+    if (!existing || hashFatura(existing) === hashFatura(state.data)) {
+      upsert(mes, { ...state.data, sincronizadoEm: new Date().toISOString() });
+      limparMes(mes);
+      return;
     }
+
+    const alertKey = `${mes}:${hashFatura(state.data)}`;
+    if (promptadoRef.current === alertKey) return;
+    promptadoRef.current = alertKey;
+
+    Alert.alert(
+      'Fatura atualizada',
+      `A fatura de ${nomeMes(mes)} mudou desde a última sincronização. Deseja atualizar?`,
+      [
+        { text: 'Agora não', style: 'cancel' },
+        {
+          text: 'Atualizar',
+          onPress: () => {
+            upsert(mes, { ...state.data, sincronizadoEm: new Date().toISOString() });
+            limparMes(mes);
+          },
+        },
+      ],
+    );
   }, [state, upsert, limparMes]);
 
   const dadosBrutos =
@@ -256,7 +287,12 @@ function AppContent() {
 
           <ScrollView
             className="flex-1"
-            contentContainerStyle={{ paddingTop: 8, paddingHorizontal: 16, paddingBottom: 16, gap: 16 }}
+            contentContainerStyle={{
+              paddingTop: 8,
+              paddingHorizontal: 16,
+              paddingBottom: 16,
+              gap: 16,
+            }}
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
