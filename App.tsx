@@ -1,11 +1,12 @@
 import './global.css';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, Share, Text, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { SQLiteProvider } from 'expo-sqlite';
 
+import { Gasto } from './src/types';
 import { migrateDbAsync } from './src/storage/db';
 import { useGoogleAuth } from './src/auth/useGoogleAuth';
 import { useRelatorio } from './src/hooks/useRelatorio';
@@ -24,6 +25,7 @@ import { SemCategoriaCard } from './src/components/SemCategoriaCard';
 import { AnotacoesInvalidasCard } from './src/components/AnotacoesInvalidasCard';
 import { RegrasModal } from './src/components/RegrasModal';
 import { CategoriasModal } from './src/components/CategoriasModal';
+import { EditarItemModal } from './src/components/EditarItemModal';
 import { HeaderMenu } from './src/components/HeaderMenu';
 import { MonthSelector } from './src/components/MonthSelector';
 import { SEM_CATEGORIA } from './src/parser/parseFatura';
@@ -53,6 +55,8 @@ function AppContent() {
   const [showCategorias, setShowCategorias] = useState(false);
   const [showRegras, setShowRegras] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [itemEditando, setItemEditando] = useState<{ item: Gasto; donoAtual: string } | null>(null);
+  const donoAtualRef = useRef('');
 
   useEffect(() => {
     if (!userEmail) {
@@ -104,6 +108,39 @@ function AppContent() {
     setRefreshing(true);
     await refresh();
     setRefreshing(false);
+  }
+
+  function handleEditarItem(item: Gasto, dono: string) {
+    donoAtualRef.current = dono;
+    setItemEditando({ item, donoAtual: dono });
+  }
+
+  async function handleSalvarEdicao(novoDono: string, novaDesc: string) {
+    if (!itemEditando) return;
+    const { item } = itemEditando;
+    await salvarEdicao({
+      mes: mesSelecionado,
+      item_desc: item.descricao,
+      item_data: item.data,
+      item_valor: item.valor,
+      novo_dono: novoDono !== donoAtualRef.current ? novoDono : null,
+      nova_desc: novaDesc !== item.descricao ? novaDesc : null,
+      deletado: false,
+    });
+  }
+
+  async function handleDeletarItem() {
+    if (!itemEditando) return;
+    const { item } = itemEditando;
+    await salvarEdicao({
+      mes: mesSelecionado,
+      item_desc: item.descricao,
+      item_data: item.data,
+      item_valor: item.valor,
+      novo_dono: null,
+      nova_desc: null,
+      deletado: true,
+    });
   }
 
   const compartilharResumo = async () => {
@@ -196,6 +233,7 @@ function AppContent() {
                     pago={ep.pago}
                     onToggleOculto={() => toggleOculto(mesSelecionado, pessoa.dono)}
                     onTogglePago={() => togglePago(mesSelecionado, pessoa.dono)}
+                    onEditarItem={(item) => handleEditarItem(item, pessoa.dono)}
                   />
                 </Animated.View>
               );
@@ -223,6 +261,15 @@ function AppContent() {
         addCategoria={addCategoria}
         removeCategoria={removeCategoria}
         reset={reset}
+      />
+      <EditarItemModal
+        visible={itemEditando !== null}
+        item={itemEditando?.item ?? null}
+        donoAtual={itemEditando?.donoAtual ?? ''}
+        pessoas={pessoas.map(p => p.dono)}
+        onSalvar={handleSalvarEdicao}
+        onDeletar={handleDeletarItem}
+        onClose={() => setItemEditando(null)}
       />
     </View>
   );

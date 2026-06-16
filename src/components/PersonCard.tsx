@@ -14,6 +14,7 @@ interface Props {
   pago: boolean;
   onToggleOculto: () => void;
   onTogglePago: () => void;
+  onEditarItem: (item: Gasto) => void;
 }
 
 function formatItemShare(item: Gasto): string {
@@ -25,7 +26,7 @@ function formatItemShare(item: Gasto): string {
   return `- ${item.descricao} - ${item.valor.toFixed(2)}`;
 }
 
-export function PersonCard({ pessoa, mes, oculto, pago, onToggleOculto, onTogglePago }: Props) {
+export function PersonCard({ pessoa, mes, oculto, pago, onToggleOculto, onTogglePago, onEditarItem }: Props) {
   const accentColor = pago ? '#4ade80' : '#7c3aed';
   const expanded = !oculto;
   const [shared, setShared] = useState(false);
@@ -84,7 +85,7 @@ export function PersonCard({ pessoa, mes, oculto, pago, onToggleOculto, onToggle
       {expanded && (
         <Animated.View entering={FadeIn.duration(150)} style={s.body}>
           {[...pessoa.itens].sort((a, b) => b.valor - a.valor).map((item, idx) => (
-            <View key={idx} style={s.row}>
+            <TouchableOpacity key={idx} style={s.row} onPress={() => onEditarItem(item)} activeOpacity={0.7}>
               <View style={s.descCol}>
                 <Text style={s.desc}>{item.descricao}</Text>
                 <Text style={s.date}>{item.data}</Text>
@@ -92,7 +93,7 @@ export function PersonCard({ pessoa, mes, oculto, pago, onToggleOculto, onToggle
               <View style={s.badge}>
                 <Text style={s.badgeText}>R$ {item.valor.toFixed(2)}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
         </Animated.View>
       )}
