@@ -25,6 +25,7 @@ import { CategoriasModal } from './src/components/CategoriasModal';
 import { HeaderMenu } from './src/components/HeaderMenu';
 import { MonthSelector } from './src/components/MonthSelector';
 import { SEM_CATEGORIA } from './src/parser/parseFatura';
+import { formatSincronizacao } from './src/utils/meses';
 
 export default function App() {
   return (
@@ -57,7 +58,7 @@ function AppContent() {
 
   useEffect(() => {
     if (state.status === 'success') {
-      upsert(state.data.mes, state.data);
+      upsert(state.data.mes, { ...state.data, sincronizadoEm: new Date().toISOString() });
       setMesSelecionado(state.data.mes);
     }
   }, [state, upsert]);
@@ -124,6 +125,11 @@ function AppContent() {
               <Text className="text-slate-500 text-xs font-semibold tracking-wide">
                 {userName.split(' ')[0]}
               </Text>
+              {dadosExibidos.sincronizadoEm && (
+                <Text className="text-slate-600 text-[10px] font-medium tracking-wide">
+                  sinc. {formatSincronizacao(dadosExibidos.sincronizadoEm)}
+                </Text>
+              )}
             </View>
             <HeaderMenu
               items={[

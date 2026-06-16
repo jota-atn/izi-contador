@@ -21,5 +21,6 @@ export interface RelatorioFatura {
   total_fatura: number;
   relatorio_por_pessoa: RelatorioPessoa[];
   anotacoes_invalidas?: AnotacaoInvalida[];
+  sincronizadoEm?: string; // ISO timestamp da última sincronização
 }
 
