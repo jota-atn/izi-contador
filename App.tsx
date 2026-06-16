@@ -27,6 +27,7 @@ import { RegrasModal } from './src/components/RegrasModal';
 import { CategoriasModal } from './src/components/CategoriasModal';
 import { EditarItemModal } from './src/components/EditarItemModal';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
+import { TutorialModal } from './src/components/TutorialModal';
 import { HeaderMenu } from './src/components/HeaderMenu';
 import { MonthSelector } from './src/components/MonthSelector';
 import { SearchBar } from './src/components/SearchBar';
@@ -67,6 +68,7 @@ function AppContent() {
   const { edicoes, salvar: salvarEdicao, limparMes } = useEdicoesFatura(userEmail, mesSelecionado);
   const [showCategorias, setShowCategorias] = useState(false);
   const [showRegras, setShowRegras] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [itemEditando, setItemEditando] = useState<{ item: Gasto; donoAtual: string } | null>(null);
   const [termoBusca, setTermoBusca] = useState('');
@@ -216,6 +218,7 @@ function AppContent() {
                 { label: 'Compartilhar', onPress: compartilharResumo },
                 { label: 'Categorias', onPress: () => setShowCategorias(true) },
                 { label: 'Regras', onPress: () => setShowRegras(true) },
+                { label: 'Como anotar', onPress: () => setShowTutorial(true) },
                 { label: 'Sair', onPress: signOut, danger: true },
               ]}
             />
@@ -280,6 +283,7 @@ function AppContent() {
         </SafeAreaView>
       )}
 
+      <TutorialModal visible={showTutorial} onClose={() => setShowTutorial(false)} />
       <RegrasModal
         visible={showRegras}
         onClose={() => setShowRegras(false)}
