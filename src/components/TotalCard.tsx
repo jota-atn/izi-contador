@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { IconUsers } from './icons/IconUsers';
 import { nomeMes } from '../utils/meses';
 
@@ -11,6 +11,7 @@ interface Props {
   numPago: number;
   totalPendente: number;
   numPendente: number;
+  onPagarFatura?: () => void;
 }
 
 export function TotalCard({
@@ -22,17 +23,29 @@ export function TotalCard({
   numPago,
   totalPendente,
   numPendente,
+  onPagarFatura,
 }: Props) {
   const diff = totalAnterior !== undefined ? total - totalAnterior : null;
   const isUp = diff !== null && diff > 0;
   const isDown = diff !== null && diff < 0;
   const ratio = total > 0 ? totalPago / total : 0;
+  const quitada = numeroPessoas > 0 && numPendente === 0;
 
   return (
-    <View className="bg-slate-900 rounded-3xl p-6 border border-slate-800">
-      <Text className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-2">
-        Fatura Total
-      </Text>
+    <View
+      className="bg-slate-900 rounded-3xl p-6 border border-slate-800"
+      style={quitada ? s.cardQuitada : undefined}
+    >
+      <View style={s.headerRow}>
+        <Text className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-2">
+          Fatura Total
+        </Text>
+        {quitada && (
+          <View style={s.quitadaBadge}>
+            <Text style={s.quitadaText}>✓ Quitada</Text>
+          </View>
+        )}
+      </View>
       <Text className="text-white text-5xl font-black tracking-tighter mb-3">
         R$ {total.toFixed(2)}
       </Text>
@@ -96,6 +109,12 @@ export function TotalCard({
               <Text style={[s.valor, { color: '#f59e0b' }]}>R$ {totalPendente.toFixed(2)}</Text>
             </View>
           </View>
+
+          {numPendente > 0 && onPagarFatura && (
+            <TouchableOpacity style={s.btnPagar} onPress={onPagarFatura} activeOpacity={0.8}>
+              <Text style={s.btnPagarText}>Pagar fatura</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
     </View>
@@ -103,6 +122,27 @@ export function TotalCard({
 }
 
 const s = StyleSheet.create({
+  cardQuitada: { borderColor: '#14532d' },
+  headerRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  quitadaBadge: {
+    backgroundColor: '#052e16',
+    borderWidth: 1,
+    borderColor: '#14532d',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  quitadaText: { color: '#4ade80', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+  btnPagar: {
+    marginTop: 4,
+    backgroundColor: '#1e293b',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  btnPagarText: { color: '#e2e8f0', fontSize: 13, fontWeight: '800', letterSpacing: 0.3 },
   painel: {
     borderTopWidth: 1,
     borderTopColor: '#1e293b',

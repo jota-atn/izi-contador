@@ -1,6 +1,6 @@
 import './global.css';
 import { useEffect, useRef, useState } from 'react';
-import { RefreshControl, ScrollView, Share, Text, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, Share, Text, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -35,6 +35,7 @@ import { SEM_CATEGORIA } from './src/parser/parseFatura';
 import { formatSincronizacao } from './src/utils/meses';
 import { aplicarEdicoes } from './src/utils/aplicarEdicoes';
 import { filtrarPessoas } from './src/utils/busca';
+import { haptic } from './src/utils/haptic';
 
 export default function App() {
   return (
@@ -61,7 +62,7 @@ function AppContent() {
   const { categorias, addKeyword, removeKeyword, addCategoria, removeCategoria, reset } =
     useCategorias(userEmail);
   const { regras, addRegra, removeRegra } = useRegrasAlocacao(userEmail);
-  const { getEstado, toggleOculto, togglePago } = useEstadoFatura(userEmail);
+  const { getEstado, toggleOculto, togglePago, marcarTodosPago } = useEstadoFatura(userEmail);
   const { state, refresh } = useRelatorio(getAccessToken, authStatus, userName, categorias, regras);
   const { historico, meses, upsert } = useHistorico(userEmail);
   const [mesSelecionado, setMesSelecionado] = useState('');
@@ -166,6 +167,24 @@ function AppContent() {
     });
   }
 
+  function handlePagarFatura() {
+    const donos = pessoas.map((p) => p.dono);
+    Alert.alert(
+      'Pagar fatura',
+      `Marcar ${donos.length} ${donos.length === 1 ? 'pessoa' : 'pessoas'} como pagas?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Pagar tudo',
+          onPress: () => {
+            marcarTodosPago(mesSelecionado, donos);
+            haptic.success();
+          },
+        },
+      ],
+    );
+  }
+
   const compartilharResumo = async () => {
     if (!dadosExibidos) return;
     const texto = dadosExibidos.relatorio_por_pessoa
@@ -254,6 +273,7 @@ function AppContent() {
               totalAnterior={totalAnterior}
               mesAnterior={mesAnterior}
               {...pagamentoStatus}
+              onPagarFatura={handlePagarFatura}
             />
             <PieChartCard pessoas={pessoas} />
             {semCategoria && <SemCategoriaCard grupo={semCategoria} />}

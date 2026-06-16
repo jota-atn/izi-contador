@@ -61,5 +61,20 @@ export function useEstadoFatura(userEmail: string) {
     [db],
   );
 
-  return { getEstado, toggleOculto, togglePago };
+  const marcarTodosPago = useCallback(
+    (mes: string, donos: string[]) => {
+      const nextMes: Record<string, EstadoPessoa> = {};
+      for (const dono of donos) {
+        const curr = estadoRef.current[mes]?.[dono] ?? DEFAULT;
+        nextMes[dono] = { ...curr, pago: true };
+      }
+      setEstado((prev) => ({ ...prev, [mes]: { ...prev[mes], ...nextMes } }));
+      Promise.all(
+        donos.map((dono) => upsertEstadoPessoa(db, emailRef.current, mes, dono, nextMes[dono])),
+      ).catch((e) => console.error('[useEstadoFatura] marcarTodosPago falhou:', e));
+    },
+    [db],
+  );
+
+  return { getEstado, toggleOculto, togglePago, marcarTodosPago };
 }
