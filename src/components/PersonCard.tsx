@@ -83,7 +83,7 @@ export function PersonCard({ pessoa, mes, oculto, pago, onToggleOculto, onToggle
 
       {expanded && (
         <Animated.View entering={FadeIn.duration(150)} style={s.body}>
-          {pessoa.itens.map((item, idx) => (
+          {[...pessoa.itens].sort((a, b) => b.valor - a.valor).map((item, idx) => (
             <View key={idx} style={s.row}>
               <View style={s.descCol}>
                 <Text style={s.desc}>{item.descricao}</Text>
