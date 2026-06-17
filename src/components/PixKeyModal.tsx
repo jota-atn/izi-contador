@@ -1,14 +1,5 @@
 import { memo, useEffect, useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { IconClose } from './icons/IconClose';
 
 interface Props {
@@ -32,7 +23,7 @@ export const PixKeyModal = memo(function PixKeyModal({ visible, pixKey, onSave, 
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <KeyboardAvoidingView behavior="padding" style={s.overlay}>
+      <View style={s.overlay}>
         <View style={s.container}>
           <View style={s.header}>
             <Text style={s.title}>Minha chave Pix</Text>
@@ -74,7 +65,7 @@ export const PixKeyModal = memo(function PixKeyModal({ visible, pixKey, onSave, 
             </TouchableOpacity>
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 });
