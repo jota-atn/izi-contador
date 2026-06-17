@@ -6,7 +6,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { SQLiteProvider } from 'expo-sqlite';
 
-import { Gasto } from './src/types';
+import { Gasto, RelatorioPessoa } from './src/types';
 import { migrateDbAsync } from './src/storage/db';
 import { useGoogleAuth } from './src/auth/useGoogleAuth';
 import { useRelatorio } from './src/hooks/useRelatorio';
@@ -30,6 +30,7 @@ import { EditarItemModal } from './src/components/EditarItemModal';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { TutorialModal } from './src/components/TutorialModal';
 import { PixKeyModal } from './src/components/PixKeyModal';
+import { QRCodeModal } from './src/components/QRCodeModal';
 import { HeaderMenu } from './src/components/HeaderMenu';
 import { MonthSelector } from './src/components/MonthSelector';
 import { SearchBar } from './src/components/SearchBar';
@@ -83,6 +84,7 @@ function AppContent() {
   const [showPixKey, setShowPixKey] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [itemEditando, setItemEditando] = useState<{ item: Gasto; donoAtual: string } | null>(null);
+  const [pessoaQR, setPessoaQR] = useState<{ pessoa: RelatorioPessoa; mes: string } | null>(null);
   const [termoBusca, setTermoBusca] = useState('');
   const donoAtualRef = useRef('');
   const historicoRef = useRef(historico);
@@ -391,6 +393,7 @@ function AppContent() {
                     onToggleOculto={toggleOculto}
                     onTogglePago={togglePago}
                     onEditarItem={handleEditarItem}
+                    onCompartilharQR={(p, m) => setPessoaQR({ pessoa: p, mes: m })}
                   />
                 </Animated.View>
               );
@@ -408,6 +411,14 @@ function AppContent() {
         pixKey={pixKey}
         onSave={salvarPixKey}
         onClose={() => setShowPixKey(false)}
+      />
+      <QRCodeModal
+        visible={pessoaQR !== null}
+        pessoa={pessoaQR?.pessoa ?? null}
+        mes={pessoaQR?.mes ?? ''}
+        pixKey={pixKey}
+        userName={userName}
+        onClose={() => setPessoaQR(null)}
       />
       <RegrasModal
         visible={showRegras}

@@ -7,6 +7,7 @@ import { haptic } from '../utils/haptic';
 import { IconShare } from './icons/IconShare';
 import { IconChevron } from './icons/IconChevron';
 import { IconCheck } from './icons/IconCheck';
+import { IconQR } from './icons/IconQR';
 
 interface Props {
   pessoa: RelatorioPessoa;
@@ -17,6 +18,7 @@ interface Props {
   onToggleOculto: (mes: string, dono: string) => void;
   onTogglePago: (mes: string, dono: string) => void;
   onEditarItem: (item: Gasto, dono: string) => void;
+  onCompartilharQR: (pessoa: RelatorioPessoa, mes: string) => void;
 }
 
 function formatItemShare(item: Gasto): string {
@@ -37,6 +39,7 @@ export const PersonCard = memo(function PersonCard({
   onToggleOculto,
   onTogglePago,
   onEditarItem,
+  onCompartilharQR,
 }: Props) {
   const accentColor = pago ? '#4ade80' : '#7c3aed';
   const expanded = !oculto;
@@ -51,7 +54,7 @@ export const PersonCard = memo(function PersonCard({
       '————————',
       `*TOTAL = R$${pessoa.total_individual.toFixed(2)}*`,
     ];
-    if (pixKey) linhas.push(`Pix: ${pixKey}`);
+    if (pixKey) linhas.push(`*CHAVE PIX:* ${pixKey}`);
     const result = await Share.share({ message: linhas.join('\n') });
     if (result.action === Share.sharedAction) {
       haptic.success();
@@ -105,6 +108,16 @@ export const PersonCard = memo(function PersonCard({
           >
             <IconShare size={13} color={shared ? '#4ade80' : '#a78bfa'} />
           </TouchableOpacity>
+
+          {pixKey && (
+            <TouchableOpacity
+              onPress={() => onCompartilharQR(pessoa, mes)}
+              style={s.iconBtn}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <IconQR size={13} color="#a78bfa" />
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             onPress={() => {
