@@ -31,6 +31,11 @@ import { TutorialModal } from './src/components/TutorialModal';
 import { HeaderMenu } from './src/components/HeaderMenu';
 import { MonthSelector } from './src/components/MonthSelector';
 import { SearchBar } from './src/components/SearchBar';
+import { IconShare } from './src/components/icons/IconShare';
+import { IconSettings } from './src/components/icons/IconSettings';
+import { IconSliders } from './src/components/icons/IconSliders';
+import { IconBook } from './src/components/icons/IconBook';
+import { IconLogOut } from './src/components/icons/IconLogOut';
 import { SEM_CATEGORIA } from './src/parser/parseFatura';
 import { formatSincronizacao, nomeMes } from './src/utils/meses';
 import { aplicarEdicoes } from './src/utils/aplicarEdicoes';
@@ -265,11 +270,32 @@ function AppContent() {
             </View>
             <HeaderMenu
               items={[
-                { label: 'Compartilhar', onPress: compartilharResumo },
-                { label: 'Categorias', onPress: () => setShowCategorias(true) },
-                { label: 'Regras', onPress: () => setShowRegras(true) },
-                { label: 'Como anotar', onPress: () => setShowTutorial(true) },
-                { label: 'Sair', onPress: signOut, danger: true },
+                {
+                  label: 'Compartilhar',
+                  onPress: compartilharResumo,
+                  icon: <IconShare size={15} color="#a78bfa" />,
+                },
+                {
+                  label: 'Categorias',
+                  onPress: () => setShowCategorias(true),
+                  icon: <IconSettings size={15} color="#a78bfa" />,
+                },
+                {
+                  label: 'Regras',
+                  onPress: () => setShowRegras(true),
+                  icon: <IconSliders size={15} color="#a78bfa" />,
+                },
+                {
+                  label: 'Como anotar',
+                  onPress: () => setShowTutorial(true),
+                  icon: <IconBook size={15} color="#a78bfa" />,
+                },
+                {
+                  label: 'Sair',
+                  onPress: signOut,
+                  danger: true,
+                  icon: <IconLogOut size={15} color="#f87171" />,
+                },
               ]}
             />
           </View>

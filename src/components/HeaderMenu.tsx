@@ -13,6 +13,7 @@ interface Item {
   label: string;
   onPress: () => void;
   danger?: boolean;
+  icon?: React.ReactNode;
 }
 
 interface Props {
@@ -51,13 +52,7 @@ export function HeaderMenu({ items }: Props) {
       </TouchableOpacity>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        {/* Pressable único cobre a tela toda e fecha ao tocar fora */}
         <Pressable style={s.backdrop} onPress={() => setOpen(false)}>
-          {/*
-            onStartShouldSetResponder reclama o evento para o dropdown antes
-            do Pressable pai — assim toques dentro do dropdown não fecham o menu,
-            mas toques fora (onde só o Pressable existe) fecham.
-          */}
           <View style={[s.dropdown, { top }]} onStartShouldSetResponder={() => true}>
             {items.map((item, i) => (
               <TouchableOpacity
@@ -65,6 +60,7 @@ export function HeaderMenu({ items }: Props) {
                 onPress={() => handleItem(item.onPress)}
                 style={[s.item, i < items.length - 1 && s.itemBorder]}
               >
+                {item.icon && <View style={s.iconWrap}>{item.icon}</View>}
                 <Text style={[s.itemText, item.danger && s.itemDanger]}>{item.label}</Text>
               </TouchableOpacity>
             ))}
@@ -95,7 +91,7 @@ const s = StyleSheet.create({
   dropdown: {
     position: 'absolute',
     right: 16,
-    minWidth: 190,
+    minWidth: 210,
     backgroundColor: '#0f172a',
     borderRadius: 16,
     borderWidth: 1,
@@ -104,12 +100,19 @@ const s = StyleSheet.create({
     elevation: 8,
   },
   item: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 14,
   },
   itemBorder: {
     borderBottomWidth: 1,
     borderBottomColor: '#1e293b',
+  },
+  iconWrap: {
+    width: 20,
+    alignItems: 'center',
+    marginRight: 12,
   },
   itemText: {
     fontSize: 15,
