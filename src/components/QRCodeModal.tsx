@@ -1,8 +1,6 @@
 import { memo, useRef } from 'react';
-import { ActivityIndicator, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
-import * as FileSystem from 'expo-file-system/legacy';
-import * as Sharing from 'expo-sharing';
 import { RelatorioPessoa } from '../types';
 import { formatMesAnoUpper } from '../utils/meses';
 import { gerarPixPayload } from '../utils/pixPayload';
@@ -34,11 +32,19 @@ export const QRCodeModal = memo(function QRCodeModal({
 
   const handleCompartilhar = async () => {
     qrRef.current?.toDataURL(async (data) => {
-      const path = `${FileSystem.cacheDirectory}pix_qr_${pessoa.dono}.png`;
-      await FileSystem.writeAsStringAsync(path, data, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      await Sharing.shareAsync(path, { mimeType: 'image/png', dialogTitle: 'Compartilhar QR Pix' });
+      try {
+        const [{ default: FileSystem }, { shareAsync }] = await Promise.all([
+          import('expo-file-system/legacy') as Promise<{ default: typeof import('expo-file-system/legacy') }>,
+          import('expo-sharing'),
+        ]);
+        const path = `${FileSystem.cacheDirectory}pix_qr_${pessoa.dono}.png`;
+        await FileSystem.writeAsStringAsync(path, data, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        await shareAsync(path, { mimeType: 'image/png', dialogTitle: 'Compartilhar QR Pix' });
+      } catch {
+        Alert.alert('Indisponível', 'Compartilhamento de imagem requer uma atualização do app instalada.');
+      }
     });
   };
 
