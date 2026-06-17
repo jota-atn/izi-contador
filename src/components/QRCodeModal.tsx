@@ -33,15 +33,13 @@ export const QRCodeModal = memo(function QRCodeModal({
   const handleCompartilhar = async () => {
     qrRef.current?.toDataURL(async (data) => {
       try {
-        const [{ default: FileSystem }, { shareAsync }] = await Promise.all([
-          import('expo-file-system/legacy') as Promise<{ default: typeof import('expo-file-system/legacy') }>,
+        const [fs, sharing] = await Promise.all([
+          import('expo-file-system/legacy'),
           import('expo-sharing'),
         ]);
-        const path = `${FileSystem.cacheDirectory}pix_qr_${pessoa.dono}.png`;
-        await FileSystem.writeAsStringAsync(path, data, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-        await shareAsync(path, { mimeType: 'image/png', dialogTitle: 'Compartilhar QR Pix' });
+        const path = `${fs.cacheDirectory}pix_qr_${pessoa.dono}.png`;
+        await fs.writeAsStringAsync(path, data, { encoding: fs.EncodingType.Base64 });
+        await sharing.shareAsync(path, { mimeType: 'image/png', dialogTitle: 'Compartilhar QR Pix' });
       } catch {
         Alert.alert('Indisponível', 'Compartilhamento de imagem requer uma atualização do app instalada.');
       }
