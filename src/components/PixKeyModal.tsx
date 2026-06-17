@@ -76,6 +76,7 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'center',
     paddingHorizontal: 24,
+    paddingBottom: 80,
   },
   container: {
     backgroundColor: '#0f172a',
