@@ -59,7 +59,14 @@ export function PersonCard({
 
   return (
     <Animated.View style={[s.card, pago && s.cardPago]} layout={LinearTransition.duration(300)}>
-      <View style={s.header}>
+      <TouchableOpacity
+        style={s.header}
+        onPress={() => {
+          haptic.light();
+          onToggleOculto();
+        }}
+        activeOpacity={0.7}
+      >
         <View style={s.left}>
           <View style={[s.bar, { backgroundColor: accentColor }]} />
           <Text style={s.name}>{pessoa.dono}</Text>
@@ -78,7 +85,8 @@ export function PersonCard({
           </View>
 
           <TouchableOpacity
-            onPress={() => {
+            onPress={(e) => {
+              e.stopPropagation();
               haptic.light();
               onTogglePago();
             }}
@@ -89,7 +97,10 @@ export function PersonCard({
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={handleCompartilhar}
+            onPress={(e) => {
+              e.stopPropagation();
+              handleCompartilhar();
+            }}
             style={[s.iconBtn, shared && s.iconBtnShared]}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
@@ -97,14 +108,18 @@ export function PersonCard({
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={onToggleOculto}
+            onPress={(e) => {
+              e.stopPropagation();
+              haptic.light();
+              onToggleOculto();
+            }}
             style={s.iconBtn}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <IconChevron size={14} color="#475569" up={expanded} />
           </TouchableOpacity>
         </View>
-      </View>
+      </TouchableOpacity>
 
       {expanded && (
         <Animated.View entering={FadeIn.duration(150)} style={s.body}>
