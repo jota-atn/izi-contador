@@ -1,5 +1,5 @@
+import { memo, useState } from 'react';
 import { Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useState } from 'react';
 import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 import { Gasto, RelatorioPessoa } from '../types';
 import { formatMesAnoUpper } from '../utils/meses';
@@ -13,9 +13,9 @@ interface Props {
   mes: string;
   oculto: boolean;
   pago: boolean;
-  onToggleOculto: () => void;
-  onTogglePago: () => void;
-  onEditarItem: (item: Gasto) => void;
+  onToggleOculto: (mes: string, dono: string) => void;
+  onTogglePago: (mes: string, dono: string) => void;
+  onEditarItem: (item: Gasto, dono: string) => void;
 }
 
 function formatItemShare(item: Gasto): string {
@@ -27,7 +27,7 @@ function formatItemShare(item: Gasto): string {
   return `- ${item.descricao} - ${item.valor.toFixed(2)}`;
 }
 
-export function PersonCard({
+export const PersonCard = memo(function PersonCard({
   pessoa,
   mes,
   oculto,
@@ -63,7 +63,7 @@ export function PersonCard({
         style={s.header}
         onPress={() => {
           haptic.light();
-          onToggleOculto();
+          onToggleOculto(mes, pessoa.dono);
         }}
         activeOpacity={0.7}
       >
@@ -88,7 +88,7 @@ export function PersonCard({
             onPress={(e) => {
               e.stopPropagation();
               haptic.light();
-              onTogglePago();
+              onTogglePago(mes, pessoa.dono);
             }}
             style={[s.iconBtn, pago && s.iconBtnPago]}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -111,7 +111,7 @@ export function PersonCard({
             onPress={(e) => {
               e.stopPropagation();
               haptic.light();
-              onToggleOculto();
+              onToggleOculto(mes, pessoa.dono);
             }}
             style={s.iconBtn}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -129,7 +129,7 @@ export function PersonCard({
               <TouchableOpacity
                 key={idx}
                 style={s.row}
-                onPress={() => onEditarItem(item)}
+                onPress={() => onEditarItem(item, pessoa.dono)}
                 activeOpacity={0.7}
               >
                 <View style={s.descCol}>
@@ -145,7 +145,7 @@ export function PersonCard({
       )}
     </Animated.View>
   );
-}
+});
 
 const s = StyleSheet.create({
   card: {

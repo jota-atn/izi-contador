@@ -377,9 +377,9 @@ function AppContent() {
                     mes={dadosExibidos.mes}
                     oculto={buscaAtiva ? false : ep.oculto}
                     pago={ep.pago}
-                    onToggleOculto={() => toggleOculto(mesSelecionado, pessoa.dono)}
-                    onTogglePago={() => togglePago(mesSelecionado, pessoa.dono)}
-                    onEditarItem={(item) => handleEditarItem(item, pessoa.dono)}
+                    onToggleOculto={toggleOculto}
+                    onTogglePago={togglePago}
+                    onEditarItem={handleEditarItem}
                   />
                 </Animated.View>
               );
