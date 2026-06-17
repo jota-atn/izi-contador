@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { IconUsers } from './icons/IconUsers';
 import { nomeMes } from '../utils/meses';
@@ -14,7 +15,7 @@ interface Props {
   onPagarFatura?: () => void;
 }
 
-export function TotalCard({
+export const TotalCard = memo(function TotalCard({
   total,
   numeroPessoas,
   totalAnterior,
@@ -119,7 +120,7 @@ export function TotalCard({
       )}
     </View>
   );
-}
+});
 
 const s = StyleSheet.create({
   cardQuitada: { borderColor: '#14532d' },

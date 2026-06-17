@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { AnotacaoInvalida } from '../types';
 
@@ -5,7 +6,7 @@ interface Props {
   itens: AnotacaoInvalida[];
 }
 
-export function AnotacoesInvalidasCard({ itens }: Props) {
+export const AnotacoesInvalidasCard = memo(function AnotacoesInvalidasCard({ itens }: Props) {
   if (itens.length === 0) return null;
 
   return (
@@ -35,7 +36,7 @@ export function AnotacoesInvalidasCard({ itens }: Props) {
       ))}
     </View>
   );
-}
+});
 
 const s = StyleSheet.create({
   card: {

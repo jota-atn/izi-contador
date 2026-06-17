@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Dimensions, Text, View } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
 import { RelatorioPessoa } from '../types';
@@ -10,7 +11,7 @@ interface Props {
   pessoas: RelatorioPessoa[];
 }
 
-export function PieChartCard({ pessoas }: Props) {
+export const PieChartCard = memo(function PieChartCard({ pessoas }: Props) {
   const data = pessoas.map((p, i) => ({
     name: p.dono,
     population: p.total_individual,
@@ -44,4 +45,4 @@ export function PieChartCard({ pessoas }: Props) {
       />
     </View>
   );
-}
+});

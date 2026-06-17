@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { RelatorioPessoa } from '../types';
 import { IconWarning } from './icons/IconWarning';
@@ -6,7 +7,7 @@ interface Props {
   grupo: RelatorioPessoa;
 }
 
-export function SemCategoriaCard({ grupo }: Props) {
+export const SemCategoriaCard = memo(function SemCategoriaCard({ grupo }: Props) {
   return (
     <View style={s.card}>
       <View style={s.header}>
@@ -32,7 +33,7 @@ export function SemCategoriaCard({ grupo }: Props) {
       </View>
     </View>
   );
-}
+});
 
 const s = StyleSheet.create({
   card: {
