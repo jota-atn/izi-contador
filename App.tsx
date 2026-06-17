@@ -340,7 +340,7 @@ function AppContent() {
           <ScrollView
             className="flex-1"
             contentContainerStyle={{
-              paddingTop: 8,
+              paddingTop: 4,
               paddingHorizontal: 16,
               paddingBottom: 16,
               gap: 16,
