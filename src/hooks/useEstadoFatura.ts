@@ -32,9 +32,10 @@ export function useEstadoFatura(userEmail: string) {
       .catch((e) => console.error('[useEstadoFatura] loadEstado falhou:', e));
   }, [db, userEmail]);
 
-  function getEstado(mes: string, dono: string): EstadoPessoa {
-    return estado[mes]?.[dono] ?? DEFAULT;
-  }
+  const getEstado = useCallback(
+    (mes: string, dono: string): EstadoPessoa => estado[mes]?.[dono] ?? DEFAULT,
+    [estado],
+  );
 
   // lê pelo ref para evitar que StrictMode invoque o updater 2× e dispare writes duplicados
   const toggleOculto = useCallback(

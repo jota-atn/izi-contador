@@ -1,5 +1,5 @@
 import './global.css';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, Share, Text, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -125,43 +125,69 @@ function AppContent() {
     );
   }, [state, upsert, limparMes]);
 
-  const dadosBrutos =
-    (mesSelecionado && historico[mesSelecionado]) ||
-    (state.status === 'success' ? state.data : null);
+  const dadosBrutos = useMemo(
+    () =>
+      (mesSelecionado && historico[mesSelecionado]) ||
+      (state.status === 'success' ? state.data : null),
+    [mesSelecionado, historico, state],
+  );
 
-  const dadosExibidos = dadosBrutos ? aplicarEdicoes(dadosBrutos, edicoes) : null;
+  const dadosExibidos = useMemo(
+    () => (dadosBrutos ? aplicarEdicoes(dadosBrutos, edicoes) : null),
+    [dadosBrutos, edicoes],
+  );
 
-  const pessoas = dadosExibidos?.relatorio_por_pessoa.filter((p) => p.dono !== SEM_CATEGORIA) ?? [];
-  const semCategoria = dadosExibidos?.relatorio_por_pessoa.find((p) => p.dono === SEM_CATEGORIA);
+  const pessoas = useMemo(
+    () => dadosExibidos?.relatorio_por_pessoa.filter((p) => p.dono !== SEM_CATEGORIA) ?? [],
+    [dadosExibidos],
+  );
+
+  const semCategoria = useMemo(
+    () => dadosExibidos?.relatorio_por_pessoa.find((p) => p.dono === SEM_CATEGORIA),
+    [dadosExibidos],
+  );
+
   const idxMes = meses.indexOf(mesSelecionado);
   const mesAnterior = meses[idxMes + 1];
   const totalAnterior = mesAnterior ? historico[mesAnterior]?.total_fatura : undefined;
 
-  const { pessoasFiltradas, totalItens, totalFiltrados } = filtrarPessoas(pessoas, termoBusca);
   const buscaAtiva = termoBusca.trim().length > 0;
 
-  const pessoasOrdenadas = pessoasFiltradas
-    .map((pf) => pf.pessoa)
-    .sort((a, b) => {
-      if (buscaAtiva) return b.total_individual - a.total_individual;
-      const aPago = getEstado(mesSelecionado, a.dono).pago ? 1 : 0;
-      const bPago = getEstado(mesSelecionado, b.dono).pago ? 1 : 0;
-      if (aPago !== bPago) return aPago - bPago;
-      return b.total_individual - a.total_individual;
-    });
+  const { pessoasFiltradas, totalItens, totalFiltrados } = useMemo(
+    () => filtrarPessoas(pessoas, termoBusca),
+    [pessoas, termoBusca],
+  );
 
-  const pagamentoStatus = pessoas.reduce(
-    (acc, p) => {
-      if (getEstado(mesSelecionado, p.dono).pago) {
-        acc.totalPago += p.total_individual;
-        acc.numPago += 1;
-      } else {
-        acc.totalPendente += p.total_individual;
-        acc.numPendente += 1;
-      }
-      return acc;
-    },
-    { totalPago: 0, numPago: 0, totalPendente: 0, numPendente: 0 },
+  const pessoasOrdenadas = useMemo(
+    () =>
+      pessoasFiltradas
+        .map((pf) => pf.pessoa)
+        .sort((a, b) => {
+          if (buscaAtiva) return b.total_individual - a.total_individual;
+          const aPago = getEstado(mesSelecionado, a.dono).pago ? 1 : 0;
+          const bPago = getEstado(mesSelecionado, b.dono).pago ? 1 : 0;
+          if (aPago !== bPago) return aPago - bPago;
+          return b.total_individual - a.total_individual;
+        }),
+    [pessoasFiltradas, buscaAtiva, getEstado, mesSelecionado],
+  );
+
+  const pagamentoStatus = useMemo(
+    () =>
+      pessoas.reduce(
+        (acc, p) => {
+          if (getEstado(mesSelecionado, p.dono).pago) {
+            acc.totalPago += p.total_individual;
+            acc.numPago += 1;
+          } else {
+            acc.totalPendente += p.total_individual;
+            acc.numPendente += 1;
+          }
+          return acc;
+        },
+        { totalPago: 0, numPago: 0, totalPendente: 0, numPendente: 0 },
+      ),
+    [pessoas, getEstado, mesSelecionado],
   );
 
   async function onRefresh() {
@@ -170,10 +196,10 @@ function AppContent() {
     setRefreshing(false);
   }
 
-  function handleEditarItem(item: Gasto, dono: string) {
+  const handleEditarItem = useCallback((item: Gasto, dono: string) => {
     donoAtualRef.current = dono;
     setItemEditando({ item, donoAtual: dono });
-  }
+  }, []);
 
   async function handleSalvarEdicao(novoDono: string, novaDesc: string) {
     if (!itemEditando) return;
