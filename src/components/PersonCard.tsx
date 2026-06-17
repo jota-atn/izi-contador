@@ -85,8 +85,7 @@ export const PersonCard = memo(function PersonCard({
           </View>
 
           <TouchableOpacity
-            onPress={(e) => {
-              e.stopPropagation();
+            onPress={() => {
               haptic.light();
               onTogglePago(mes, pessoa.dono);
             }}
@@ -97,10 +96,7 @@ export const PersonCard = memo(function PersonCard({
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={(e) => {
-              e.stopPropagation();
-              handleCompartilhar();
-            }}
+            onPress={handleCompartilhar}
             style={[s.iconBtn, shared && s.iconBtnShared]}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
@@ -108,8 +104,7 @@ export const PersonCard = memo(function PersonCard({
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={(e) => {
-              e.stopPropagation();
+            onPress={() => {
               haptic.light();
               onToggleOculto(mes, pessoa.dono);
             }}

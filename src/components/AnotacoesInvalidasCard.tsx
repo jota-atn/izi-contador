@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { AnotacaoInvalida } from '../types';
+import { IconWarning } from './icons/IconWarning';
 
 interface Props {
   itens: AnotacaoInvalida[];
@@ -12,7 +13,7 @@ export const AnotacoesInvalidasCard = memo(function AnotacoesInvalidasCard({ ite
   return (
     <View style={s.card}>
       <View style={s.header}>
-        <Text style={s.icon}>⚠</Text>
+        <IconWarning size={16} color="#fb923c" />
         <View>
           <Text style={s.title}>Anotações inválidas</Text>
           <Text style={s.subtitle}>
@@ -48,7 +49,6 @@ const s = StyleSheet.create({
     gap: 10,
   },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  icon: { fontSize: 18, color: '#fb923c' },
   title: {
     color: '#fb923c',
     fontSize: 13,
