@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconClose } from './icons/IconClose';
 
 interface Props {
@@ -33,11 +32,8 @@ export const PixKeyModal = memo(function PixKeyModal({ visible, pixKey, onSave, 
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={s.overlay}
-      >
-        <SafeAreaView style={s.container}>
+      <KeyboardAvoidingView behavior="padding" style={s.overlay}>
+        <View style={s.container}>
           <View style={s.header}>
             <Text style={s.title}>Minha chave Pix</Text>
             <TouchableOpacity onPress={onClose} style={s.closeBtn} hitSlop={8}>
@@ -77,7 +73,7 @@ export const PixKeyModal = memo(function PixKeyModal({ visible, pixKey, onSave, 
               <Text style={s.btnPrimaryText}>Salvar</Text>
             </TouchableOpacity>
           </View>
-        </SafeAreaView>
+        </View>
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -87,21 +83,20 @@ const s = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
   },
   container: {
     backgroundColor: '#0f172a',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderRadius: 16,
     paddingHorizontal: 20,
-    paddingBottom: 8,
+    paddingVertical: 20,
     gap: 16,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 20,
   },
   title: {
     color: '#f1f5f9',
@@ -130,7 +125,6 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: 10,
-    paddingBottom: 8,
   },
   btnPrimary: {
     backgroundColor: '#7c3aed',
