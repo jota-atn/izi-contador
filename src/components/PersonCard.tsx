@@ -13,6 +13,7 @@ interface Props {
   mes: string;
   oculto: boolean;
   pago: boolean;
+  pixKey?: string;
   onToggleOculto: (mes: string, dono: string) => void;
   onTogglePago: (mes: string, dono: string) => void;
   onEditarItem: (item: Gasto, dono: string) => void;
@@ -32,6 +33,7 @@ export const PersonCard = memo(function PersonCard({
   mes,
   oculto,
   pago,
+  pixKey,
   onToggleOculto,
   onTogglePago,
   onEditarItem,
@@ -42,14 +44,15 @@ export const PersonCard = memo(function PersonCard({
 
   const handleCompartilhar = async () => {
     const itens = pessoa.itens.map(formatItemShare).join('\n');
-    const texto = [
+    const linhas = [
       `*FATURA ${formatMesAnoUpper(mes)}*`,
       `*${pessoa.dono}*`,
       itens,
       '————————',
       `*TOTAL = R$${pessoa.total_individual.toFixed(2)}*`,
-    ].join('\n');
-    const result = await Share.share({ message: texto });
+    ];
+    if (pixKey) linhas.push(`Pix: ${pixKey}`);
+    const result = await Share.share({ message: linhas.join('\n') });
     if (result.action === Share.sharedAction) {
       haptic.success();
       setShared(true);

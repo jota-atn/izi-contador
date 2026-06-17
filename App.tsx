@@ -15,6 +15,7 @@ import { useHistorico } from './src/hooks/useHistorico';
 import { useRegrasAlocacao } from './src/hooks/useRegrasAlocacao';
 import { useEstadoFatura } from './src/hooks/useEstadoFatura';
 import { useEdicoesFatura } from './src/hooks/useEdicoesFatura';
+import { usePixKey } from './src/hooks/usePixKey';
 import { LoadingScreen } from './src/components/LoadingScreen';
 import { ErrorScreen } from './src/components/ErrorScreen';
 import { LoginScreen } from './src/components/LoginScreen';
@@ -28,6 +29,7 @@ import { CategoriasModal } from './src/components/CategoriasModal';
 import { EditarItemModal } from './src/components/EditarItemModal';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { TutorialModal } from './src/components/TutorialModal';
+import { PixKeyModal } from './src/components/PixKeyModal';
 import { HeaderMenu } from './src/components/HeaderMenu';
 import { MonthSelector } from './src/components/MonthSelector';
 import { SearchBar } from './src/components/SearchBar';
@@ -35,6 +37,7 @@ import { IconShare } from './src/components/icons/IconShare';
 import { IconSettings } from './src/components/icons/IconSettings';
 import { IconSliders } from './src/components/icons/IconSliders';
 import { IconBook } from './src/components/icons/IconBook';
+import { IconCard } from './src/components/icons/IconCard';
 import { IconLogOut } from './src/components/icons/IconLogOut';
 import { SEM_CATEGORIA } from './src/parser/parseFatura';
 import { formatSincronizacao, nomeMes } from './src/utils/meses';
@@ -73,9 +76,11 @@ function AppContent() {
   const { historico, meses, upsert } = useHistorico(userEmail);
   const [mesSelecionado, setMesSelecionado] = useState('');
   const { edicoes, salvar: salvarEdicao, limparMes } = useEdicoesFatura(userEmail, mesSelecionado);
+  const { pixKey, salvarPixKey } = usePixKey(userEmail);
   const [showCategorias, setShowCategorias] = useState(false);
   const [showRegras, setShowRegras] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showPixKey, setShowPixKey] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [itemEditando, setItemEditando] = useState<{ item: Gasto; donoAtual: string } | null>(null);
   const [termoBusca, setTermoBusca] = useState('');
@@ -249,14 +254,14 @@ function AppContent() {
 
   const compartilharResumo = async () => {
     if (!dadosExibidos) return;
-    const texto = dadosExibidos.relatorio_por_pessoa
+    const linhas = dadosExibidos.relatorio_por_pessoa
       .filter((p) => p.dono !== SEM_CATEGORIA)
       .map((p) => {
         const itens = p.itens.map((i) => `${i.descricao} - ${i.valor.toFixed(2)}`).join('\n');
         return `${p.dono}\n${itens}\nTotal = ${p.total_individual.toFixed(2)}`;
-      })
-      .join('\n\n');
-    await Share.share({ message: texto });
+      });
+    if (pixKey) linhas.push(`Pix: ${pixKey}`);
+    await Share.share({ message: linhas.join('\n\n') });
   };
 
   return (
@@ -310,6 +315,11 @@ function AppContent() {
                   label: 'Regras',
                   onPress: () => setShowRegras(true),
                   icon: <IconSliders size={15} color="#a78bfa" />,
+                },
+                {
+                  label: 'Chave Pix',
+                  onPress: () => setShowPixKey(true),
+                  icon: <IconCard size={15} color="#a78bfa" />,
                 },
                 {
                   label: 'Como anotar',
@@ -377,6 +387,7 @@ function AppContent() {
                     mes={dadosExibidos.mes}
                     oculto={buscaAtiva ? false : ep.oculto}
                     pago={ep.pago}
+                    pixKey={pixKey}
                     onToggleOculto={toggleOculto}
                     onTogglePago={togglePago}
                     onEditarItem={handleEditarItem}
@@ -392,6 +403,12 @@ function AppContent() {
       )}
 
       <TutorialModal visible={showTutorial} onClose={() => setShowTutorial(false)} />
+      <PixKeyModal
+        visible={showPixKey}
+        pixKey={pixKey}
+        onSave={salvarPixKey}
+        onClose={() => setShowPixKey(false)}
+      />
       <RegrasModal
         visible={showRegras}
         onClose={() => setShowRegras(false)}
