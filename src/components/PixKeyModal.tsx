@@ -1,5 +1,6 @@
 import { memo, useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { sanitizarChavePix } from '../utils/pixPayload';
 import { IconClose } from './icons/IconClose';
 
 interface Props {
@@ -16,8 +17,11 @@ export const PixKeyModal = memo(function PixKeyModal({ visible, pixKey, onSave, 
     if (visible) setValue(pixKey);
   }, [visible, pixKey]);
 
+  const sanitized = sanitizarChavePix(value);
+  const showPreview = value.trim().length > 0 && sanitized !== value.trim().replace(/\s+/g, '');
+
   const handleSave = () => {
-    onSave(value);
+    onSave(sanitized);
     onClose();
   };
 
@@ -47,6 +51,10 @@ export const PixKeyModal = memo(function PixKeyModal({ visible, pixKey, onSave, 
             returnKeyType="done"
             onSubmitEditing={handleSave}
           />
+
+          {showPreview && (
+            <Text style={s.preview}>Será salvo como: {sanitized}</Text>
+          )}
 
           <View style={s.actions}>
             {value.trim().length > 0 && (
@@ -140,5 +148,11 @@ const s = StyleSheet.create({
     color: '#94a3b8',
     fontWeight: '600',
     fontSize: 14,
+  },
+  preview: {
+    color: '#4ade80',
+    fontSize: 12,
+    fontFamily: 'monospace',
+    marginTop: -4,
   },
 });

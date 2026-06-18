@@ -1,3 +1,35 @@
+export function sanitizarChavePix(raw: string): string {
+  const v = raw.trim().replace(/\s+/g, '');
+  if (!v) return '';
+
+  // E-mail
+  if (v.includes('@')) return v.toLowerCase();
+
+  // Chave aleatória (UUID)
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)) {
+    return v.toLowerCase();
+  }
+
+  const digits = v.replace(/\D/g, '');
+
+  // Telefone com + prefixo: remove formatação, mantém +
+  if (v.startsWith('+')) return '+' + digits;
+
+  // 13 dígitos começando com 55 → usuário esqueceu o + (ex: 5511999999999)
+  if (digits.length === 13 && digits.startsWith('55')) return '+' + digits;
+
+  // CPF com formatação: XXX.XXX.XXX-XX → só dígitos
+  if (/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(v)) return digits;
+
+  // CNPJ com formatação: XX.XXX.XXX/XXXX-XX → só dígitos
+  if (/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/.test(v)) return digits;
+
+  // Telefone com parênteses: (11) 99999-9999 → +5511999999999
+  if (/^\(\d{2}\)/.test(v) && digits.length >= 10) return '+55' + digits;
+
+  return v;
+}
+
 function tlv(id: string, value: string): string {
   return `${id}${String(value.length).padStart(2, '0')}${value}`;
 }
