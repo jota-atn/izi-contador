@@ -75,11 +75,8 @@ export const PersonCard = memo(function PersonCard({
       >
         <View style={s.left}>
           <View style={[s.bar, { backgroundColor: accentColor }]} />
-          <Text style={s.name}>{pessoa.dono}</Text>
-        </View>
-
-        <View style={s.right}>
-          <View style={s.totalCol}>
+          <View style={s.nameValueCol}>
+            <Text style={s.name}>{pessoa.dono}</Text>
             <Text style={[s.total, pago && s.totalPago]}>
               R$ {pessoa.total_individual.toFixed(2)}
             </Text>
@@ -89,7 +86,9 @@ export const PersonCard = memo(function PersonCard({
               </Text>
             )}
           </View>
+        </View>
 
+        <View style={s.right}>
           <TouchableOpacity
             onPress={() => {
               haptic.light();
@@ -178,7 +177,8 @@ const s = StyleSheet.create({
     borderBottomColor: '#1e293b',
   },
   left: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  bar: { width: 6, height: 20, borderRadius: 3 },
+  bar: { width: 6, borderRadius: 3, alignSelf: 'stretch' },
+  nameValueCol: { flex: 1, gap: 3 },
   name: {
     color: '#fff',
     fontSize: 16,
@@ -186,9 +186,8 @@ const s = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: -0.3,
   },
-  right: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  totalCol: { alignItems: 'flex-end', marginRight: 4 },
-  total: { color: '#a78bfa', fontFamily: 'monospace', fontWeight: '700', fontSize: 16 },
+  right: { flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 8 },
+  total: { color: '#a78bfa', fontFamily: 'monospace', fontWeight: '700', fontSize: 15 },
   totalPago: { color: '#4ade80' },
   itemCount: {
     color: '#475569',
