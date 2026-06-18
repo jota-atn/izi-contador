@@ -1,6 +1,6 @@
 import './global.css';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, Share, Text, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -40,6 +40,10 @@ import { IconSliders } from './src/components/icons/IconSliders';
 import { IconBook } from './src/components/icons/IconBook';
 import { IconCard } from './src/components/icons/IconCard';
 import { IconLogOut } from './src/components/icons/IconLogOut';
+import { IconBarChart } from './src/components/icons/IconBarChart';
+import { IconSparkle } from './src/components/icons/IconSparkle';
+import { EstatsScreen } from './src/screens/EstatsScreen';
+import { IziBotScreen } from './src/screens/IziBotScreen';
 import { SEM_CATEGORIA } from './src/parser/parseFatura';
 import { formatSincronizacao, nomeMes } from './src/utils/meses';
 import { aplicarEdicoes } from './src/utils/aplicarEdicoes';
@@ -86,6 +90,7 @@ function AppContent() {
   const [itemEditando, setItemEditando] = useState<{ item: Gasto; donoAtual: string } | null>(null);
   const [pessoaQR, setPessoaQR] = useState<{ pessoa: RelatorioPessoa; mes: string } | null>(null);
   const [termoBusca, setTermoBusca] = useState('');
+  const [activeTab, setActiveTab] = useState<'fatura' | 'stats' | 'bot'>('fatura');
   const donoAtualRef = useRef('');
   const historicoRef = useRef(historico);
   const promptadoRef = useRef<string | null>(null);
@@ -338,70 +343,101 @@ function AppContent() {
             />
           </View>
 
-          {meses.length > 1 && (
-            <MonthSelector meses={meses} selected={mesSelecionado} onChange={setMesSelecionado} />
+          {activeTab === 'fatura' && (
+            <>
+              {meses.length > 1 && (
+                <MonthSelector meses={meses} selected={mesSelecionado} onChange={setMesSelecionado} />
+              )}
+
+              <SearchBar
+                value={termoBusca}
+                onChange={setTermoBusca}
+                totalItens={totalItens}
+                totalFiltrados={totalFiltrados}
+              />
+
+              <ScrollView
+                className="flex-1"
+                contentContainerStyle={{
+                  paddingTop: 4,
+                  paddingHorizontal: 16,
+                  paddingBottom: 16,
+                  gap: 16,
+                }}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    tintColor="#7c3aed"
+                    colors={['#7c3aed']}
+                  />
+                }
+              >
+                <TotalCard
+                  total={dadosExibidos.total_fatura}
+                  numeroPessoas={pessoas.length}
+                  totalAnterior={totalAnterior}
+                  mesAnterior={mesAnterior}
+                  {...pagamentoStatus}
+                  onPagarFatura={handlePagarFatura}
+                />
+                <PieChartCard pessoas={pessoas} />
+                {semCategoria && <SemCategoriaCard grupo={semCategoria} />}
+                {dadosExibidos.anotacoes_invalidas && dadosExibidos.anotacoes_invalidas.length > 0 && (
+                  <AnotacoesInvalidasCard itens={dadosExibidos.anotacoes_invalidas} />
+                )}
+                {pessoasOrdenadas.map((pessoa) => {
+                  const ep = getEstado(mesSelecionado, pessoa.dono);
+                  return (
+                    <Animated.View key={pessoa.dono} layout={LinearTransition.duration(300)}>
+                      <PersonCard
+                        pessoa={pessoa}
+                        mes={dadosExibidos.mes}
+                        oculto={buscaAtiva ? false : ep.oculto}
+                        pago={ep.pago}
+                        pixKey={pixKey}
+                        onToggleOculto={toggleOculto}
+                        onTogglePago={togglePago}
+                        onEditarItem={handleEditarItem}
+                        onCompartilharQR={(p, m) => setPessoaQR({ pessoa: p, mes: m })}
+                      />
+                    </Animated.View>
+                  );
+                })}
+                <Text className="text-slate-700 text-[10px] font-bold uppercase tracking-[0.2em] text-center py-4">
+                  IziContador • Automático • {new Date().getFullYear()}
+                </Text>
+              </ScrollView>
+            </>
           )}
 
-          <SearchBar
-            value={termoBusca}
-            onChange={setTermoBusca}
-            totalItens={totalItens}
-            totalFiltrados={totalFiltrados}
-          />
+          {activeTab === 'stats' && <EstatsScreen historico={historico} meses={meses} />}
 
-          <ScrollView
-            className="flex-1"
-            contentContainerStyle={{
-              paddingTop: 4,
-              paddingHorizontal: 16,
-              paddingBottom: 16,
-              gap: 16,
-            }}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                tintColor="#7c3aed"
-                colors={['#7c3aed']}
-              />
-            }
-          >
-            <TotalCard
-              total={dadosExibidos.total_fatura}
-              numeroPessoas={pessoas.length}
-              totalAnterior={totalAnterior}
-              mesAnterior={mesAnterior}
-              {...pagamentoStatus}
-              onPagarFatura={handlePagarFatura}
-            />
-            <PieChartCard pessoas={pessoas} />
-            {semCategoria && <SemCategoriaCard grupo={semCategoria} />}
-            {dadosExibidos.anotacoes_invalidas && dadosExibidos.anotacoes_invalidas.length > 0 && (
-              <AnotacoesInvalidasCard itens={dadosExibidos.anotacoes_invalidas} />
-            )}
-            {pessoasOrdenadas.map((pessoa) => {
-              const ep = getEstado(mesSelecionado, pessoa.dono);
+          {activeTab === 'bot' && <IziBotScreen />}
+
+          <View style={tabS.bar}>
+            {(
+              [
+                { key: 'fatura', label: 'Fatura', Icon: IconCard },
+                { key: 'stats', label: 'Estatísticas', Icon: IconBarChart },
+                { key: 'bot', label: 'IziBot', Icon: IconSparkle },
+              ] as const
+            ).map(({ key, label, Icon }) => {
+              const active = activeTab === key;
               return (
-                <Animated.View key={pessoa.dono} layout={LinearTransition.duration(300)}>
-                  <PersonCard
-                    pessoa={pessoa}
-                    mes={dadosExibidos.mes}
-                    oculto={buscaAtiva ? false : ep.oculto}
-                    pago={ep.pago}
-                    pixKey={pixKey}
-                    onToggleOculto={toggleOculto}
-                    onTogglePago={togglePago}
-                    onEditarItem={handleEditarItem}
-                    onCompartilharQR={(p, m) => setPessoaQR({ pessoa: p, mes: m })}
-                  />
-                </Animated.View>
+                <TouchableOpacity
+                  key={key}
+                  style={tabS.item}
+                  onPress={() => setActiveTab(key)}
+                  activeOpacity={0.7}
+                >
+                  <Icon size={20} color={active ? '#a78bfa' : '#475569'} />
+                  <Text style={[tabS.label, active && tabS.labelActive]}>{label}</Text>
+                </TouchableOpacity>
               );
             })}
-            <Text className="text-slate-700 text-[10px] font-bold uppercase tracking-[0.2em] text-center py-4">
-              IziContador • Automático • {new Date().getFullYear()}
-            </Text>
-          </ScrollView>
+          </View>
         </SafeAreaView>
       )}
 
@@ -449,3 +485,26 @@ function AppContent() {
     </View>
   );
 }
+
+const tabS = StyleSheet.create({
+  bar: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: '#1e293b',
+    backgroundColor: '#0a0f1a',
+  },
+  item: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    gap: 3,
+  },
+  label: {
+    color: '#475569',
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+  labelActive: { color: '#a78bfa' },
+});
