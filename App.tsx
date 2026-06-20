@@ -414,7 +414,7 @@ function AppContent() {
 
           {activeTab === 'stats' && <EstatsScreen historico={historico} meses={meses} />}
 
-          {activeTab === 'bot' && <IziBotScreen />}
+          {activeTab === 'bot' && <IziBotScreen historico={historico} meses={meses} userName={userName} />}
 
           <View style={tabS.bar}>
             {(
