@@ -45,6 +45,7 @@ import { IconSparkle } from './src/components/icons/IconSparkle';
 import { EstatsScreen } from './src/screens/EstatsScreen';
 import { IziBotScreen } from './src/screens/IziBotScreen';
 import { SEM_CATEGORIA } from './src/parser/parseFatura';
+import { MOCK_MODE, MOCK_HISTORICO, MOCK_MESES, MOCK_USER_NAME } from './src/mocks/faturasMock';
 import { formatSincronizacao, nomeMes } from './src/utils/meses';
 import { aplicarEdicoes } from './src/utils/aplicarEdicoes';
 import { filtrarPessoas } from './src/utils/busca';
@@ -67,18 +68,21 @@ export default function App() {
 function AppContent() {
   const {
     status: authStatus,
-    userName,
+    userName: _userName,
     userEmail,
     signIn,
     signOut,
     getAccessToken,
   } = useGoogleAuth();
+  const userName = MOCK_MODE ? MOCK_USER_NAME : _userName;
   const { categorias, addKeyword, removeKeyword, addCategoria, removeCategoria, reset } =
     useCategorias(userEmail);
   const { regras, addRegra, removeRegra } = useRegrasAlocacao(userEmail);
   const { getEstado, toggleOculto, togglePago, marcarTodosPago } = useEstadoFatura(userEmail);
   const { state, refresh } = useRelatorio(getAccessToken, authStatus, userName, categorias, regras);
-  const { historico, meses, upsert } = useHistorico(userEmail);
+  const { historico: _historico, meses: _meses, upsert } = useHistorico(userEmail);
+  const historico = MOCK_MODE ? MOCK_HISTORICO : _historico;
+  const meses = MOCK_MODE ? MOCK_MESES : _meses;
   const [mesSelecionado, setMesSelecionado] = useState('');
   const { edicoes, salvar: salvarEdicao, limparMes } = useEdicoesFatura(userEmail, mesSelecionado);
   const { pixKey, salvarPixKey } = usePixKey(userEmail);
@@ -90,7 +94,7 @@ function AppContent() {
   const [itemEditando, setItemEditando] = useState<{ item: Gasto; donoAtual: string } | null>(null);
   const [pessoaQR, setPessoaQR] = useState<{ pessoa: RelatorioPessoa; mes: string } | null>(null);
   const [termoBusca, setTermoBusca] = useState('');
-  const [activeTab, setActiveTab] = useState<'fatura' | 'stats' | 'bot'>('fatura');
+  const [activeTab, setActiveTab] = useState<'fatura' | 'stats' | 'bot'>(MOCK_MODE ? 'stats' : 'fatura');
   const donoAtualRef = useRef('');
   const historicoRef = useRef(historico);
   const promptadoRef = useRef<string | null>(null);
@@ -104,6 +108,12 @@ function AppContent() {
       setMesSelecionado('');
     }
   }, [userEmail]);
+
+  useEffect(() => {
+    if (MOCK_MODE && !mesSelecionado && MOCK_MESES.length > 0) {
+      setMesSelecionado(MOCK_MESES[0]);
+    }
+  }, [mesSelecionado]);
 
   useEffect(() => {
     if (state.status !== 'success') return;
@@ -273,24 +283,24 @@ function AppContent() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#020617' }}>
-      {authStatus === 'loading' && <LoadingScreen message="Verificando autenticação..." />}
+      {!MOCK_MODE && authStatus === 'loading' && <LoadingScreen message="Verificando autenticação..." />}
 
-      {authStatus === 'unauthenticated' && <LoginScreen onSignIn={signIn} />}
+      {!MOCK_MODE && authStatus === 'unauthenticated' && <LoginScreen onSignIn={signIn} />}
 
-      {authStatus === 'authenticated' && state.status === 'auth_expired' && (
+      {!MOCK_MODE && authStatus === 'authenticated' && state.status === 'auth_expired' && (
         <ErrorScreen message="Sessão expirada. Faça login novamente." onRetry={signOut} />
       )}
 
-      {authStatus === 'authenticated' &&
+      {!MOCK_MODE && authStatus === 'authenticated' &&
         (state.status === 'loading' || state.status === 'idle') && (
           <LoadingScreen message="Sincronizando faturas..." />
         )}
 
-      {authStatus === 'authenticated' && state.status === 'error' && (
+      {!MOCK_MODE && authStatus === 'authenticated' && state.status === 'error' && (
         <ErrorScreen message={state.message} onRetry={refresh} />
       )}
 
-      {authStatus === 'authenticated' && state.status === 'success' && dadosExibidos && (
+      {(MOCK_MODE || (authStatus === 'authenticated' && state.status === 'success')) && dadosExibidos && (
         <SafeAreaView className="flex-1 bg-slate-950">
           <View className="flex-row items-center justify-between px-6 py-4 border-b border-slate-800">
             <View>
