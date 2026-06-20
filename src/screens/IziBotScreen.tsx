@@ -39,9 +39,10 @@ interface Props {
   meses: string[]; // desc
   userName: string;
   userEmail: string;
+  kbOffset: number; // tabBarHeight + insets.bottom para corrigir paddingBottom do teclado
 }
 
-export function IziBotScreen({ historico, meses, userName, userEmail }: Props) {
+export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }: Props) {
   const systemPrompt = useMemo(() => {
     if (meses.length === 0) return '';
     return (
@@ -259,7 +260,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail }: Props) {
   const visibleMessages = messages.filter((m) => !m.isHidden);
 
   return (
-    <View style={[s.root, kbHeight > 0 && { paddingBottom: kbHeight }]}>
+    <View style={[s.root, kbHeight > 0 && { paddingBottom: kbHeight - kbOffset }]}>
       <ScrollView
         ref={scrollRef}
         style={s.scroll}
