@@ -363,7 +363,6 @@ function AppContent() {
                 className="flex-1"
                 contentContainerStyle={{
                   paddingTop: 4,
-                  paddingHorizontal: 16,
                   paddingBottom: 16,
                   gap: 16,
                 }}
@@ -377,18 +376,28 @@ function AppContent() {
                   />
                 }
               >
-                <TotalCard
-                  total={dadosExibidos.total_fatura}
-                  numeroPessoas={pessoas.length}
-                  totalAnterior={totalAnterior}
-                  mesAnterior={mesAnterior}
-                  {...pagamentoStatus}
-                  onPagarFatura={handlePagarFatura}
-                />
-                <PieChartCard pessoas={pessoas} />
-                {semCategoria && <SemCategoriaCard grupo={semCategoria} />}
+                <View style={{ marginHorizontal: 16 }}>
+                  <TotalCard
+                    total={dadosExibidos.total_fatura}
+                    numeroPessoas={pessoas.length}
+                    totalAnterior={totalAnterior}
+                    mesAnterior={mesAnterior}
+                    {...pagamentoStatus}
+                    onPagarFatura={handlePagarFatura}
+                  />
+                </View>
+                <View style={{ marginHorizontal: 16 }}>
+                  <PieChartCard pessoas={pessoas} />
+                </View>
+                {semCategoria && (
+                  <View style={{ marginHorizontal: 16 }}>
+                    <SemCategoriaCard grupo={semCategoria} />
+                  </View>
+                )}
                 {dadosExibidos.anotacoes_invalidas && dadosExibidos.anotacoes_invalidas.length > 0 && (
-                  <AnotacoesInvalidasCard itens={dadosExibidos.anotacoes_invalidas} />
+                  <View style={{ marginHorizontal: 16 }}>
+                    <AnotacoesInvalidasCard itens={dadosExibidos.anotacoes_invalidas} />
+                  </View>
                 )}
                 {pessoasOrdenadas.map((pessoa) => {
                   const ep = getEstado(mesSelecionado, pessoa.dono);
