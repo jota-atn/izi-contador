@@ -1,92 +1,269 @@
-import { StyleSheet, Text, View } from 'react-native';
-import { IconSparkle } from '../components/icons/IconSparkle';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Historico } from '../hooks/useHistorico';
+import { streamGemini, GeminiMessage } from '../services/geminiApi';
+import { serializarHistorico } from '../utils/serializarHistorico';
+import { nomeMes } from '../utils/meses';
 
-export function IziBotScreen() {
+const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY ?? '';
+
+interface Message {
+  id: string;
+  role: 'user' | 'bot';
+  text: string;
+  streaming?: boolean;
+  isWelcome?: boolean;
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+interface Props {
+  historico: Historico;
+  meses: string[]; // desc
+  userName: string;
+}
+
+export function IziBotScreen({ historico, meses, userName }: Props) {
+  const systemPrompt = useMemo(() => {
+    if (meses.length === 0) return '';
+    return `Você é o IziBot, assistente financeiro do IziContador. Analisa faturas do cartão Nubank divididas entre pessoas.
+
+O usuário que usa o app é ${userName}.
+
+Dados das faturas disponíveis:
+
+${serializarHistorico(historico, meses)}
+
+Instruções:
+- Responda em português brasileiro, de forma concisa e direta
+- Use valores em R$ com separador de milhar (ex: R$ 1.234)
+- Mencione meses por extenso (Janeiro, Fevereiro, etc.)
+- Foque somente nos dados disponíveis acima, não invente valores
+- Seja objetivo e amigável`;
+  }, [historico, meses, userName]);
+
+  const welcomeText = useMemo(() => {
+    if (meses.length === 0) {
+      return 'Olá! Sincronize uma fatura para que eu possa analisar seus gastos.';
+    }
+    const oldest = meses[meses.length - 1];
+    const newest = meses[0];
+    const range =
+      meses.length >= 2
+        ? ` (${nomeMes(oldest)} a ${nomeMes(newest)})`
+        : ` (${nomeMes(newest)})`;
+    return `Olá! Tenho acesso a ${meses.length} ${meses.length === 1 ? 'mês' : 'meses'} de fatura${range}. Me pergunte sobre gastos, comparativos entre pessoas, itens recorrentes...`;
+  }, [meses]);
+
+  const [messages, setMessages] = useState<Message[]>(() => [
+    { id: 'welcome', role: 'bot', text: welcomeText, isWelcome: true },
+  ]);
+  const [input, setInput] = useState('');
+  const [streaming, setStreaming] = useState(false);
+  const cancelRef = useRef<(() => void) | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    return () => cancelRef.current?.();
+  }, []);
+
+  useEffect(() => {
+    scrollRef.current?.scrollToEnd({ animated: true });
+  }, [messages]);
+
+  const send = useCallback(() => {
+    const text = input.trim();
+    if (!text || streaming || meses.length === 0) return;
+
+    if (!API_KEY) {
+      setMessages((prev) => [
+        ...prev,
+        { id: uid(), role: 'user', text },
+        {
+          id: uid(),
+          role: 'bot',
+          text: 'API key não configurada. Adicione EXPO_PUBLIC_GEMINI_API_KEY no arquivo .env.',
+        },
+      ]);
+      setInput('');
+      return;
+    }
+
+    const snapshot = messages;
+    setInput('');
+    setStreaming(true);
+
+    const apiMessages: GeminiMessage[] = [
+      ...snapshot
+        .filter((m) => !m.isWelcome && !m.streaming)
+        .map((m) => ({ role: m.role === 'bot' ? ('model' as const) : ('user' as const), text: m.text })),
+      { role: 'user' as const, text },
+    ];
+
+    setMessages((prev) => [
+      ...prev,
+      { id: uid(), role: 'user', text },
+      { id: uid(), role: 'bot', text: '', streaming: true },
+    ]);
+
+    cancelRef.current = streamGemini(
+      API_KEY,
+      systemPrompt,
+      apiMessages,
+      (chunk) => {
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (!last || last.role !== 'bot') return prev;
+          return [...prev.slice(0, -1), { ...last, text: last.text + chunk }];
+        });
+      },
+      () => {
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (!last || last.role !== 'bot') return prev;
+          return [...prev.slice(0, -1), { ...last, streaming: false }];
+        });
+        setStreaming(false);
+        cancelRef.current = null;
+      },
+      (err) => {
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (!last || last.role !== 'bot') return prev;
+          return [...prev.slice(0, -1), { ...last, text: `Erro: ${err}`, streaming: false }];
+        });
+        setStreaming(false);
+        cancelRef.current = null;
+      },
+    );
+  }, [input, streaming, messages, systemPrompt, meses.length]);
+
   return (
-    <View style={s.container}>
-      <View style={s.iconWrap}>
-        <IconSparkle size={36} color="#7c3aed" />
-      </View>
-
-      <Text style={s.title}>
-        Izi<Text style={s.titleAccent}>Bot</Text>
-      </Text>
-
-      <Text style={s.desc}>
-        Seu assistente de IA para analisar gastos, identificar padrões e te ajudar a economizar —
-        direto nas suas faturas.
-      </Text>
-
-      <View style={s.badge}>
-        <Text style={s.badgeText}>Em desenvolvimento</Text>
-      </View>
-
-      <View style={s.featureList}>
-        {[
-          'Análise automática dos seus hábitos de consumo',
-          'Alertas sobre gastos incomuns',
-          'Sugestões personalizadas de economia',
-          'Chat com IA para tirar dúvidas sobre seus gastos',
-        ].map((item) => (
-          <View key={item} style={s.featureRow}>
-            <View style={s.bullet} />
-            <Text style={s.featureText}>{item}</Text>
+    <KeyboardAvoidingView
+      style={s.root}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+    >
+      <ScrollView
+        ref={scrollRef}
+        style={s.scroll}
+        contentContainerStyle={s.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {messages.map((msg) => (
+          <View
+            key={msg.id}
+            style={[s.bubbleWrap, msg.role === 'user' ? s.bubbleWrapUser : s.bubbleWrapBot]}
+          >
+            <View style={[s.bubble, msg.role === 'user' ? s.bubbleUser : s.bubbleBot]}>
+              <Text style={[s.bubbleText, msg.role === 'user' ? s.bubbleTextUser : s.bubbleTextBot]}>
+                {msg.text}
+                {msg.streaming && <Text style={s.cursor}>▍</Text>}
+              </Text>
+            </View>
           </View>
         ))}
+        {streaming && messages[messages.length - 1]?.text === '' && (
+          <View style={s.bubbleWrapBot}>
+            <View style={s.bubbleBot}>
+              <Text style={s.typing}>digitando</Text>
+            </View>
+          </View>
+        )}
+      </ScrollView>
+
+      <View style={s.inputBar}>
+        <TextInput
+          style={s.input}
+          value={input}
+          onChangeText={setInput}
+          placeholder="Pergunte sobre seus gastos..."
+          placeholderTextColor="#475569"
+          multiline
+          maxLength={500}
+          onSubmitEditing={send}
+          blurOnSubmit={false}
+          editable={!streaming && meses.length > 0}
+        />
+        <TouchableOpacity
+          style={[s.sendBtn, (!input.trim() || streaming) && s.sendBtnDisabled]}
+          onPress={send}
+          disabled={!input.trim() || streaming}
+          activeOpacity={0.7}
+        >
+          <Text style={s.sendBtnText}>Enviar</Text>
+        </TouchableOpacity>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const s = StyleSheet.create({
-  container: {
+  root: { flex: 1 },
+
+  scroll: { flex: 1 },
+  scrollContent: { padding: 16, gap: 10, paddingBottom: 8 },
+
+  bubbleWrap: { flexDirection: 'row' },
+  bubbleWrapUser: { justifyContent: 'flex-end' },
+  bubbleWrapBot: { justifyContent: 'flex-start' },
+
+  bubble: { maxWidth: '82%', borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
+  bubbleUser: { backgroundColor: '#7c3aed', borderBottomRightRadius: 4 },
+  bubbleBot: {
+    backgroundColor: '#0f172a',
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    borderBottomLeftRadius: 4,
+  },
+
+  bubbleText: { fontSize: 14, lineHeight: 21 },
+  bubbleTextUser: { color: '#f1f5f9' },
+  bubbleTextBot: { color: '#cbd5e1' },
+
+  cursor: { color: '#7c3aed' },
+  typing: { color: '#475569', fontSize: 13, fontStyle: 'italic' },
+
+  inputBar: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#1e293b',
+    backgroundColor: '#020617',
+  },
+  input: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-    paddingBottom: 24,
-  },
-  iconWrap: {
-    backgroundColor: '#1e0a3c',
-    borderRadius: 24,
-    padding: 20,
-    marginBottom: 20,
+    backgroundColor: '#0f172a',
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#3b0764',
-  },
-  title: {
+    borderColor: '#1e293b',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     color: '#f1f5f9',
-    fontSize: 28,
-    fontWeight: '900',
-    letterSpacing: -0.5,
-  },
-  titleAccent: { color: '#7c3aed' },
-  desc: {
-    color: '#64748b',
     fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginTop: 10,
-    marginBottom: 20,
+    maxHeight: 100,
   },
-  badge: {
-    backgroundColor: '#1e0a3c',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#3b0764',
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    marginBottom: 28,
+  sendBtn: {
+    backgroundColor: '#7c3aed',
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
   },
-  badgeText: {
-    color: '#a78bfa',
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  featureList: { alignSelf: 'stretch', gap: 12 },
-  featureRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
-  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#3b0764', marginTop: 6 },
-  featureText: { color: '#475569', fontSize: 13, flex: 1, lineHeight: 20 },
+  sendBtnDisabled: { backgroundColor: '#3b1c7a', opacity: 0.5 },
+  sendBtnText: { color: '#f1f5f9', fontSize: 13, fontWeight: '700' },
 });
