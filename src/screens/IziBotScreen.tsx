@@ -248,7 +248,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail }: Props) {
   const visibleMessages = messages.filter((m) => !m.isHidden);
 
   return (
-    <KeyboardAvoidingView style={s.root} behavior="padding">
+    <KeyboardAvoidingView style={s.root} behavior="padding" enabled={Platform.OS === 'ios'}>
       <ScrollView
         ref={scrollRef}
         style={s.scroll}
