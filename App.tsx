@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { SQLiteProvider } from 'expo-sqlite';
 
@@ -53,14 +54,16 @@ import { hashFatura } from './src/utils/hashFatura';
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <StatusBar style="light" />
-      <SQLiteProvider databaseName="izicont.db" onInit={migrateDbAsync}>
-        <ErrorBoundary>
-          <AppContent />
-        </ErrorBoundary>
-      </SQLiteProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <StatusBar style="light" />
+        <SQLiteProvider databaseName="izicont.db" onInit={migrateDbAsync}>
+          <ErrorBoundary>
+            <AppContent />
+          </ErrorBoundary>
+        </SQLiteProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -390,7 +393,7 @@ function AppContent() {
                 {pessoasOrdenadas.map((pessoa) => {
                   const ep = getEstado(mesSelecionado, pessoa.dono);
                   return (
-                    <Animated.View key={pessoa.dono} layout={LinearTransition.duration(300)}>
+                    <Animated.View key={pessoa.dono} layout={LinearTransition.duration(200)}>
                       <PersonCard
                         pessoa={pessoa}
                         mes={dadosExibidos.mes}
