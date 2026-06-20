@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
+  Keyboard,
   ScrollView,
   StyleSheet,
   Text,
@@ -70,6 +69,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
+  const [kbHeight, setKbHeight] = useState(0);
   const cancelRef = useRef<(() => void) | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const analyzedMesRef = useRef('');
@@ -101,6 +101,17 @@ export function IziBotScreen({ historico, meses, userName, userEmail }: Props) {
 
   useEffect(() => {
     return () => cancelRef.current?.();
+  }, []);
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', (e) =>
+      setKbHeight(e.endCoordinates.height),
+    );
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKbHeight(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -248,7 +259,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail }: Props) {
   const visibleMessages = messages.filter((m) => !m.isHidden);
 
   return (
-    <KeyboardAvoidingView style={s.root} behavior="padding" enabled={Platform.OS === 'ios'}>
+    <View style={[s.root, kbHeight > 0 && { paddingBottom: kbHeight }]}>
       <ScrollView
         ref={scrollRef}
         style={s.scroll}
@@ -302,7 +313,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail }: Props) {
           <Text style={s.sendBtnText}>Enviar</Text>
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
