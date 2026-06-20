@@ -27,5 +27,15 @@ export async function migrateDbAsync(db: SQLiteDatabase): Promise<void> {
       deletado     INTEGER NOT NULL DEFAULT 0,
       PRIMARY KEY (user_id, mes, item_desc, item_data, item_valor)
     );
+    CREATE TABLE IF NOT EXISTS chat_v1 (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id    TEXT    NOT NULL,
+      mes        TEXT    NOT NULL,
+      role       TEXT    NOT NULL,
+      content    TEXT    NOT NULL,
+      is_hidden  INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_chat_v1_user_mes ON chat_v1 (user_id, mes);
   `);
 }

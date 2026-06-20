@@ -441,7 +441,7 @@ function AppContent() {
           {activeTab === 'stats' && <EstatsScreen historico={historico} meses={meses} />}
 
           <View style={{ flex: 1, display: activeTab === 'bot' ? 'flex' : 'none' }}>
-            <IziBotScreen historico={historico} meses={meses} userName={userName} />
+            <IziBotScreen historico={historico} meses={meses} userName={userName} userEmail={userEmail} />
           </View>
 
           <View style={tabS.bar}>

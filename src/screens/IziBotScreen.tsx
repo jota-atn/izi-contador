@@ -9,10 +9,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSQLiteContext } from 'expo-sqlite';
 import { Historico } from '../hooks/useHistorico';
 import { streamGemini, GeminiMessage } from '../services/geminiApi';
 import { serializarHistorico } from '../utils/serializarHistorico';
 import { nomeMes } from '../utils/meses';
+import { loadChatHistory, saveChatMessages } from '../storage/chatHistory';
 
 const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY ?? '';
 
@@ -37,9 +39,10 @@ interface Props {
   historico: Historico;
   meses: string[]; // desc
   userName: string;
+  userEmail: string;
 }
 
-export function IziBotScreen({ historico, meses, userName }: Props) {
+export function IziBotScreen({ historico, meses, userName, userEmail }: Props) {
   const systemPrompt = useMemo(() => {
     if (meses.length === 0) return '';
     return (
@@ -63,12 +66,38 @@ export function IziBotScreen({ historico, meses, userName }: Props) {
     systemPromptRef.current = systemPrompt;
   }, [systemPrompt]);
 
+  const db = useSQLiteContext();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const cancelRef = useRef<(() => void) | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const analyzedMesRef = useRef('');
+
+  // Carrega histórico do SQLite ao trocar de mês ou usuário
+  useEffect(() => {
+    const currentMes = meses[0];
+    if (!currentMes || !userEmail) {
+      setMessages([]);
+      return;
+    }
+    setMessages([]);
+    loadChatHistory(db, userEmail, currentMes)
+      .then((rows) => {
+        if (rows.length === 0) return;
+        setMessages(
+          rows.map((r) => ({
+            id: String(r.id),
+            role: r.role,
+            text: r.content,
+            isHidden: r.is_hidden === 1,
+          })),
+        );
+        // Já há conversa para este mês — não dispara análise proativa
+        analyzedMesRef.current = currentMes;
+      })
+      .catch((e) => console.error('[IziBotScreen] loadChatHistory falhou:', e));
+  }, [db, userEmail, meses[0]]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     return () => cancelRef.current?.();
@@ -91,6 +120,7 @@ export function IziBotScreen({ historico, meses, userName }: Props) {
       { id: uid(), role: 'bot', text: '', streaming: true },
     ]);
 
+    const mes = currentMes;
     cancelRef.current = streamGemini(
       API_KEY,
       systemPrompt,
@@ -106,7 +136,12 @@ export function IziBotScreen({ historico, meses, userName }: Props) {
         setMessages((prev) => {
           const last = prev[prev.length - 1];
           if (!last || last.role !== 'bot') return prev;
-          return [...prev.slice(0, -1), { ...last, streaming: false }];
+          const final = [...prev.slice(0, -1), { ...last, streaming: false }];
+          saveChatMessages(db, userEmail, mes, [
+            { role: 'user', content: PROACTIVE_PROMPT, isHidden: true },
+            { role: 'bot', content: last.text },
+          ]).catch((e) => console.error('[IziBotScreen] saveChatMessages falhou:', e));
+          return final;
         });
         setStreaming(false);
         cancelRef.current = null;
@@ -115,13 +150,16 @@ export function IziBotScreen({ historico, meses, userName }: Props) {
         setMessages((prev) => {
           const last = prev[prev.length - 1];
           if (!last || last.role !== 'bot') return prev;
-          return [...prev.slice(0, -1), { ...last, text: `Erro na análise: ${err}`, streaming: false }];
+          return [
+            ...prev.slice(0, -1),
+            { ...last, text: `Erro na análise: ${err}`, streaming: false },
+          ];
         });
         setStreaming(false);
         cancelRef.current = null;
       },
     );
-  }, [meses, systemPrompt]);
+  }, [meses, systemPrompt]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const send = useCallback(() => {
     const text = input.trim();
@@ -142,13 +180,17 @@ export function IziBotScreen({ historico, meses, userName }: Props) {
     }
 
     const snapshot = messages;
+    const mes = meses[0];
     setInput('');
     setStreaming(true);
 
     const apiMessages: GeminiMessage[] = [
       ...snapshot
         .filter((m) => !m.streaming)
-        .map((m) => ({ role: m.role === 'bot' ? ('model' as const) : ('user' as const), text: m.text })),
+        .map((m) => ({
+          role: m.role === 'bot' ? ('model' as const) : ('user' as const),
+          text: m.text,
+        })),
       { role: 'user' as const, text },
     ];
 
@@ -173,7 +215,12 @@ export function IziBotScreen({ historico, meses, userName }: Props) {
         setMessages((prev) => {
           const last = prev[prev.length - 1];
           if (!last || last.role !== 'bot') return prev;
-          return [...prev.slice(0, -1), { ...last, streaming: false }];
+          const final = [...prev.slice(0, -1), { ...last, streaming: false }];
+          saveChatMessages(db, userEmail, mes, [
+            { role: 'user', content: text },
+            { role: 'bot', content: last.text },
+          ]).catch((e) => console.error('[IziBotScreen] saveChatMessages falhou:', e));
+          return final;
         });
         setStreaming(false);
         cancelRef.current = null;
@@ -188,7 +235,7 @@ export function IziBotScreen({ historico, meses, userName }: Props) {
         cancelRef.current = null;
       },
     );
-  }, [input, streaming, messages, meses.length]);
+  }, [input, streaming, messages, meses.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (meses.length === 0) {
     return (
@@ -201,10 +248,7 @@ export function IziBotScreen({ historico, meses, userName }: Props) {
   const visibleMessages = messages.filter((m) => !m.isHidden);
 
   return (
-    <KeyboardAvoidingView
-      style={s.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <KeyboardAvoidingView style={s.root} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView
         ref={scrollRef}
         style={s.scroll}
@@ -218,7 +262,9 @@ export function IziBotScreen({ historico, meses, userName }: Props) {
             style={[s.bubbleWrap, msg.role === 'user' ? s.bubbleWrapUser : s.bubbleWrapBot]}
           >
             <View style={[s.bubble, msg.role === 'user' ? s.bubbleUser : s.bubbleBot]}>
-              <Text style={[s.bubbleText, msg.role === 'user' ? s.bubbleTextUser : s.bubbleTextBot]}>
+              <Text
+                style={[s.bubbleText, msg.role === 'user' ? s.bubbleTextUser : s.bubbleTextBot]}
+              >
                 {msg.text}
                 {msg.streaming && <Text style={s.cursor}>▍</Text>}
               </Text>
