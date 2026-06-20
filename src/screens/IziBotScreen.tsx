@@ -16,12 +16,17 @@ import { nomeMes } from '../utils/meses';
 
 const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY ?? '';
 
+const PROACTIVE_PROMPT =
+  'Faça uma análise do mês mais recente. Sem introdução, vá direto aos insights. ' +
+  'Mencione: variação vs mês anterior (se houver), quem mais gastou e o que puxou, ' +
+  'algum gasto recorrente relevante. Máximo 4 frases, texto simples.';
+
 interface Message {
   id: string;
   role: 'user' | 'bot';
   text: string;
   streaming?: boolean;
-  isWelcome?: boolean;
+  isHidden?: boolean; // incluída no histórico da API mas não exibida no chat
 }
 
 function uid() {
@@ -37,42 +42,33 @@ interface Props {
 export function IziBotScreen({ historico, meses, userName }: Props) {
   const systemPrompt = useMemo(() => {
     if (meses.length === 0) return '';
-    return `Você é o IziBot, assistente financeiro do IziContador. Analisa faturas do cartão Nubank divididas entre pessoas.
-
-O usuário que usa o app é ${userName}.
-
-Dados das faturas disponíveis:
-
-${serializarHistorico(historico, meses)}
-
-Instruções:
-- Responda em português brasileiro, de forma concisa e direta
-- Use valores em R$ com separador de milhar (ex: R$ 1.234)
-- Mencione meses por extenso (Janeiro, Fevereiro, etc.)
-- Foque somente nos dados disponíveis acima, não invente valores
-- Seja objetivo e amigável`;
+    return (
+      `Você é o IziBot, assistente financeiro do IziContador. O app divide faturas do cartão ` +
+      `Nubank entre pessoas — amigos ou família que compartilham um cartão.\n\n` +
+      `O usuário que usa o app é ${userName}.\n\n` +
+      `Dados das faturas disponíveis:\n\n` +
+      `${serializarHistorico(historico, meses)}\n\n` +
+      `Instruções:\n` +
+      `- Responda em português brasileiro, de forma concisa e direta\n` +
+      `- Use valores em R$ com separador de milhar (ex: R$ 1.234)\n` +
+      `- Mencione meses por extenso (Janeiro, Fevereiro, etc.)\n` +
+      `- Foque somente nos dados disponíveis, não invente valores\n` +
+      `- Não use markdown: sem asteriscos, sem hashtags, sem traços de lista — texto simples\n` +
+      `- Seja objetivo e amigável`
+    );
   }, [historico, meses, userName]);
 
-  const welcomeText = useMemo(() => {
-    if (meses.length === 0) {
-      return 'Olá! Sincronize uma fatura para que eu possa analisar seus gastos.';
-    }
-    const oldest = meses[meses.length - 1];
-    const newest = meses[0];
-    const range =
-      meses.length >= 2
-        ? ` (${nomeMes(oldest)} a ${nomeMes(newest)})`
-        : ` (${nomeMes(newest)})`;
-    return `Olá! Tenho acesso a ${meses.length} ${meses.length === 1 ? 'mês' : 'meses'} de fatura${range}. Me pergunte sobre gastos, comparativos entre pessoas, itens recorrentes...`;
-  }, [meses]);
+  const systemPromptRef = useRef(systemPrompt);
+  useEffect(() => {
+    systemPromptRef.current = systemPrompt;
+  }, [systemPrompt]);
 
-  const [messages, setMessages] = useState<Message[]>(() => [
-    { id: 'welcome', role: 'bot', text: welcomeText, isWelcome: true },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const cancelRef = useRef<(() => void) | null>(null);
   const scrollRef = useRef<ScrollView>(null);
+  const analyzedMesRef = useRef('');
 
   useEffect(() => {
     return () => cancelRef.current?.();
@@ -81,6 +77,51 @@ Instruções:
   useEffect(() => {
     scrollRef.current?.scrollToEnd({ animated: true });
   }, [messages]);
+
+  // Análise proativa — dispara uma vez por mês
+  useEffect(() => {
+    const currentMes = meses[0];
+    if (!currentMes || !systemPrompt || !API_KEY) return;
+    if (analyzedMesRef.current === currentMes) return;
+
+    analyzedMesRef.current = currentMes;
+    setStreaming(true);
+    setMessages([
+      { id: uid(), role: 'user', text: PROACTIVE_PROMPT, isHidden: true },
+      { id: uid(), role: 'bot', text: '', streaming: true },
+    ]);
+
+    cancelRef.current = streamGemini(
+      API_KEY,
+      systemPrompt,
+      [{ role: 'user', text: PROACTIVE_PROMPT }],
+      (chunk) => {
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (!last || last.role !== 'bot') return prev;
+          return [...prev.slice(0, -1), { ...last, text: last.text + chunk }];
+        });
+      },
+      () => {
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (!last || last.role !== 'bot') return prev;
+          return [...prev.slice(0, -1), { ...last, streaming: false }];
+        });
+        setStreaming(false);
+        cancelRef.current = null;
+      },
+      (err) => {
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (!last || last.role !== 'bot') return prev;
+          return [...prev.slice(0, -1), { ...last, text: `Erro na análise: ${err}`, streaming: false }];
+        });
+        setStreaming(false);
+        cancelRef.current = null;
+      },
+    );
+  }, [meses, systemPrompt]);
 
   const send = useCallback(() => {
     const text = input.trim();
@@ -106,7 +147,7 @@ Instruções:
 
     const apiMessages: GeminiMessage[] = [
       ...snapshot
-        .filter((m) => !m.isWelcome && !m.streaming)
+        .filter((m) => !m.streaming)
         .map((m) => ({ role: m.role === 'bot' ? ('model' as const) : ('user' as const), text: m.text })),
       { role: 'user' as const, text },
     ];
@@ -119,7 +160,7 @@ Instruções:
 
     cancelRef.current = streamGemini(
       API_KEY,
-      systemPrompt,
+      systemPromptRef.current,
       apiMessages,
       (chunk) => {
         setMessages((prev) => {
@@ -147,13 +188,22 @@ Instruções:
         cancelRef.current = null;
       },
     );
-  }, [input, streaming, messages, systemPrompt, meses.length]);
+  }, [input, streaming, messages, meses.length]);
+
+  if (meses.length === 0) {
+    return (
+      <View style={s.empty}>
+        <Text style={s.emptyText}>Sincronize uma fatura para ativar o IziBot.</Text>
+      </View>
+    );
+  }
+
+  const visibleMessages = messages.filter((m) => !m.isHidden);
 
   return (
     <KeyboardAvoidingView
       style={s.root}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       <ScrollView
         ref={scrollRef}
@@ -162,7 +212,7 @@ Instruções:
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {messages.map((msg) => (
+        {visibleMessages.map((msg) => (
           <View
             key={msg.id}
             style={[s.bubbleWrap, msg.role === 'user' ? s.bubbleWrapUser : s.bubbleWrapBot]}
@@ -175,7 +225,7 @@ Instruções:
             </View>
           </View>
         ))}
-        {streaming && messages[messages.length - 1]?.text === '' && (
+        {streaming && visibleMessages[visibleMessages.length - 1]?.text === '' && (
           <View style={s.bubbleWrapBot}>
             <View style={s.bubbleBot}>
               <Text style={s.typing}>digitando</Text>
@@ -195,7 +245,7 @@ Instruções:
           maxLength={500}
           onSubmitEditing={send}
           blurOnSubmit={false}
-          editable={!streaming && meses.length > 0}
+          editable={!streaming}
         />
         <TouchableOpacity
           style={[s.sendBtn, (!input.trim() || streaming) && s.sendBtnDisabled]}
@@ -212,6 +262,8 @@ Instruções:
 
 const s = StyleSheet.create({
   root: { flex: 1 },
+  empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
+  emptyText: { color: '#475569', fontSize: 14, textAlign: 'center' },
 
   scroll: { flex: 1 },
   scrollContent: { padding: 16, gap: 10, paddingBottom: 8 },
