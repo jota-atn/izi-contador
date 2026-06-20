@@ -1,6 +1,6 @@
 import { memo, useRef, useState } from 'react';
 import { Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 import ReanimatedSwipeable, {
   SwipeableMethods,
 } from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -90,7 +90,7 @@ export const PersonCard = memo(function PersonCard({
       friction={2}
       overshootLeft={false}
     >
-      <Animated.View style={[s.card, pago && s.cardPago]} layout={LinearTransition.duration(200)}>
+      <Animated.View style={[s.card, pago && s.cardPago]} layout={LinearTransition.duration(180)}>
         <TouchableOpacity
           style={s.header}
           onPress={() => {
@@ -147,7 +147,11 @@ export const PersonCard = memo(function PersonCard({
         </TouchableOpacity>
 
         {expanded && (
-          <Animated.View entering={FadeIn.duration(100)} style={s.body}>
+          <Animated.View
+            entering={FadeIn.duration(80)}
+            exiting={FadeOut.duration(80)}
+            style={s.body}
+          >
             {[...pessoa.itens]
               .sort((a, b) => b.valor - a.valor)
               .map((item, idx) => (
