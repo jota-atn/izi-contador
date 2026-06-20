@@ -1,6 +1,15 @@
 import './global.css';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  RefreshControl,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -349,7 +358,11 @@ function AppContent() {
           {activeTab === 'fatura' && (
             <>
               {meses.length > 1 && (
-                <MonthSelector meses={meses} selected={mesSelecionado} onChange={setMesSelecionado} />
+                <MonthSelector
+                  meses={meses}
+                  selected={mesSelecionado}
+                  onChange={setMesSelecionado}
+                />
               )}
 
               <SearchBar
@@ -394,11 +407,12 @@ function AppContent() {
                     <SemCategoriaCard grupo={semCategoria} />
                   </View>
                 )}
-                {dadosExibidos.anotacoes_invalidas && dadosExibidos.anotacoes_invalidas.length > 0 && (
-                  <View style={{ marginHorizontal: 16 }}>
-                    <AnotacoesInvalidasCard itens={dadosExibidos.anotacoes_invalidas} />
-                  </View>
-                )}
+                {dadosExibidos.anotacoes_invalidas &&
+                  dadosExibidos.anotacoes_invalidas.length > 0 && (
+                    <View style={{ marginHorizontal: 16 }}>
+                      <AnotacoesInvalidasCard itens={dadosExibidos.anotacoes_invalidas} />
+                    </View>
+                  )}
                 {pessoasOrdenadas.map((pessoa) => {
                   const ep = getEstado(mesSelecionado, pessoa.dono);
                   return (

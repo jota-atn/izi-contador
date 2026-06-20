@@ -1,7 +1,9 @@
 import { memo, useRef, useState } from 'react';
 import { Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
-import ReanimatedSwipeable, { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
+import ReanimatedSwipeable, {
+  SwipeableMethods,
+} from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { Gasto, RelatorioPessoa } from '../types';
 import { formatMesAnoUpper } from '../utils/meses';
 import { haptic } from '../utils/haptic';
@@ -75,9 +77,7 @@ export const PersonCard = memo(function PersonCard({
     <View style={[s.swipeAction, pago ? s.swipeActionUndo : s.swipeActionPay]}>
       <View style={[s.swipeActionFill, pago ? s.swipeActionUndo : s.swipeActionPay]} />
       <IconCheck size={20} color={pago ? '#f97316' : '#4ade80'} />
-      <Text style={[s.swipeText, pago && s.swipeTextUndo]}>
-        {pago ? 'Desfazer' : 'Pago'}
-      </Text>
+      <Text style={[s.swipeText, pago && s.swipeTextUndo]}>{pago ? 'Desfazer' : 'Pago'}</Text>
     </View>
   );
 
