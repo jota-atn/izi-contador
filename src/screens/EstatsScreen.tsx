@@ -9,6 +9,8 @@ const MESES_CURTOS = MESES_PT.map((m) => m.substring(0, 3));
 const SEM_CATEGORIA = '__SEM_CATEGORIA__';
 const CHART_MAX_MESES = 7;
 
+const PERSON_COLORS = ['#7c3aed', '#0ea5e9', '#ec4899', '#f59e0b', '#22c55e', '#f97316'];
+
 const CHART_CONFIG = {
   backgroundColor: '#0f172a',
   backgroundGradientFrom: '#0f172a',
@@ -30,9 +32,7 @@ interface Props {
 }
 
 export const EstatsScreen = memo(function EstatsScreen({ historico, meses }: Props) {
-  // Ascending (oldest → newest) for chronological display
   const mesesCron = useMemo(() => [...meses].reverse(), [meses]);
-
   const mesesChart = useMemo(() => mesesCron.slice(-CHART_MAX_MESES), [mesesCron]);
 
   const totaisChart = useMemo(
@@ -53,6 +53,35 @@ export const EstatsScreen = memo(function EstatsScreen({ historico, meses }: Pro
     return { media, maiorMes, menorMes };
   }, [mesesCron, historico]);
 
+  // Total acumulado e distribuição por pessoa (soma de todos os meses)
+  const pessoasAcumulado = useMemo(() => {
+    const byPessoa: Record<string, number> = {};
+    mesesCron.forEach((mes) => {
+      historico[mes].relatorio_por_pessoa
+        .filter((p) => p.dono !== SEM_CATEGORIA)
+        .forEach((p) => {
+          byPessoa[p.dono] = (byPessoa[p.dono] ?? 0) + p.total_individual;
+        });
+    });
+    return Object.entries(byPessoa)
+      .map(([dono, total]) => ({ dono, total }))
+      .sort((a, b) => b.total - a.total);
+  }, [mesesCron, historico]);
+
+  const totalAcumulado = useMemo(
+    () => pessoasAcumulado.reduce((s, p) => s + p.total, 0),
+    [pessoasAcumulado],
+  );
+
+  const personColors = useMemo(() => {
+    const map: Record<string, string> = {};
+    pessoasAcumulado.forEach(({ dono }, i) => {
+      map[dono] = PERSON_COLORS[i % PERSON_COLORS.length];
+    });
+    return map;
+  }, [pessoasAcumulado]);
+
+  // Média por pessoa (aparece nos meses em que está presente)
   const pessoasStats = useMemo(() => {
     const byPessoa: Record<string, number[]> = {};
     mesesCron.forEach((mes) => {
@@ -71,6 +100,26 @@ export const EstatsScreen = memo(function EstatsScreen({ historico, meses }: Pro
       .sort((a, b) => b.media - a.media);
   }, [mesesCron, historico]);
 
+  // Gastos recorrentes — itens presentes em 2+ meses
+  const topFrequentes = useMemo(() => {
+    const countByDesc: Record<string, Set<string>> = {};
+    mesesCron.forEach((mes) => {
+      historico[mes].relatorio_por_pessoa
+        .filter((p) => p.dono !== SEM_CATEGORIA)
+        .forEach((p) => {
+          p.itens.forEach((item) => {
+            const key = item.descricao.toUpperCase().trim();
+            (countByDesc[key] ??= new Set()).add(mes);
+          });
+        });
+    });
+    return Object.entries(countByDesc)
+      .map(([desc, mesesSet]) => ({ desc, count: mesesSet.size }))
+      .filter((x) => x.count > 1)
+      .sort((a, b) => b.count - a.count || a.desc.localeCompare(b.desc))
+      .slice(0, 8);
+  }, [mesesCron, historico]);
+
   if (meses.length < 2) {
     return (
       <View style={s.empty}>
@@ -82,15 +131,35 @@ export const EstatsScreen = memo(function EstatsScreen({ historico, meses }: Pro
     );
   }
 
+  const maxAcumulado = pessoasAcumulado[0]?.total ?? 1;
+
   return (
     <ScrollView
       style={s.scroll}
       contentContainerStyle={s.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* Summary */}
+      {/* Header */}
+      <View style={s.headerRow}>
+        <Text style={s.headerTitle}>
+          Izi<Text style={s.headerAccent}>Stats</Text>
+        </Text>
+        <Text style={s.headerSub}>
+          {meses.length} {meses.length === 1 ? 'mês analisado' : 'meses analisados'}
+        </Text>
+      </View>
+
+      {/* Acumulado */}
+      <View style={s.acumuladoCard}>
+        <Text style={s.acumuladoLabel}>Total acumulado</Text>
+        <Text style={s.acumuladoValor}>{fmtBRL(totalAcumulado)}</Text>
+        <Text style={s.acumuladoSub}>
+          média de {fmtBRL(media)}/mês
+        </Text>
+      </View>
+
+      {/* Summary cards */}
       <View style={s.row}>
-        <StatCard label="Média mensal" value={fmtBRL(media)} />
         <StatCard
           label="Maior mês"
           value={fmtBRL(historico[maiorMes].total_fatura)}
@@ -121,16 +190,34 @@ export const EstatsScreen = memo(function EstatsScreen({ historico, meses }: Pro
         />
       </View>
 
-      {/* Por pessoa */}
+      {/* Distribuição por pessoa */}
+      <View style={s.card}>
+        <Text style={s.cardTitle}>Distribuição por pessoa</Text>
+        <Text style={s.cardSub}>total acumulado no período</Text>
+        {pessoasAcumulado.map(({ dono, total }, i) => {
+          const color = PERSON_COLORS[i % PERSON_COLORS.length];
+          const pct = total / maxAcumulado;
+          return (
+            <View key={dono} style={s.barRow}>
+              <View style={s.barHeader}>
+                <Text style={[s.barNome, { color }]}>{dono}</Text>
+                <Text style={s.barValor}>{fmtBRL(total)}</Text>
+              </View>
+              <View style={s.barTrack}>
+                <View style={[s.barFill, { width: `${pct * 100}%` as any, backgroundColor: color }]} />
+              </View>
+            </View>
+          );
+        })}
+      </View>
+
+      {/* Média por pessoa */}
       <View style={s.card}>
         <Text style={s.cardTitle}>Média por pessoa</Text>
-        <Text style={s.cardSub}>
-          {meses.length} {meses.length === 1 ? 'mês analisado' : 'meses analisados'}
-        </Text>
         {pessoasStats.map(({ dono, media: m, meses: qtd }, i) => (
           <View key={dono} style={[s.pessoaRow, i === 0 && s.pessoaRowFirst]}>
             <View style={s.pessoaLeft}>
-              <View style={s.dot} />
+              <View style={[s.dot, { backgroundColor: personColors[dono] ?? '#7c3aed' }]} />
               <View>
                 <Text style={s.pessoaNome}>{dono}</Text>
                 <Text style={s.pessoaMeses}>
@@ -138,10 +225,32 @@ export const EstatsScreen = memo(function EstatsScreen({ historico, meses }: Pro
                 </Text>
               </View>
             </View>
-            <Text style={s.pessoaValor}>{fmtBRL(m)}</Text>
+            <Text style={[s.pessoaValor, { color: personColors[dono] ?? '#a78bfa' }]}>
+              {fmtBRL(m)}
+            </Text>
           </View>
         ))}
       </View>
+
+      {/* Gastos recorrentes */}
+      {topFrequentes.length > 0 && (
+        <View style={s.card}>
+          <Text style={s.cardTitle}>Gastos recorrentes</Text>
+          <Text style={s.cardSub}>itens presentes em múltiplos meses</Text>
+          {topFrequentes.map(({ desc, count }, i) => (
+            <View key={desc} style={[s.frequenteRow, i === 0 && s.frequenteRowFirst]}>
+              <Text style={s.frequenteDesc} numberOfLines={1}>
+                {desc}
+              </Text>
+              <View style={[s.frequenteBadge, count === meses.length && s.frequenteBadgeFull]}>
+                <Text style={s.frequenteBadgeText}>
+                  {count}/{meses.length}m
+                </Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
     </ScrollView>
   );
 });
@@ -162,24 +271,51 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
 
 const s = StyleSheet.create({
   scroll: { flex: 1 },
-  content: { padding: 16, gap: 14, paddingBottom: 24 },
+  content: { padding: 16, gap: 14, paddingBottom: 32 },
 
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
   emptyTitle: { color: '#f1f5f9', fontSize: 16, fontWeight: '700', marginBottom: 8 },
   emptyText: { color: '#64748b', fontSize: 14, textAlign: 'center', lineHeight: 22 },
 
-  row: { flexDirection: 'row', gap: 10 },
+  headerRow: { marginBottom: 2 },
+  headerTitle: { color: '#f1f5f9', fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
+  headerAccent: { color: '#7c3aed' },
+  headerSub: { color: '#475569', fontSize: 12, fontWeight: '500', marginTop: 2 },
 
+  acumuladoCard: {
+    backgroundColor: '#1e1040',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#4c1d95',
+    padding: 20,
+  },
+  acumuladoLabel: {
+    color: '#a78bfa',
+    fontSize: 10,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  acumuladoValor: {
+    color: '#f1f5f9',
+    fontSize: 32,
+    fontWeight: '900',
+    letterSpacing: -1,
+    marginTop: 6,
+  },
+  acumuladoSub: { color: '#7c3aed', fontSize: 12, fontWeight: '500', marginTop: 4 },
+
+  row: { flexDirection: 'row', gap: 10 },
   statCard: {
     flex: 1,
     backgroundColor: '#0f172a',
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#1e293b',
-    padding: 12,
+    padding: 14,
   },
   statLabel: { color: '#475569', fontSize: 10, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
-  statValue: { color: '#f1f5f9', fontSize: 14, fontWeight: '900', marginTop: 6 },
+  statValue: { color: '#f1f5f9', fontSize: 15, fontWeight: '900', marginTop: 6 },
   statSub: { color: '#7c3aed', fontSize: 10, fontWeight: '600', marginTop: 3, textTransform: 'capitalize' },
 
   card: {
@@ -198,9 +334,17 @@ const s = StyleSheet.create({
     letterSpacing: 0.8,
   },
   cardSub: { color: '#475569', fontSize: 11, marginTop: 2, marginBottom: 4 },
-
   chart: { borderRadius: 12, marginTop: 12, marginLeft: -12 },
 
+  // Distribuição
+  barRow: { marginTop: 14 },
+  barHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  barNome: { fontSize: 12, fontWeight: '700' },
+  barValor: { color: '#94a3b8', fontSize: 12, fontWeight: '600' },
+  barTrack: { height: 6, backgroundColor: '#1e293b', borderRadius: 3, overflow: 'hidden' },
+  barFill: { height: 6, borderRadius: 3 },
+
+  // Média por pessoa
   pessoaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -212,8 +356,28 @@ const s = StyleSheet.create({
   },
   pessoaRowFirst: { marginTop: 12 },
   pessoaLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#7c3aed' },
+  dot: { width: 6, height: 6, borderRadius: 3 },
   pessoaNome: { color: '#f1f5f9', fontSize: 13, fontWeight: '700' },
   pessoaMeses: { color: '#475569', fontSize: 11, marginTop: 1 },
-  pessoaValor: { color: '#a78bfa', fontSize: 14, fontWeight: '700', fontFamily: 'monospace' },
+  pessoaValor: { fontSize: 14, fontWeight: '700', fontFamily: 'monospace' },
+
+  // Recorrentes
+  frequenteRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#1e293b',
+  },
+  frequenteRowFirst: { marginTop: 10 },
+  frequenteDesc: { color: '#cbd5e1', fontSize: 12, fontWeight: '600', flex: 1, marginRight: 12 },
+  frequenteBadge: {
+    backgroundColor: '#1e293b',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  frequenteBadgeFull: { backgroundColor: '#4c1d95' },
+  frequenteBadgeText: { color: '#a78bfa', fontSize: 11, fontWeight: '700' },
 });

@@ -420,7 +420,7 @@ function AppContent() {
             {(
               [
                 { key: 'fatura', label: 'Fatura', Icon: IconCard },
-                { key: 'stats', label: 'Estatísticas', Icon: IconBarChart },
+                { key: 'stats', label: 'IziStats', Icon: IconBarChart },
                 { key: 'bot', label: 'IziBot', Icon: IconSparkle },
               ] as const
             ).map(({ key, label, Icon }) => {
