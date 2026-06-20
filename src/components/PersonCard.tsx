@@ -1,6 +1,7 @@
-import { memo, useState } from 'react';
+import { memo, useRef, useState } from 'react';
 import { Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
+import ReanimatedSwipeable, { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { Gasto, RelatorioPessoa } from '../types';
 import { formatMesAnoUpper } from '../utils/meses';
 import { haptic } from '../utils/haptic';
@@ -44,6 +45,7 @@ export const PersonCard = memo(function PersonCard({
   const accentColor = pago ? '#4ade80' : '#7c3aed';
   const expanded = !oculto;
   const [shared, setShared] = useState(false);
+  const swipeableRef = useRef<SwipeableMethods>(null);
 
   const handleCompartilhar = async () => {
     const itens = pessoa.itens.map(formatItemShare).join('\n');
@@ -63,101 +65,135 @@ export const PersonCard = memo(function PersonCard({
     }
   };
 
+  const handleSwipe = () => {
+    haptic.success();
+    onTogglePago(mes, pessoa.dono);
+    swipeableRef.current?.close();
+  };
+
+  const renderLeftAction = () => (
+    <View style={[s.swipeAction, pago ? s.swipeActionUndo : s.swipeActionPay]}>
+      <IconCheck size={20} color={pago ? '#f97316' : '#4ade80'} />
+      <Text style={[s.swipeText, pago && s.swipeTextUndo]}>
+        {pago ? 'Desfazer' : 'Pago'}
+      </Text>
+    </View>
+  );
+
   return (
-    <Animated.View style={[s.card, pago && s.cardPago]} layout={LinearTransition.duration(300)}>
-      <TouchableOpacity
-        style={s.header}
-        onPress={() => {
-          haptic.light();
-          onToggleOculto(mes, pessoa.dono);
-        }}
-        activeOpacity={0.7}
-      >
-        <View style={s.left}>
-          <View style={[s.bar, { backgroundColor: accentColor }]} />
-          <View style={s.nameValueCol}>
-            <Text style={s.name}>{pessoa.dono}</Text>
-            <Text style={[s.total, pago && s.totalPago]}>
-              R$ {pessoa.total_individual.toFixed(2)}
-            </Text>
-            {!expanded && (
-              <Text style={s.itemCount}>
-                {pessoa.itens.length} {pessoa.itens.length === 1 ? 'item' : 'itens'}
+    <ReanimatedSwipeable
+      ref={swipeableRef}
+      renderLeftActions={renderLeftAction}
+      onSwipeableOpen={(direction) => {
+        if (direction === 'left') handleSwipe();
+      }}
+      leftThreshold={72}
+      friction={2}
+      overshootLeft={false}
+    >
+      <Animated.View style={[s.card, pago && s.cardPago]} layout={LinearTransition.duration(300)}>
+        <TouchableOpacity
+          style={s.header}
+          onPress={() => {
+            haptic.light();
+            onToggleOculto(mes, pessoa.dono);
+          }}
+          activeOpacity={0.7}
+        >
+          <View style={s.left}>
+            <View style={[s.bar, { backgroundColor: accentColor }]} />
+            <View style={s.nameValueCol}>
+              <Text style={s.name}>{pessoa.dono}</Text>
+              <Text style={[s.total, pago && s.totalPago]}>
+                R$ {pessoa.total_individual.toFixed(2)}
               </Text>
-            )}
+              {!expanded && (
+                <Text style={s.itemCount}>
+                  {pessoa.itens.length} {pessoa.itens.length === 1 ? 'item' : 'itens'}
+                </Text>
+              )}
+            </View>
           </View>
-        </View>
 
-        <View style={s.right}>
-          <TouchableOpacity
-            onPress={() => {
-              haptic.light();
-              onTogglePago(mes, pessoa.dono);
-            }}
-            style={[s.iconBtn, pago && s.iconBtnPago]}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <IconCheck size={12} color={pago ? '#4ade80' : '#334155'} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleCompartilhar}
-            style={[s.iconBtn, shared && s.iconBtnShared]}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <IconShare size={13} color={shared ? '#4ade80' : '#a78bfa'} />
-          </TouchableOpacity>
-
-          {pixKey && (
+          <View style={s.right}>
             <TouchableOpacity
-              onPress={() => onCompartilharQR(pessoa, mes)}
+              onPress={handleCompartilhar}
+              style={[s.iconBtn, shared && s.iconBtnShared]}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <IconShare size={13} color={shared ? '#4ade80' : '#a78bfa'} />
+            </TouchableOpacity>
+
+            {pixKey && (
+              <TouchableOpacity
+                onPress={() => onCompartilharQR(pessoa, mes)}
+                style={s.iconBtn}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <IconQR size={13} color="#a78bfa" />
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              onPress={() => {
+                haptic.light();
+                onToggleOculto(mes, pessoa.dono);
+              }}
               style={s.iconBtn}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <IconQR size={13} color="#a78bfa" />
+              <IconChevron size={14} color="#475569" up={expanded} />
             </TouchableOpacity>
-          )}
+          </View>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => {
-              haptic.light();
-              onToggleOculto(mes, pessoa.dono);
-            }}
-            style={s.iconBtn}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <IconChevron size={14} color="#475569" up={expanded} />
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
-
-      {expanded && (
-        <Animated.View entering={FadeIn.duration(150)} style={s.body}>
-          {[...pessoa.itens]
-            .sort((a, b) => b.valor - a.valor)
-            .map((item, idx) => (
-              <TouchableOpacity
-                key={idx}
-                style={s.row}
-                onPress={() => onEditarItem(item, pessoa.dono)}
-                activeOpacity={0.7}
-              >
-                <View style={s.descCol}>
-                  <Text style={s.desc}>{item.descricao}</Text>
-                  <Text style={s.date}>{item.data}</Text>
-                </View>
-                <View style={s.badge}>
-                  <Text style={s.badgeText}>R$ {item.valor.toFixed(2)}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-        </Animated.View>
-      )}
-    </Animated.View>
+        {expanded && (
+          <Animated.View entering={FadeIn.duration(150)} style={s.body}>
+            {[...pessoa.itens]
+              .sort((a, b) => b.valor - a.valor)
+              .map((item, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  style={s.row}
+                  onPress={() => onEditarItem(item, pessoa.dono)}
+                  activeOpacity={0.7}
+                >
+                  <View style={s.descCol}>
+                    <Text style={s.desc}>{item.descricao}</Text>
+                    <Text style={s.date}>{item.data}</Text>
+                  </View>
+                  <View style={s.badge}>
+                    <Text style={s.badgeText}>R$ {item.valor.toFixed(2)}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+          </Animated.View>
+        )}
+      </Animated.View>
+    </ReanimatedSwipeable>
   );
 });
 
 const s = StyleSheet.create({
+  swipeAction: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    borderRadius: 24,
+    marginRight: 8,
+    gap: 4,
+  },
+  swipeActionPay: { backgroundColor: '#052e16' },
+  swipeActionUndo: { backgroundColor: '#431407' },
+  swipeText: {
+    color: '#4ade80',
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  swipeTextUndo: { color: '#f97316' },
+
   card: {
     backgroundColor: '#0f172a',
     borderRadius: 24,
@@ -205,7 +241,6 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconBtnPago: { backgroundColor: '#052e16', borderWidth: 1, borderColor: '#14532d' },
   iconBtnShared: { backgroundColor: '#052e16', borderWidth: 1, borderColor: '#14532d' },
   body: { paddingHorizontal: 24, paddingVertical: 16, gap: 12 },
   row: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
