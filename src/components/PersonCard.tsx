@@ -84,10 +84,8 @@ export const PersonCard = memo(function PersonCard({
     <ReanimatedSwipeable
       ref={swipeableRef}
       renderLeftActions={renderLeftAction}
-      onSwipeableOpen={(direction) => {
-        if (direction === 'left') handleSwipe();
-      }}
-      leftThreshold={72}
+      onSwipeableOpen={() => handleSwipe()}
+      leftThreshold={60}
       friction={2}
       overshootLeft={false}
     >
