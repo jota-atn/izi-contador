@@ -73,6 +73,7 @@ export const PersonCard = memo(function PersonCard({
 
   const renderLeftAction = () => (
     <View style={[s.swipeAction, pago ? s.swipeActionUndo : s.swipeActionPay]}>
+      <View style={[s.swipeActionFill, pago ? s.swipeActionUndo : s.swipeActionPay]} />
       <IconCheck size={20} color={pago ? '#f97316' : '#4ade80'} />
       <Text style={[s.swipeText, pago && s.swipeTextUndo]}>
         {pago ? 'Desfazer' : 'Pago'}
@@ -174,12 +175,22 @@ export const PersonCard = memo(function PersonCard({
 
 const s = StyleSheet.create({
   swipeAction: {
+    width: 88,
+    alignSelf: 'stretch',
     justifyContent: 'center',
     alignItems: 'center',
-    width: 80,
-    borderRadius: 24,
-    marginRight: 8,
     gap: 4,
+    borderTopLeftRadius: 24,
+    borderBottomLeftRadius: 24,
+  },
+  swipeActionFill: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: -30,
+    borderTopLeftRadius: 24,
+    borderBottomLeftRadius: 24,
   },
   swipeActionPay: { backgroundColor: '#052e16' },
   swipeActionUndo: { backgroundColor: '#431407' },
