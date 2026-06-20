@@ -175,6 +175,7 @@ export const PersonCard = memo(function PersonCard({
 
 const s = StyleSheet.create({
   swipeAction: {
+    marginLeft: 16,
     width: 88,
     alignSelf: 'stretch',
     justifyContent: 'center',
@@ -209,6 +210,7 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#1e293b',
     overflow: 'hidden',
+    marginHorizontal: 16,
   },
   cardPago: { borderColor: '#14532d' },
   header: {
