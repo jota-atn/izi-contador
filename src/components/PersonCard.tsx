@@ -90,7 +90,7 @@ export const PersonCard = memo(function PersonCard({
       friction={2}
       overshootLeft={false}
     >
-      <Animated.View style={[s.card, pago && s.cardPago]} layout={LinearTransition.duration(300)}>
+      <Animated.View style={[s.card, pago && s.cardPago]} layout={LinearTransition.duration(200)}>
         <TouchableOpacity
           style={s.header}
           onPress={() => {
@@ -147,7 +147,7 @@ export const PersonCard = memo(function PersonCard({
         </TouchableOpacity>
 
         {expanded && (
-          <Animated.View entering={FadeIn.duration(150)} style={s.body}>
+          <Animated.View entering={FadeIn.duration(100)} style={s.body}>
             {[...pessoa.itens]
               .sort((a, b) => b.valor - a.valor)
               .map((item, idx) => (
