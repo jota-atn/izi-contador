@@ -52,6 +52,9 @@ import { IconCard } from './src/components/icons/IconCard';
 import { IconLogOut } from './src/components/icons/IconLogOut';
 import { IconBarChart } from './src/components/icons/IconBarChart';
 import { IconSparkle } from './src/components/icons/IconSparkle';
+import { IconBell } from './src/components/icons/IconBell';
+import { ModalNotificacoes } from './src/components/ModalNotificacoes';
+import { useNotificacoes } from './src/hooks/useNotificacoes';
 import { EstatsScreen } from './src/screens/EstatsScreen';
 import { IziBotScreen } from './src/screens/IziBotScreen';
 import { SEM_CATEGORIA } from './src/parser/parseFatura';
@@ -95,7 +98,9 @@ function AppContent() {
   const [mesSelecionado, setMesSelecionado] = useState('');
   const { edicoes, salvar: salvarEdicao, limparMes } = useEdicoesFatura(userEmail, mesSelecionado);
   const { pixKey, salvarPixKey } = usePixKey(userEmail);
+  const { diaFechamento, salvar: salvarNotif, cancelar: cancelarNotif } = useNotificacoes(userEmail);
   const [showCategorias, setShowCategorias] = useState(false);
+  const [showNotificacoes, setShowNotificacoes] = useState(false);
   const [showRegras, setShowRegras] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showPixKey, setShowPixKey] = useState(false);
@@ -353,6 +358,11 @@ function AppContent() {
                   icon: <IconCard size={15} color="#a78bfa" />,
                 },
                 {
+                  label: diaFechamento ? `Notificações (dia ${diaFechamento})` : 'Notificações',
+                  onPress: () => setShowNotificacoes(true),
+                  icon: <IconBell size={15} color="#a78bfa" />,
+                },
+                {
                   label: 'Como anotar',
                   onPress: () => setShowTutorial(true),
                   icon: <IconBook size={15} color="#a78bfa" />,
@@ -528,6 +538,13 @@ function AppContent() {
         onSalvar={handleSalvarEdicao}
         onDeletar={handleDeletarItem}
         onClose={() => setItemEditando(null)}
+      />
+      <ModalNotificacoes
+        visible={showNotificacoes}
+        diaAtual={diaFechamento}
+        onSalvar={salvarNotif}
+        onCancelar={cancelarNotif}
+        onFechar={() => setShowNotificacoes(false)}
       />
     </View>
   );

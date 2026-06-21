@@ -37,7 +37,15 @@
           "imageWidth": 200
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#7c3aed",
+          "sounds": []
+        }
+      ]
     ],
     "updates": {
       "url": "https://u.expo.dev/d5ed8dd8-7485-4277-a415-729fdb20c6d0"
