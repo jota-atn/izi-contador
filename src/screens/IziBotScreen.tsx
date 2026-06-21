@@ -23,6 +23,12 @@ const PROACTIVE_PROMPT =
   'Mencione: variação vs mês anterior (se houver), quem mais gastou e o que puxou, ' +
   'algum gasto recorrente relevante. Máximo 4 frases, texto simples.';
 
+const CHIPS_PROMPT =
+  'Com base na análise acima, sugira exatamente 3 perguntas curtas (máximo 6 palavras cada) ' +
+  'que o usuário pode querer perguntar sobre seus gastos. ' +
+  'Retorne somente um array JSON de strings, sem mais nenhum texto. ' +
+  'Exemplo: ["Quem gastou mais?","Maiores gastos do mês","Compare meses anteriores"]';
+
 interface Message {
   id: string;
   role: 'user' | 'bot';
@@ -72,6 +78,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [kbHeight, setKbHeight] = useState(0);
+  const [chips, setChips] = useState<string[]>([]);
   const cancelRef = useRef<(() => void) | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const analyzedMesRef = useRef('');
@@ -134,11 +141,13 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
     ]);
 
     const mes = currentMes;
+    let botTextBuffer = '';
     cancelRef.current = streamGemini(
       API_KEY,
       systemPrompt,
       [{ role: 'user', text: PROACTIVE_PROMPT }],
       (chunk) => {
+        botTextBuffer += chunk;
         setMessages((prev) => {
           const last = prev[prev.length - 1];
           if (!last || last.role !== 'bot') return prev;
@@ -158,6 +167,32 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
         });
         setStreaming(false);
         cancelRef.current = null;
+        // Busca chips de forma silenciosa após a análise proativa
+        if (botTextBuffer) {
+          let chipsBuffer = '';
+          streamGemini(
+            API_KEY,
+            systemPromptRef.current,
+            [
+              { role: 'user', text: PROACTIVE_PROMPT },
+              { role: 'model', text: botTextBuffer },
+              { role: 'user', text: CHIPS_PROMPT },
+            ],
+            (chunk) => { chipsBuffer += chunk; },
+            () => {
+              try {
+                const match = chipsBuffer.match(/\[[\s\S]*?\]/);
+                if (match) {
+                  const parsed = JSON.parse(match[0]);
+                  if (Array.isArray(parsed)) {
+                    setChips(parsed.slice(0, 3).filter((x): x is string => typeof x === 'string'));
+                  }
+                }
+              } catch {}
+            },
+            () => {}, // chips são best-effort; ignora erros
+          );
+        }
       },
       (err) => {
         setMessages((prev) => {
@@ -174,9 +209,12 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
     );
   }, [meses, systemPrompt]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const send = useCallback(() => {
-    const text = input.trim();
+  const send = useCallback((textOverride?: string) => {
+    const text = (textOverride ?? input).trim();
     if (!text || streaming || meses.length === 0) return;
+
+    setChips([]);
+    if (!textOverride) setInput('');
 
     if (!API_KEY) {
       setMessages((prev) => [
@@ -188,13 +226,11 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
           text: 'API key não configurada. Adicione EXPO_PUBLIC_GEMINI_API_KEY no arquivo .env.',
         },
       ]);
-      setInput('');
       return;
     }
 
     const snapshot = messages;
     const mes = meses[0];
-    setInput('');
     setStreaming(true);
 
     const apiMessages: GeminiMessage[] = [
@@ -257,6 +293,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
     cancelRef.current = null;
     setStreaming(false);
     setMessages([]);
+    setChips([]);
     analyzedMesRef.current = '';
     clearChatHistory(db, userEmail, currentMes).catch((e) =>
       console.error('[IziBotScreen] clearChatHistory falhou:', e),
@@ -320,6 +357,21 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
         )}
       </ScrollView>
 
+      {chips.length > 0 && !streaming && (
+        <View style={s.chipsRow}>
+          {chips.map((chip) => (
+            <TouchableOpacity
+              key={chip}
+              style={s.chip}
+              onPress={() => send(chip)}
+              activeOpacity={0.7}
+            >
+              <Text style={s.chipText}>{chip}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
       <View style={s.inputBar}>
         <TextInput
           style={s.input}
@@ -329,13 +381,13 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
           placeholderTextColor="#475569"
           multiline
           maxLength={500}
-          onSubmitEditing={send}
+          onSubmitEditing={() => send()}
           blurOnSubmit={false}
           editable={!streaming}
         />
         <TouchableOpacity
           style={[s.sendBtn, (!input.trim() || streaming) && s.sendBtnDisabled]}
-          onPress={send}
+          onPress={() => send()}
           disabled={!input.trim() || streaming}
           activeOpacity={0.7}
         >
@@ -395,6 +447,26 @@ const s = StyleSheet.create({
 
   cursor: { color: '#7c3aed' },
   typing: { color: '#475569', fontSize: 13, fontStyle: 'italic' },
+
+  chipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#1e293b',
+    backgroundColor: '#020617',
+  },
+  chip: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#4c1d95',
+    backgroundColor: '#1e1040',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  chipText: { color: '#a78bfa', fontSize: 12, fontWeight: '600' },
 
   inputBar: {
     flexDirection: 'row',
