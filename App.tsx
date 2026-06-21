@@ -1,5 +1,5 @@
 import './global.css';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   RefreshControl,
@@ -66,11 +66,13 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <StatusBar style="light" />
-        <SQLiteProvider databaseName="izicont.db" onInit={migrateDbAsync}>
-          <ErrorBoundary>
-            <AppContent />
-          </ErrorBoundary>
-        </SQLiteProvider>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingScreen />}>
+            <SQLiteProvider databaseName="izicont.db" onInit={migrateDbAsync} useSuspense>
+              <AppContent />
+            </SQLiteProvider>
+          </Suspense>
+        </ErrorBoundary>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
