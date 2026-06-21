@@ -21,7 +21,7 @@ import { Historico } from '../hooks/useHistorico';
 import { streamGemini, GeminiMessage } from '../services/geminiApi';
 import { serializarHistorico } from '../utils/serializarHistorico';
 import { nomeMes } from '../utils/meses';
-import { loadChatHistory, saveChatMessages, clearChatHistory } from '../storage/chatHistory';
+import { loadChatHistory, saveChatMessages, clearChatHistory, loadChips, saveChips } from '../storage/chatHistory';
 import { IconTrash } from '../components/icons/IconTrash';
 import { IconSparkle } from '../components/icons/IconSparkle';
 
@@ -131,9 +131,13 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
       return;
     }
     setMessages([]);
+    setChips([]);
     setHistoryReady(false);
-    loadChatHistory(db, userEmail, currentMes)
-      .then((rows) => {
+    Promise.all([
+      loadChatHistory(db, userEmail, currentMes),
+      loadChips(db, userEmail, currentMes),
+    ])
+      .then(([rows, savedChips]) => {
         if (rows.length > 0) {
           setMessages(
             rows.map((r) => ({
@@ -146,10 +150,11 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
           // Já há conversa — bloqueia análise proativa para este mês
           analyzedMesRef.current = currentMes;
         }
+        if (savedChips.length > 0) setChips(savedChips);
         setHistoryReady(true);
       })
       .catch((e) => {
-        console.error('[IziBotScreen] loadChatHistory falhou:', e);
+        console.error('[IziBotScreen] load falhou:', e);
         setHistoryReady(true);
       });
   }, [db, userEmail, meses[0]]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -232,7 +237,11 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
                 if (match) {
                   const parsed = JSON.parse(match[0]);
                   if (Array.isArray(parsed)) {
-                    setChips(parsed.slice(0, 3).filter((x): x is string => typeof x === 'string'));
+                    const valid = parsed.slice(0, 3).filter((x): x is string => typeof x === 'string');
+                    setChips(valid);
+                    if (valid.length > 0) {
+                      saveChips(db, userEmail, mes, valid).catch(() => {});
+                    }
                   }
                 }
               } catch {}
@@ -261,6 +270,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
     if (!text || streaming || meses.length === 0) return;
 
     setChips([]);
+    saveChips(db, userEmail, meses[0], []).catch(() => {});
     if (!textOverride) setInput('');
 
     if (!API_KEY) {

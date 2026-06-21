@@ -13,9 +13,45 @@ export async function loadChatHistory(
   mes: string,
 ): Promise<ChatRow[]> {
   return db.getAllAsync<ChatRow>(
-    'SELECT id, role, content, is_hidden FROM chat_v1 WHERE user_id = ? AND mes = ? ORDER BY created_at ASC, id ASC',
+    "SELECT id, role, content, is_hidden FROM chat_v1 WHERE user_id = ? AND mes = ? AND role != 'chips' ORDER BY created_at ASC, id ASC",
     [userEmail, mes],
   );
+}
+
+export async function loadChips(
+  db: SQLiteDatabase,
+  userEmail: string,
+  mes: string,
+): Promise<string[]> {
+  const row = await db.getFirstAsync<{ content: string }>(
+    "SELECT content FROM chat_v1 WHERE user_id = ? AND mes = ? AND role = 'chips'",
+    [userEmail, mes],
+  );
+  if (!row) return [];
+  try {
+    const parsed = JSON.parse(row.content);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function saveChips(
+  db: SQLiteDatabase,
+  userEmail: string,
+  mes: string,
+  chips: string[],
+): Promise<void> {
+  await db.runAsync(
+    "DELETE FROM chat_v1 WHERE user_id = ? AND mes = ? AND role = 'chips'",
+    [userEmail, mes],
+  );
+  if (chips.length > 0) {
+    await db.runAsync(
+      "INSERT INTO chat_v1 (user_id, mes, role, content, is_hidden, created_at) VALUES (?, ?, 'chips', ?, 0, ?)",
+      [userEmail, mes, JSON.stringify(chips), Date.now()],
+    );
+  }
 }
 
 export async function clearChatHistory(
