@@ -1,13 +1,12 @@
 import React, { useRef, useState } from 'react';
 import {
   Dimensions,
-  FlatList,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
-  ViewToken,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconSparkle } from './icons/IconSparkle';
@@ -23,36 +22,25 @@ interface Props {
 }
 
 type SlideKey = 'welcome' | 'como' | 'anotar' | 'notif';
-
-interface Slide {
-  key: SlideKey;
-}
-
-const SLIDES: Slide[] = [
-  { key: 'welcome' },
-  { key: 'como' },
-  { key: 'anotar' },
-  { key: 'notif' },
-];
+const SLIDES: SlideKey[] = ['welcome', 'como', 'anotar', 'notif'];
 
 export function OnboardingModal({ visible, onClose }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const listRef = useRef<FlatList>(null);
-
-  const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (viewableItems.length > 0 && viewableItems[0].index !== null) {
-        setCurrentIndex(viewableItems[0].index);
-      }
-    },
-  ).current;
+  const scrollRef = useRef<ScrollView>(null);
 
   function avancar() {
     if (currentIndex < SLIDES.length - 1) {
-      listRef.current?.scrollToIndex({ index: currentIndex + 1, animated: true });
+      const next = currentIndex + 1;
+      scrollRef.current?.scrollTo({ x: next * W, animated: true });
+      setCurrentIndex(next);
     } else {
       onClose();
     }
+  }
+
+  function handleScroll(x: number) {
+    const idx = Math.round(x / W);
+    if (idx !== currentIndex) setCurrentIndex(idx);
   }
 
   return (
@@ -70,19 +58,25 @@ export function OnboardingModal({ visible, onClose }: Props) {
         </View>
 
         {/* Slides */}
-        <FlatList
-          ref={listRef}
-          data={SLIDES}
-          keyExtractor={(item) => item.key}
+        <ScrollView
+          ref={scrollRef}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           scrollEventThrottle={16}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
-          renderItem={({ item }) => <SlideView slideKey={item.key} />}
-          style={{ flexGrow: 0 }}
-        />
+          onScroll={(e) => handleScroll(e.nativeEvent.contentOffset.x)}
+          style={s.pager}
+          contentContainerStyle={s.pagerContent}
+        >
+          {SLIDES.map((key) => (
+            <View key={key} style={s.slide}>
+              {key === 'welcome' && <SlideWelcome />}
+              {key === 'como' && <SlideComo />}
+              {key === 'anotar' && <SlideAnotar />}
+              {key === 'notif' && <SlideNotif />}
+            </View>
+          ))}
+        </ScrollView>
 
         {/* Dots + botão */}
         <View style={s.footer}>
@@ -102,17 +96,6 @@ export function OnboardingModal({ visible, onClose }: Props) {
   );
 }
 
-function SlideView({ slideKey }: { slideKey: SlideKey }) {
-  return (
-    <View style={[s.slide, { width: W }]}>
-      {slideKey === 'welcome' && <SlideWelcome />}
-      {slideKey === 'como' && <SlideComo />}
-      {slideKey === 'anotar' && <SlideAnotar />}
-      {slideKey === 'notif' && <SlideNotif />}
-    </View>
-  );
-}
-
 function SlideWelcome() {
   return (
     <View style={s.slideInner}>
@@ -120,7 +103,7 @@ function SlideWelcome() {
         <IconSparkle size={40} color="#a78bfa" />
       </View>
       <Text style={s.slideTitle}>
-        Bem-vindo ao{'\n'}
+        {'Bem-vindo ao\n'}
         <Text style={s.accent}>Izi</Text>
         <Text style={s.white}>Contador</Text>
       </Text>
@@ -139,7 +122,7 @@ function SlideComo() {
         <IconCard size={40} color="#38bdf8" />
       </View>
       <Text style={s.slideTitle}>
-        <Text style={s.white}>Como</Text> funciona
+        <Text style={s.white}>Como</Text>{' funciona'}
       </Text>
       <Text style={s.slideBody}>
         Conectamos ao seu Gmail, encontramos o CSV da fatura Nubank e importamos os gastos
@@ -151,7 +134,9 @@ function SlideComo() {
         <StepItem n="3" text="Os gastos aparecem divididos por pessoa" />
       </View>
       <View style={s.privacyBox}>
-        <Text style={s.privacyTxt}>Nenhum dado sai do celular. Tudo fica armazenado localmente.</Text>
+        <Text style={s.privacyTxt}>
+          Nenhum dado sai do celular. Tudo fica armazenado localmente.
+        </Text>
       </View>
     </View>
   );
@@ -164,7 +149,7 @@ function SlideAnotar() {
         <IconBook size={40} color="#fb7185" />
       </View>
       <Text style={s.slideTitle}>
-        <Text style={s.white}>Como</Text> anotar
+        <Text style={s.white}>Como</Text>{' anotar'}
       </Text>
       <Text style={s.slideBody}>
         No app do Nubank, edite a descrição do gasto e adicione o nome da pessoa:
@@ -188,7 +173,7 @@ function SlideNotif() {
         <IconBell size={40} color="#818cf8" />
       </View>
       <Text style={s.slideTitle}>
-        <Text style={s.white}>Nunca perca</Text> o fechamento
+        <Text style={s.white}>Nunca perca</Text>{' o fechamento'}
       </Text>
       <Text style={s.slideBody}>
         Configure o dia de fechamento da sua fatura e te avisamos 1 dia antes para sincronizar.
@@ -238,12 +223,15 @@ const s = StyleSheet.create({
   },
   pular: { color: '#475569', fontSize: 14, fontWeight: '600' },
 
-  slide: { flex: 1 },
+  pager: { flex: 1 },
+  pagerContent: { alignItems: 'stretch' },
+
+  slide: { width: W },
   slideInner: {
     flex: 1,
     paddingHorizontal: 28,
-    paddingTop: 8,
-    gap: 14,
+    paddingTop: 16,
+    gap: 16,
   },
 
   iconCircle: {
@@ -252,7 +240,6 @@ const s = StyleSheet.create({
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
   },
   slideTitle: {
     color: '#475569',
@@ -263,14 +250,9 @@ const s = StyleSheet.create({
   },
   accent: { color: '#a78bfa' },
   white: { color: '#f1f5f9' },
-  slideBody: {
-    color: '#64748b',
-    fontSize: 15,
-    lineHeight: 24,
-  },
+  slideBody: { color: '#64748b', fontSize: 15, lineHeight: 24 },
 
-  // Steps
-  stepList: { gap: 10, marginTop: 4 },
+  stepList: { gap: 10 },
   stepItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   stepNum: {
     width: 24,
@@ -290,41 +272,41 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#1e293b',
     padding: 12,
-    marginTop: 4,
   },
   privacyTxt: { color: '#334155', fontSize: 12, lineHeight: 18 },
 
-  // Examples
   exampleBox: {
     backgroundColor: '#0f172a',
     borderRadius: 14,
     borderWidth: 1,
     borderColor: '#1e293b',
     overflow: 'hidden',
-    marginTop: 2,
   },
   exRow: { padding: 14, gap: 4 },
   exInput: { color: '#e2e8f0', fontSize: 13, fontWeight: '600', fontFamily: 'monospace' },
   exOutput: { color: '#4ade80', fontSize: 11, fontWeight: '500' },
   exDivider: { height: 1, backgroundColor: '#1e293b' },
 
-  hint: { color: '#334155', fontSize: 12, marginTop: 2 },
+  hint: { color: '#334155', fontSize: 12 },
 
-  // Notification preview
   notifBox: {
     backgroundColor: '#1e293b',
     borderRadius: 14,
     padding: 14,
     gap: 4,
-    marginTop: 4,
   },
   notifHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 },
-  notifApp: { color: '#64748b', fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
+  notifApp: {
+    color: '#64748b',
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
   notifTime: { color: '#475569', fontSize: 11 },
   notifTitle: { color: '#f1f5f9', fontSize: 14, fontWeight: '700' },
   notifBody: { color: '#94a3b8', fontSize: 13 },
 
-  // Footer
   footer: {
     paddingHorizontal: 28,
     paddingBottom: 16,
