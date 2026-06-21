@@ -54,7 +54,9 @@ import { IconBarChart } from './src/components/icons/IconBarChart';
 import { IconSparkle } from './src/components/icons/IconSparkle';
 import { IconBell } from './src/components/icons/IconBell';
 import { ModalNotificacoes } from './src/components/ModalNotificacoes';
+import { OnboardingModal } from './src/components/OnboardingModal';
 import { useNotificacoes } from './src/hooks/useNotificacoes';
+import { useOnboarding } from './src/hooks/useOnboarding';
 import { EstatsScreen } from './src/screens/EstatsScreen';
 import { IziBotScreen } from './src/screens/IziBotScreen';
 import { SEM_CATEGORIA } from './src/parser/parseFatura';
@@ -99,6 +101,7 @@ function AppContent() {
   const { edicoes, salvar: salvarEdicao, limparMes } = useEdicoesFatura(userEmail, mesSelecionado);
   const { pixKey, salvarPixKey } = usePixKey(userEmail);
   const { diaFechamento, salvar: salvarNotif, cancelar: cancelarNotif } = useNotificacoes(userEmail);
+  const { mostrar: mostrarOnboarding, marcarVisto } = useOnboarding(userEmail);
   const [showCategorias, setShowCategorias] = useState(false);
   const [showNotificacoes, setShowNotificacoes] = useState(false);
   const [showRegras, setShowRegras] = useState(false);
@@ -546,6 +549,7 @@ function AppContent() {
         onCancelar={cancelarNotif}
         onFechar={() => setShowNotificacoes(false)}
       />
+      <OnboardingModal visible={mostrarOnboarding} onClose={marcarVisto} />
     </View>
   );
 }
