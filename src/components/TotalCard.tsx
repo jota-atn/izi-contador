@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { IconUsers } from './icons/IconUsers';
+import { IconPdf } from './icons/IconPdf';
 import { nomeMes } from '../utils/meses';
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
   totalPendente: number;
   numPendente: number;
   onPagarFatura?: () => void;
+  onExportarPdf?: () => void;
 }
 
 export const TotalCard = memo(function TotalCard({
@@ -25,6 +27,7 @@ export const TotalCard = memo(function TotalCard({
   totalPendente,
   numPendente,
   onPagarFatura,
+  onExportarPdf,
 }: Props) {
   const diff = totalAnterior !== undefined ? total - totalAnterior : null;
   const isUp = diff !== null && diff > 0;
@@ -41,11 +44,21 @@ export const TotalCard = memo(function TotalCard({
         <Text className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-2">
           Fatura Total
         </Text>
-        {quitada && (
-          <View style={s.quitadaBadge}>
-            <Text style={s.quitadaText}>✓ Quitada</Text>
-          </View>
-        )}
+        <View style={s.headerRight}>
+          {quitada && (
+            <View style={s.quitadaBadge}>
+              <Text style={s.quitadaText}>✓ Quitada</Text>
+            </View>
+          )}
+          {onExportarPdf && (
+            <TouchableOpacity
+              onPress={onExportarPdf}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <IconPdf size={18} color="#475569" />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
       <Text className="text-white text-5xl font-black tracking-tighter mb-3">
         R$ {total.toFixed(2)}
@@ -125,6 +138,7 @@ export const TotalCard = memo(function TotalCard({
 const s = StyleSheet.create({
   cardQuitada: { borderColor: '#14532d' },
   headerRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   quitadaBadge: {
     backgroundColor: '#052e16',
     borderWidth: 1,

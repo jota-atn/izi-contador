@@ -61,7 +61,6 @@ import { filtrarPessoas } from './src/utils/busca';
 import { haptic } from './src/utils/haptic';
 import { hashFatura } from './src/utils/hashFatura';
 import { exportarPdf } from './src/utils/exportarPdf';
-import { IconPdf } from './src/components/icons/IconPdf';
 
 export default function App() {
   return (
@@ -339,11 +338,6 @@ function AppContent() {
                   icon: <IconShare size={15} color="#a78bfa" />,
                 },
                 {
-                  label: 'Exportar PDF',
-                  onPress: exportarRelatorioPdf,
-                  icon: <IconPdf size={15} color="#a78bfa" />,
-                },
-                {
                   label: 'Categorias',
                   onPress: () => setShowCategorias(true),
                   icon: <IconSettings size={15} color="#a78bfa" />,
@@ -415,6 +409,7 @@ function AppContent() {
                     mesAnterior={mesAnterior}
                     {...pagamentoStatus}
                     onPagarFatura={handlePagarFatura}
+                    onExportarPdf={exportarRelatorioPdf}
                   />
                 </View>
                 <View style={{ marginHorizontal: 16 }}>

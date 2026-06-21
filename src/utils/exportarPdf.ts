@@ -5,7 +5,7 @@ import { formatMesAno } from './meses';
 async function getIconBase64(): Promise<string> {
   try {
     const { Asset } = await import('expo-asset');
-    const { readAsStringAsync, EncodingType } = await import('expo-file-system');
+    const { readAsStringAsync, EncodingType } = await import('expo-file-system/legacy');
     const asset = Asset.fromModule(require('../../assets/icon.png'));
     await asset.downloadAsync();
     if (!asset.localUri) return '';
@@ -21,10 +21,16 @@ export async function exportarPdf(
 ): Promise<void> {
   const { printToFileAsync } = await import('expo-print');
   const { shareAsync } = await import('expo-sharing');
+  const { moveAsync, cacheDirectory } = await import('expo-file-system/legacy');
 
   const iconBase64 = await getIconBase64();
   const html = gerarPdfHtml(dados, estadoPorPessoa, iconBase64);
-  const { uri } = await printToFileAsync({ html });
+  const { uri: tempUri } = await printToFileAsync({ html });
+
+  const nomeArquivo = `IziContador - Fatura ${formatMesAno(dados.mes)}.pdf`;
+  const uri = `${cacheDirectory ?? ''}${nomeArquivo}`;
+  await moveAsync({ from: tempUri, to: uri });
+
   await shareAsync(uri, {
     mimeType: 'application/pdf',
     dialogTitle: `Fatura ${formatMesAno(dados.mes)}`,
