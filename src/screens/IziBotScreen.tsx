@@ -8,6 +8,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  withDelay,
+} from 'react-native-reanimated';
 import { useSQLiteContext } from 'expo-sqlite';
 import { Historico } from '../hooks/useHistorico';
 import { streamGemini, GeminiMessage } from '../services/geminiApi';
@@ -15,6 +23,36 @@ import { serializarHistorico } from '../utils/serializarHistorico';
 import { nomeMes } from '../utils/meses';
 import { loadChatHistory, saveChatMessages, clearChatHistory } from '../storage/chatHistory';
 import { IconTrash } from '../components/icons/IconTrash';
+import { IconSparkle } from '../components/icons/IconSparkle';
+
+function TypingDot({ delay }: { delay: number }) {
+  const translateY = useSharedValue(0);
+  const opacity = useSharedValue(0.4);
+
+  useEffect(() => {
+    translateY.value = withDelay(
+      delay,
+      withRepeat(
+        withSequence(withTiming(-5, { duration: 280 }), withTiming(0, { duration: 280 })),
+        -1,
+      ),
+    );
+    opacity.value = withDelay(
+      delay,
+      withRepeat(
+        withSequence(withTiming(1, { duration: 280 }), withTiming(0.4, { duration: 280 })),
+        -1,
+      ),
+    );
+  }, []);
+
+  const style = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+    opacity: opacity.value,
+  }));
+
+  return <Animated.View style={[s.typingDot, style]} />;
+}
 
 const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY ?? '';
 
@@ -348,6 +386,11 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
             key={msg.id}
             style={[s.bubbleWrap, msg.role === 'user' ? s.bubbleWrapUser : s.bubbleWrapBot]}
           >
+            {msg.role === 'bot' && (
+              <View style={s.avatar}>
+                <IconSparkle size={11} color="#a78bfa" />
+              </View>
+            )}
             <View style={[s.bubble, msg.role === 'user' ? s.bubbleUser : s.bubbleBot]}>
               <Text
                 style={[s.bubbleText, msg.role === 'user' ? s.bubbleTextUser : s.bubbleTextBot]}
@@ -360,15 +403,26 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
         ))}
         {streaming && visibleMessages[visibleMessages.length - 1]?.text === '' && (
           <View style={s.bubbleWrapBot}>
-            <View style={s.bubbleBot}>
-              <Text style={s.typing}>digitando</Text>
+            <View style={s.avatar}>
+              <IconSparkle size={11} color="#a78bfa" />
+            </View>
+            <View style={[s.bubbleBot, s.typingBubble]}>
+              <TypingDot delay={0} />
+              <TypingDot delay={160} />
+              <TypingDot delay={320} />
             </View>
           </View>
         )}
       </ScrollView>
 
       {chips.length > 0 && !streaming && (
-        <View style={s.chipsRow}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={s.chipsScroll}
+          contentContainerStyle={s.chipsContent}
+          keyboardShouldPersistTaps="handled"
+        >
           {chips.map((chip) => (
             <TouchableOpacity
               key={chip}
@@ -379,7 +433,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
               <Text style={s.chipText}>{chip}</Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
       )}
 
       <View style={s.inputBar}>
@@ -438,11 +492,23 @@ const s = StyleSheet.create({
   scroll: { flex: 1 },
   scrollContent: { padding: 16, gap: 10, paddingBottom: 8 },
 
-  bubbleWrap: { flexDirection: 'row' },
+  bubbleWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 6 },
   bubbleWrapUser: { justifyContent: 'flex-end' },
   bubbleWrapBot: { justifyContent: 'flex-start' },
 
-  bubble: { maxWidth: '82%', borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
+  avatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#1e1040',
+    borderWidth: 1,
+    borderColor: '#4c1d95',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+
+  bubble: { maxWidth: '78%', borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
   bubbleUser: { backgroundColor: '#7c3aed', borderBottomRightRadius: 4 },
   bubbleBot: {
     backgroundColor: '#0f172a',
@@ -450,31 +516,44 @@ const s = StyleSheet.create({
     borderColor: '#1e293b',
     borderBottomLeftRadius: 4,
   },
+  typingBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 5,
+  },
 
   bubbleText: { fontSize: 14, lineHeight: 21 },
   bubbleTextUser: { color: '#f1f5f9' },
   bubbleTextBot: { color: '#cbd5e1' },
 
   cursor: { color: '#7c3aed' },
-  typing: { color: '#475569', fontSize: 13, fontStyle: 'italic' },
 
-  chipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+  typingDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#7c3aed',
+  },
+
+  chipsScroll: {
     borderTopWidth: 1,
     borderTopColor: '#1e293b',
     backgroundColor: '#020617',
+  },
+  chipsContent: {
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
   chip: {
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#4c1d95',
     backgroundColor: '#1e1040',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
   },
   chipText: { color: '#a78bfa', fontSize: 12, fontWeight: '600' },
 
