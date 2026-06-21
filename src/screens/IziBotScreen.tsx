@@ -416,24 +416,25 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
       </ScrollView>
 
       {chips.length > 0 && !streaming && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={s.chipsScroll}
-          contentContainerStyle={s.chipsContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          {chips.map((chip) => (
-            <TouchableOpacity
-              key={chip}
-              style={s.chip}
-              onPress={() => send(chip)}
-              activeOpacity={0.7}
-            >
-              <Text style={s.chipText}>{chip}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <View style={s.chipsScroll}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={s.chipsContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            {chips.map((chip) => (
+              <TouchableOpacity
+                key={chip}
+                style={s.chip}
+                onPress={() => send(chip)}
+                activeOpacity={0.7}
+              >
+                <Text style={s.chipText}>{chip}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
       )}
 
       <View style={s.inputBar}>
@@ -541,11 +542,13 @@ const s = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#1e293b',
     backgroundColor: '#020617',
+    height: 52,
+    justifyContent: 'center',
   },
   chipsContent: {
     gap: 8,
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    alignItems: 'center',
   },
   chip: {
     borderRadius: 20,
