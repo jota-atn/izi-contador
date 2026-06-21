@@ -10,6 +10,14 @@ const SEM_CATEGORIA = '__SEM_CATEGORIA__';
 const CHART_MAX_MESES = 7;
 
 const PERSON_COLORS = ['#7c3aed', '#0ea5e9', '#ec4899', '#f59e0b', '#22c55e', '#f97316'];
+const PERSON_COLORS_RGB = [
+  '124, 58, 237',
+  '14, 165, 233',
+  '236, 72, 153',
+  '245, 158, 11',
+  '34, 197, 94',
+  '249, 115, 22',
+];
 
 const CHART_CONFIG = {
   backgroundColor: '#0f172a',
@@ -39,6 +47,24 @@ export const EstatsScreen = memo(function EstatsScreen({ historico, meses }: Pro
     () => mesesChart.map((m) => historico[m].total_fatura),
     [mesesChart, historico],
   );
+
+  const pessoasChart = useMemo(() => {
+    const pessoasSet = new Set<string>();
+    mesesChart.forEach((m) =>
+      historico[m].relatorio_por_pessoa
+        .filter((p) => p.dono !== SEM_CATEGORIA)
+        .forEach((p) => pessoasSet.add(p.dono)),
+    );
+    return Array.from(pessoasSet)
+      .map((dono) => ({
+        dono,
+        data: mesesChart.map((m) => {
+          const p = historico[m].relatorio_por_pessoa.find((x) => x.dono === dono);
+          return p ? p.total_individual : 0;
+        }),
+      }))
+      .sort((a, b) => b.data.reduce((s, v) => s + v, 0) - a.data.reduce((s, v) => s + v, 0));
+  }, [mesesChart, historico]);
 
   const labels = useMemo(
     () => mesesChart.map((m) => MESES_CURTOS[parseInt(m.split('-')[1], 10) - 1]),
@@ -208,6 +234,45 @@ export const EstatsScreen = memo(function EstatsScreen({ historico, meses }: Pro
           formatYLabel={(v) => `${Math.round(Number(v) / 100) * 100}`}
         />
       </View>
+
+      {/* Evolução por pessoa */}
+      {pessoasChart.length >= 2 && (
+        <View style={s.card}>
+          <Text style={s.cardTitle}>Evolução por pessoa</Text>
+          <LineChart
+            data={{
+              labels,
+              datasets: pessoasChart.map((p, i) => ({
+                data: p.data,
+                color: (opacity = 1) =>
+                  `rgba(${PERSON_COLORS_RGB[i % PERSON_COLORS_RGB.length]}, ${opacity})`,
+                strokeWidth: 2,
+              })),
+            }}
+            width={SCREEN_W - 64}
+            height={220}
+            chartConfig={CHART_CONFIG}
+            bezier
+            withShadow={false}
+            withInnerLines
+            withOuterLines={false}
+            withVerticalLines={false}
+            withDots={pessoasChart.length <= 3}
+            style={s.chart}
+            formatYLabel={(v) => `${Math.round(Number(v) / 100) * 100}`}
+          />
+          <View style={s.legendRow}>
+            {pessoasChart.map(({ dono }, i) => (
+              <View key={dono} style={s.legendItem}>
+                <View
+                  style={[s.legendDot, { backgroundColor: PERSON_COLORS[i % PERSON_COLORS.length] }]}
+                />
+                <Text style={s.legendLabel}>{dono}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
 
       {/* Distribuição por pessoa */}
       <View style={s.card}>
@@ -392,6 +457,29 @@ const s = StyleSheet.create({
   },
   cardSub: { color: '#475569', fontSize: 11, marginTop: 2, marginBottom: 4 },
   chart: { borderRadius: 12, marginTop: 12, marginLeft: -12 },
+
+  // Legenda multi-linha
+  legendRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 14,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  legendLabel: {
+    color: '#94a3b8',
+    fontSize: 12,
+    fontWeight: '600',
+  },
 
   // Distribuição
   barRow: { marginTop: 14 },
