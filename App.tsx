@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
-import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { SQLiteProvider } from 'expo-sqlite';
@@ -104,7 +104,6 @@ function AppContent() {
   const [termoBusca, setTermoBusca] = useState('');
   const [activeTab, setActiveTab] = useState<'fatura' | 'stats' | 'bot'>('fatura');
   const [tabBarHeight, setTabBarHeight] = useState(0);
-  const insets = useSafeAreaInsets();
   const donoAtualRef = useRef('');
   const historicoRef = useRef(historico);
   const promptadoRef = useRef<string | null>(null);
@@ -448,7 +447,7 @@ function AppContent() {
               meses={meses}
               userName={userName}
               userEmail={userEmail}
-              kbOffset={tabBarHeight + insets.bottom}
+              kbOffset={tabBarHeight}
             />
           </View>
 

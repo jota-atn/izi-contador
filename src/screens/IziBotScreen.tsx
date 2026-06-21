@@ -39,7 +39,7 @@ interface Props {
   meses: string[]; // desc
   userName: string;
   userEmail: string;
-  kbOffset: number; // tabBarHeight + insets.bottom para corrigir paddingBottom do teclado
+  kbOffset: number; // tabBarHeight medido via onLayout na tab bar
 }
 
 export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }: Props) {
