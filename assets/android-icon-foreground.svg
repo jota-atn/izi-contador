@@ -5,13 +5,13 @@
   <text x="512" y="755"
     font-family="'Arial Black', Arial, sans-serif"
     font-weight="900" font-size="642"
-    text-anchor="middle" fill="#7c3aed" opacity="0.22">$</text>
+    text-anchor="middle" fill="#c4b5fd" opacity="0.35">$</text>
 
   <!-- "Izi" por cima -->
   <text x="512" y="634"
     font-family="'Arial Black', Arial, sans-serif"
     font-weight="900" font-size="304"
     text-anchor="middle">
-    <tspan fill="#ffffff">I</tspan><tspan fill="#7c3aed">zi</tspan>
+    <tspan fill="#ffffff">I</tspan><tspan fill="#c4b5fd">zi</tspan>
   </text>
 </svg>
