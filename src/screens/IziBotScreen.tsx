@@ -79,6 +79,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
   const [streaming, setStreaming] = useState(false);
   const [kbHeight, setKbHeight] = useState(0);
   const [chips, setChips] = useState<string[]>([]);
+  const [historyReady, setHistoryReady] = useState(false);
   const cancelRef = useRef<(() => void) | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const analyzedMesRef = useRef('');
@@ -88,24 +89,31 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
     const currentMes = meses[0];
     if (!currentMes || !userEmail) {
       setMessages([]);
+      setHistoryReady(true);
       return;
     }
     setMessages([]);
+    setHistoryReady(false);
     loadChatHistory(db, userEmail, currentMes)
       .then((rows) => {
-        if (rows.length === 0) return;
-        setMessages(
-          rows.map((r) => ({
-            id: String(r.id),
-            role: r.role,
-            text: r.content,
-            isHidden: r.is_hidden === 1,
-          })),
-        );
-        // Já há conversa para este mês — não dispara análise proativa
-        analyzedMesRef.current = currentMes;
+        if (rows.length > 0) {
+          setMessages(
+            rows.map((r) => ({
+              id: String(r.id),
+              role: r.role,
+              text: r.content,
+              isHidden: r.is_hidden === 1,
+            })),
+          );
+          // Já há conversa — bloqueia análise proativa para este mês
+          analyzedMesRef.current = currentMes;
+        }
+        setHistoryReady(true);
       })
-      .catch((e) => console.error('[IziBotScreen] loadChatHistory falhou:', e));
+      .catch((e) => {
+        console.error('[IziBotScreen] loadChatHistory falhou:', e);
+        setHistoryReady(true);
+      });
   }, [db, userEmail, meses[0]]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -127,8 +135,9 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
     scrollRef.current?.scrollToEnd({ animated: true });
   }, [messages]);
 
-  // Análise proativa — dispara uma vez por mês
+  // Análise proativa — dispara uma vez por mês, só após checar o histórico
   useEffect(() => {
+    if (!historyReady) return;
     const currentMes = meses[0];
     if (!currentMes || !systemPrompt || !API_KEY) return;
     if (analyzedMesRef.current === currentMes) return;
@@ -207,7 +216,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
         cancelRef.current = null;
       },
     );
-  }, [meses, systemPrompt]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [historyReady, meses, systemPrompt]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const send = useCallback((textOverride?: string) => {
     const text = (textOverride ?? input).trim();
@@ -294,6 +303,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
     setStreaming(false);
     setMessages([]);
     setChips([]);
+    setHistoryReady(true);
     analyzedMesRef.current = '';
     clearChatHistory(db, userEmail, currentMes).catch((e) =>
       console.error('[IziBotScreen] clearChatHistory falhou:', e),
