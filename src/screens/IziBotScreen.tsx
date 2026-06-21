@@ -491,17 +491,17 @@ const s = StyleSheet.create({
   },
 
   scroll: { flex: 1 },
-  scrollContent: { padding: 16, gap: 10, paddingBottom: 8 },
+  scrollContent: { flexGrow: 1, justifyContent: 'flex-end', padding: 16, gap: 8, paddingBottom: 12 },
 
-  bubbleWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 6 },
+  bubbleWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
   bubbleWrapUser: { justifyContent: 'flex-end' },
   bubbleWrapBot: { justifyContent: 'flex-start' },
 
   avatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#1e1040',
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#150d2e',
     borderWidth: 1,
     borderColor: '#4c1d95',
     alignItems: 'center',
@@ -509,31 +509,34 @@ const s = StyleSheet.create({
     flexShrink: 0,
   },
 
-  bubble: { maxWidth: '78%', borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
-  bubbleUser: { backgroundColor: '#7c3aed', borderBottomRightRadius: 4 },
+  bubble: { maxWidth: '78%', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10 },
+  bubbleUser: { backgroundColor: '#6d28d9', borderBottomRightRadius: 5 },
   bubbleBot: {
     backgroundColor: '#0f172a',
     borderWidth: 1,
     borderColor: '#1e293b',
-    borderBottomLeftRadius: 4,
+    borderBottomLeftRadius: 5,
   },
   typingBubble: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 18,
     paddingVertical: 14,
-    gap: 5,
+    gap: 6,
+    borderRadius: 20,
+    borderBottomLeftRadius: 5,
   },
 
-  bubbleText: { fontSize: 14, lineHeight: 21 },
+  bubbleText: { fontSize: 14, lineHeight: 22 },
   bubbleTextUser: { color: '#f1f5f9' },
   bubbleTextBot: { color: '#cbd5e1' },
 
   cursor: { color: '#7c3aed' },
 
   typingDot: {
-    width: 7,
-    height: 7,
+    width: 8,
+    height: 8,
     borderRadius: 4,
     backgroundColor: '#7c3aed',
   },
