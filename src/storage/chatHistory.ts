@@ -18,6 +18,14 @@ export async function loadChatHistory(
   );
 }
 
+export async function clearChatHistory(
+  db: SQLiteDatabase,
+  userEmail: string,
+  mes: string,
+): Promise<void> {
+  await db.runAsync('DELETE FROM chat_v1 WHERE user_id = ? AND mes = ?', [userEmail, mes]);
+}
+
 export async function saveChatMessages(
   db: SQLiteDatabase,
   userEmail: string,

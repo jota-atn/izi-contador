@@ -13,7 +13,8 @@ import { Historico } from '../hooks/useHistorico';
 import { streamGemini, GeminiMessage } from '../services/geminiApi';
 import { serializarHistorico } from '../utils/serializarHistorico';
 import { nomeMes } from '../utils/meses';
-import { loadChatHistory, saveChatMessages } from '../storage/chatHistory';
+import { loadChatHistory, saveChatMessages, clearChatHistory } from '../storage/chatHistory';
+import { IconTrash } from '../components/icons/IconTrash';
 
 const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY ?? '';
 
@@ -249,6 +250,19 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
     );
   }, [input, streaming, messages, meses.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const handleClear = useCallback(() => {
+    const currentMes = meses[0];
+    if (!currentMes || !userEmail) return;
+    cancelRef.current?.();
+    cancelRef.current = null;
+    setStreaming(false);
+    setMessages([]);
+    analyzedMesRef.current = '';
+    clearChatHistory(db, userEmail, currentMes).catch((e) =>
+      console.error('[IziBotScreen] clearChatHistory falhou:', e),
+    );
+  }, [db, userEmail, meses]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (meses.length === 0) {
     return (
       <View style={s.empty}>
@@ -261,6 +275,20 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
 
   return (
     <View style={[s.root, kbHeight > 0 && { paddingBottom: kbHeight - kbOffset }]}>
+      <View style={s.header}>
+        <Text style={s.headerTitle}>
+          Izi<Text style={s.headerAccent}>Bot</Text>
+        </Text>
+        {visibleMessages.length > 0 && !streaming && (
+          <TouchableOpacity
+            onPress={handleClear}
+            style={s.clearBtn}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <IconTrash size={15} color="#475569" />
+          </TouchableOpacity>
+        )}
+      </View>
       <ScrollView
         ref={scrollRef}
         style={s.scroll}
@@ -322,6 +350,28 @@ const s = StyleSheet.create({
   root: { flex: 1 },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
   emptyText: { color: '#475569', fontSize: 14, textAlign: 'center' },
+
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1e293b',
+  },
+  headerTitle: { color: '#f1f5f9', fontSize: 16, fontWeight: '900', letterSpacing: -0.3 },
+  headerAccent: { color: '#7c3aed' },
+  clearBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: '#0f172a',
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
   scroll: { flex: 1 },
   scrollContent: { padding: 16, gap: 10, paddingBottom: 8 },
