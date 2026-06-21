@@ -60,6 +60,8 @@ import { aplicarEdicoes } from './src/utils/aplicarEdicoes';
 import { filtrarPessoas } from './src/utils/busca';
 import { haptic } from './src/utils/haptic';
 import { hashFatura } from './src/utils/hashFatura';
+import { exportarPdf } from './src/utils/exportarPdf';
+import { IconPdf } from './src/components/icons/IconPdf';
 
 export default function App() {
   return (
@@ -286,6 +288,16 @@ function AppContent() {
     await Share.share({ message: linhas.join('\n\n') });
   };
 
+  const exportarRelatorioPdf = async () => {
+    if (!dadosExibidos) return;
+    const estadoPorPessoa: Record<string, { pago: boolean }> = {};
+    dadosExibidos.relatorio_por_pessoa.forEach((p) => {
+      const est = getEstado(mesSelecionado, p.dono);
+      estadoPorPessoa[p.dono] = { pago: est.pago };
+    });
+    await exportarPdf(dadosExibidos, estadoPorPessoa);
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: '#020617' }}>
       {authStatus === 'loading' && <LoadingScreen message="Verificando autenticação..." />}
@@ -327,6 +339,11 @@ function AppContent() {
                   label: 'Compartilhar',
                   onPress: compartilharResumo,
                   icon: <IconShare size={15} color="#a78bfa" />,
+                },
+                {
+                  label: 'Exportar PDF',
+                  onPress: exportarRelatorioPdf,
+                  icon: <IconPdf size={15} color="#a78bfa" />,
                 },
                 {
                   label: 'Categorias',
