@@ -282,6 +282,13 @@ function AppContent() {
     });
   }
 
+  function handleSignOut() {
+    Alert.alert('Sair', 'Deseja mesmo sair da sua conta?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Sair', style: 'destructive', onPress: signOut },
+    ]);
+  }
+
   function handlePagarFatura() {
     const donos = pessoas.map((p) => p.dono);
     Alert.alert(
@@ -403,7 +410,7 @@ function AppContent() {
                 },
                 {
                   label: 'Sair',
-                  onPress: signOut,
+                  onPress: handleSignOut,
                   danger: true,
                   icon: <IconLogOut size={15} color="#f87171" />,
                   section: 'Conta',
