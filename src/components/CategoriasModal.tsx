@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Categorias } from '../config/categorias';
+import { useKeyboardHeight } from '../hooks/useKeyboardHeight';
 import { IconClose } from './icons/IconClose';
 
 interface Props {
@@ -36,6 +37,7 @@ export function CategoriasModal({
 }: Props) {
   const [newCat, setNewCat] = useState('');
   const [kwInputs, setKwInputs] = useState<Record<string, string>>({});
+  const kbHeight = useKeyboardHeight();
 
   function handleAddCategoria() {
     if (!newCat.trim()) return;
@@ -80,7 +82,7 @@ export function CategoriasModal({
 
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={s.scroll}
+          contentContainerStyle={[s.scroll, kbHeight > 0 && { paddingBottom: kbHeight + 24 }]}
           keyboardShouldPersistTaps="handled"
         >
           {Object.entries(categorias).map(([nome, palavras]) => (

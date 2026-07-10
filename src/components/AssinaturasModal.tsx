@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Alert,
-  Keyboard,
   Modal,
   ScrollView,
   StyleSheet,
@@ -12,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Assinatura } from '../config/assinaturas';
+import { useKeyboardHeight } from '../hooks/useKeyboardHeight';
 import { IconClose } from './icons/IconClose';
 
 interface Props {
@@ -41,18 +41,7 @@ export function AssinaturasModal({
   const [keyword, setKeyword] = useState('');
   const [participantes, setParticipantes] = useState<ParticipanteForm[]>([PARTICIPANTE_VAZIO]);
   const [editandoOriginal, setEditandoOriginal] = useState<string | null>(null);
-  const [kbHeight, setKbHeight] = useState(0);
-
-  useEffect(() => {
-    const show = Keyboard.addListener('keyboardDidShow', (e) =>
-      setKbHeight(e.endCoordinates.height),
-    );
-    const hide = Keyboard.addListener('keyboardDidHide', () => setKbHeight(0));
-    return () => {
-      show.remove();
-      hide.remove();
-    };
-  }, []);
+  const kbHeight = useKeyboardHeight();
 
   function resetForm() {
     setKeyword('');

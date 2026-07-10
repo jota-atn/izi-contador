@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RegrasAlocacao } from '../config/regrasAlocacao';
+import { useKeyboardHeight } from '../hooks/useKeyboardHeight';
 import { IconClose } from './icons/IconClose';
 
 interface Props {
@@ -23,6 +24,7 @@ interface Props {
 export function RegrasModal({ visible, onClose, regras, addRegra, removeRegra }: Props) {
   const [keyword, setKeyword] = useState('');
   const [pessoa, setPessoa] = useState('');
+  const kbHeight = useKeyboardHeight();
 
   function handleAdd() {
     if (!keyword.trim() || !pessoa.trim()) return;
@@ -43,7 +45,7 @@ export function RegrasModal({ visible, onClose, regras, addRegra, removeRegra }:
 
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={s.scroll}
+          contentContainerStyle={[s.scroll, kbHeight > 0 && { paddingBottom: kbHeight + 24 }]}
           keyboardShouldPersistTaps="handled"
         >
           <Text style={s.hint}>
