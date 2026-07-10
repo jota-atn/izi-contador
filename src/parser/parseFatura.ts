@@ -10,6 +10,7 @@ const NON_PERSONS = new Set(['NUPAY']);
 const SPLIT_PARENS = /\(metade\s+(\w+)\)/i;
 const SPLIT_DASH = /\s*-\s*metade\s+(\w+)\s*$/i;
 const SPLIT_FIXED = /\((?:menos\s+)?(\d+(?:[.,]\d+)?)\s+(\w+)\)/i;
+const SPLIT_FIXED_DASH = /\s*-\s*menos\s+(\d+(?:[.,]\d+)?)\s+(\w+)\s*$/i;
 const SPLIT_MULTI = /\(([^\s=(),]+=\d+(?:[.,]\d+)?(?:[,\s]+[^\s=(),]+=\d+(?:[.,]\d+)?)*)\)/i;
 const PARCELA_SUFFIX = /\s*-\s*parcela\s+\d+\/\d+\s*$/i;
 
@@ -33,6 +34,7 @@ function expandSplitRows(
   for (const row of rows) {
     const multiMatch = SPLIT_MULTI.exec(row.title);
     const fixedMatch = SPLIT_FIXED.exec(row.title);
+    const fixedDashMatch = SPLIT_FIXED_DASH.exec(row.title);
     const parensMatch = SPLIT_PARENS.exec(row.title);
     const dashMatch = SPLIT_DASH.exec(row.title);
 
@@ -76,6 +78,17 @@ function expandSplitRows(
       const personAmount = parseFloat(fixedMatch[1].replace(',', '.'));
       const splitPerson = normalizeName(fixedMatch[2]);
       const baseTitle = row.title.replace(SPLIT_FIXED, '').trim();
+
+      result.push({
+        ...row,
+        amount: row.amount - personAmount,
+        title: `${baseTitle} - ${normalizeName(defaultOwner)}`,
+      });
+      result.push({ ...row, amount: personAmount, title: `${baseTitle} - ${splitPerson}` });
+    } else if (fixedDashMatch) {
+      const personAmount = parseFloat(fixedDashMatch[1].replace(',', '.'));
+      const splitPerson = normalizeName(fixedDashMatch[2]);
+      const baseTitle = row.title.replace(SPLIT_FIXED_DASH, '').trim();
 
       result.push({
         ...row,

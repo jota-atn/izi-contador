@@ -61,6 +61,13 @@ describe('parseFatura — splits', () => {
     expect(pessoa(r, 'SOFIA')?.total_individual).toBeCloseTo(30);
   });
 
+  it('- menos N NOME separa valor fixo via sufixo dash', () => {
+    const r = parseFatura(csv('2025-01-10,ESPETOS BAR - Menos 27 Sofia,47,00'), 'JOAO');
+    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(20);
+    expect(pessoa(r, 'SOFIA')?.total_individual).toBeCloseTo(27);
+    expect(pessoa(r, 'MENOS 27 SOFIA')).toBeUndefined();
+  });
+
   it('SPLIT_MULTI distribui valores explícitos corretamente', () => {
     // usa espaço como separador para evitar quebra de CSV
     const r = parseFatura(csv('2025-01-10,JANTAR (JOAO=60 SOFIA=40),100,00'), 'JOAO');
