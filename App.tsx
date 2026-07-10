@@ -130,7 +130,9 @@ function AppContent() {
   useEffect(() => {
     if (state.status !== 'success') return;
     const { mes } = state.data;
-    setMesSelecionado(mes);
+    // só define o mês inicial — não força o usuário a sair do mês que ele
+    // navegou manualmente toda vez que a fatura ressincroniza (pull-to-refresh, reload)
+    setMesSelecionado((atual) => atual || mes);
 
     const existing = historicoRef.current[mes];
     if (!existing || hashFatura(existing) === hashFatura(state.data)) {
