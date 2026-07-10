@@ -1,5 +1,6 @@
 import { memo, useRef } from 'react';
 import { Alert, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { ZoomIn } from 'react-native-reanimated';
 import QRCode from 'react-native-qrcode-svg';
 import { RelatorioPessoa } from '../types';
 import { formatMesAnoUpper } from '../utils/meses';
@@ -55,7 +56,7 @@ export const QRCodeModal = memo(function QRCodeModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={s.overlay}>
-        <View style={s.container}>
+        <Animated.View entering={ZoomIn.duration(220)} style={s.container}>
           <View style={s.header}>
             <View>
               <Text style={s.name}>{pessoa.dono}</Text>
@@ -85,7 +86,7 @@ export const QRCodeModal = memo(function QRCodeModal({
             <IconShare size={14} color="#fff" />
             <Text style={s.shareBtnText}>Compartilhar QR</Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );

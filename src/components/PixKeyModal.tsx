@@ -1,5 +1,6 @@
 import { memo, useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Animated, { ZoomIn } from 'react-native-reanimated';
 import { sanitizarChavePix } from '../utils/pixPayload';
 import { IconClose } from './icons/IconClose';
 
@@ -28,7 +29,7 @@ export const PixKeyModal = memo(function PixKeyModal({ visible, pixKey, onSave, 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={s.overlay}>
-        <View style={s.container}>
+        <Animated.View entering={ZoomIn.duration(220)} style={s.container}>
           <View style={s.header}>
             <Text style={s.title}>Minha chave Pix</Text>
             <TouchableOpacity onPress={onClose} style={s.closeBtn} hitSlop={8}>
@@ -70,7 +71,7 @@ export const PixKeyModal = memo(function PixKeyModal({ visible, pixKey, onSave, 
               <Text style={s.btnPrimaryText}>Salvar</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );

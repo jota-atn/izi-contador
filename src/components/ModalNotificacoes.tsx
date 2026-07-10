@@ -8,6 +8,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import Animated, { ZoomIn } from 'react-native-reanimated';
 
 interface Props {
   visible: boolean;
@@ -65,54 +66,56 @@ export function ModalNotificacoes({ visible, diaAtual, onSalvar, onCancelar, onF
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onFechar}>
       <Pressable style={s.overlay} onPress={onFechar}>
-        <Pressable style={s.card} onPress={() => {}}>
-          <Text style={s.titulo}>Lembrete de fatura</Text>
-          <Text style={s.descricao}>
-            Te avisamos 1 dia antes do fechamento para você sincronizar as contas.
-          </Text>
+        <Animated.View entering={ZoomIn.duration(220)}>
+          <Pressable style={s.card} onPress={() => {}}>
+            <Text style={s.titulo}>Lembrete de fatura</Text>
+            <Text style={s.descricao}>
+              Te avisamos 1 dia antes do fechamento para você sincronizar as contas.
+            </Text>
 
-          <Text style={s.label}>Dia de fechamento</Text>
-          <TextInput
-            ref={inputRef}
-            style={s.input}
-            value={texto}
-            onChangeText={(t) => {
-              setErro('');
-              setTexto(t.replace(/[^0-9]/g, ''));
-            }}
-            keyboardType="number-pad"
-            maxLength={2}
-            placeholder="Ex: 10"
-            placeholderTextColor="#475569"
-            returnKeyType="done"
-            onSubmitEditing={handleSalvar}
-          />
+            <Text style={s.label}>Dia de fechamento</Text>
+            <TextInput
+              ref={inputRef}
+              style={s.input}
+              value={texto}
+              onChangeText={(t) => {
+                setErro('');
+                setTexto(t.replace(/[^0-9]/g, ''));
+              }}
+              keyboardType="number-pad"
+              maxLength={2}
+              placeholder="Ex: 10"
+              placeholderTextColor="#475569"
+              returnKeyType="done"
+              onSubmitEditing={handleSalvar}
+            />
 
-          {!!erro && <Text style={s.erro}>{erro}</Text>}
+            {!!erro && <Text style={s.erro}>{erro}</Text>}
 
-          <View style={s.botoes}>
-            {diaAtual !== null && (
+            <View style={s.botoes}>
+              {diaAtual !== null && (
+                <Pressable
+                  style={[s.btn, s.btnDesativar]}
+                  onPress={handleDesativar}
+                  disabled={loading}
+                >
+                  <Text style={s.btnDesativarTxt}>Desativar</Text>
+                </Pressable>
+              )}
               <Pressable
-                style={[s.btn, s.btnDesativar]}
-                onPress={handleDesativar}
+                style={[s.btn, s.btnSalvar, loading && s.btnDisabled]}
+                onPress={handleSalvar}
                 disabled={loading}
               >
-                <Text style={s.btnDesativarTxt}>Desativar</Text>
+                {loading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={s.btnSalvarTxt}>{diaAtual !== null ? 'Atualizar' : 'Ativar'}</Text>
+                )}
               </Pressable>
-            )}
-            <Pressable
-              style={[s.btn, s.btnSalvar, loading && s.btnDisabled]}
-              onPress={handleSalvar}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={s.btnSalvarTxt}>{diaAtual !== null ? 'Atualizar' : 'Ativar'}</Text>
-              )}
-            </Pressable>
-          </View>
-        </Pressable>
+            </View>
+          </Pressable>
+        </Animated.View>
       </Pressable>
     </Modal>
   );
