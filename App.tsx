@@ -363,42 +363,50 @@ function AppContent() {
                   label: 'Compartilhar',
                   onPress: compartilharResumo,
                   icon: <IconShare size={15} color="#a78bfa" />,
+                  section: 'Ações',
                 },
                 {
                   label: 'Categorias',
                   onPress: () => setShowCategorias(true),
                   icon: <IconSettings size={15} color="#a78bfa" />,
+                  section: 'Configuração',
                 },
                 {
                   label: 'Regras',
                   onPress: () => setShowRegras(true),
                   icon: <IconSliders size={15} color="#a78bfa" />,
+                  section: 'Configuração',
                 },
                 {
                   label: 'Assinaturas',
                   onPress: () => setShowAssinaturas(true),
                   icon: <IconUsers size={15} color="#a78bfa" />,
+                  section: 'Configuração',
                 },
                 {
                   label: 'Chave Pix',
                   onPress: () => setShowPixKey(true),
                   icon: <IconCard size={15} color="#a78bfa" />,
+                  section: 'Configuração',
                 },
                 {
                   label: diaFechamento ? `Notificações (dia ${diaFechamento})` : 'Notificações',
                   onPress: () => setShowNotificacoes(true),
                   icon: <IconBell size={15} color="#a78bfa" />,
+                  section: 'Configuração',
                 },
                 {
                   label: 'Como anotar',
                   onPress: () => setShowTutorial(true),
                   icon: <IconBook size={15} color="#a78bfa" />,
+                  section: 'Ajuda',
                 },
                 {
                   label: 'Sair',
                   onPress: signOut,
                   danger: true,
                   icon: <IconLogOut size={15} color="#f87171" />,
+                  section: 'Conta',
                 },
               ]}
             />

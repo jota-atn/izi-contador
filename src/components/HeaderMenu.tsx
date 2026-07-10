@@ -14,6 +14,7 @@ interface Item {
   onPress: () => void;
   danger?: boolean;
   icon?: React.ReactNode;
+  section?: string;
 }
 
 interface Props {
@@ -54,16 +55,25 @@ export function HeaderMenu({ items }: Props) {
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={s.backdrop} onPress={() => setOpen(false)}>
           <View style={[s.dropdown, { top }]} onStartShouldSetResponder={() => true}>
-            {items.map((item, i) => (
-              <TouchableOpacity
-                key={item.label}
-                onPress={() => handleItem(item.onPress)}
-                style={[s.item, i < items.length - 1 && s.itemBorder]}
-              >
-                {item.icon && <View style={s.iconWrap}>{item.icon}</View>}
-                <Text style={[s.itemText, item.danger && s.itemDanger]}>{item.label}</Text>
-              </TouchableOpacity>
-            ))}
+            {items.map((item, i) => {
+              const novaSecao = item.section && item.section !== items[i - 1]?.section;
+              return (
+                <View key={item.label}>
+                  {novaSecao && (
+                    <View style={[s.sectionLabel, i > 0 && s.sectionLabelBorder]}>
+                      <Text style={s.sectionLabelText}>{item.section}</Text>
+                    </View>
+                  )}
+                  <TouchableOpacity
+                    onPress={() => handleItem(item.onPress)}
+                    style={[s.item, i < items.length - 1 && s.itemBorder]}
+                  >
+                    {item.icon && <View style={s.iconWrap}>{item.icon}</View>}
+                    <Text style={[s.itemText, item.danger && s.itemDanger]}>{item.label}</Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
           </View>
         </Pressable>
       </Modal>
@@ -121,5 +131,22 @@ const s = StyleSheet.create({
   },
   itemDanger: {
     color: '#f87171',
+  },
+  sectionLabel: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 4,
+    backgroundColor: '#0b1220',
+  },
+  sectionLabelBorder: {
+    borderTopWidth: 1,
+    borderTopColor: '#1e293b',
+  },
+  sectionLabelText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#475569',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
 });
