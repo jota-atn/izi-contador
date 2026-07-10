@@ -1,13 +1,14 @@
 import { memo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { RelatorioPessoa } from '../types';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Gasto, RelatorioPessoa } from '../types';
 import { IconWarning } from './icons/IconWarning';
 
 interface Props {
   grupo: RelatorioPessoa;
+  onEditarItem: (item: Gasto, dono: string) => void;
 }
 
-export const SemCategoriaCard = memo(function SemCategoriaCard({ grupo }: Props) {
+export const SemCategoriaCard = memo(function SemCategoriaCard({ grupo, onEditarItem }: Props) {
   return (
     <View style={s.card}>
       <View style={s.header}>
@@ -20,7 +21,12 @@ export const SemCategoriaCard = memo(function SemCategoriaCard({ grupo }: Props)
 
       <View style={s.body}>
         {grupo.itens.map((item, idx) => (
-          <View key={idx} style={s.row}>
+          <TouchableOpacity
+            key={idx}
+            style={s.row}
+            onPress={() => onEditarItem(item, grupo.dono)}
+            activeOpacity={0.7}
+          >
             <View style={s.descCol}>
               <Text style={s.desc}>{item.descricao}</Text>
               <Text style={s.date}>{item.data}</Text>
@@ -28,7 +34,7 @@ export const SemCategoriaCard = memo(function SemCategoriaCard({ grupo }: Props)
             <View style={s.badge}>
               <Text style={s.badgeText}>R$ {item.valor.toFixed(2)}</Text>
             </View>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
     </View>

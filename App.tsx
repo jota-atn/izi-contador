@@ -433,7 +433,7 @@ function AppContent() {
                 </View>
                 {semCategoria && (
                   <View style={{ marginHorizontal: 16 }}>
-                    <SemCategoriaCard grupo={semCategoria} />
+                    <SemCategoriaCard grupo={semCategoria} onEditarItem={handleEditarItem} />
                   </View>
                 )}
                 {dadosExibidos.anotacoes_invalidas &&
