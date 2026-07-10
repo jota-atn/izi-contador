@@ -113,4 +113,17 @@ describe('parseFatura — categorias e regras', () => {
     );
     expect(pessoa(r, 'ANA')?.total_individual).toBeCloseTo(50);
   });
+
+  it('sufixo "- NOME-DA-CATEGORIA" não vira pessoa fictícia', () => {
+    // "Mini Box Vitoria - Almoço" anota a categoria, não indica de quem é a compra
+    const r = parseFatura(
+      csv('2025-01-10,MINI BOX VITORIA - Almoço,20,00'),
+      'EU',
+      { Almoço: ['ALMOÇO'] },
+      {},
+    );
+    expect(pessoa(r, 'ALMOCO')).toBeUndefined();
+    expect(pessoa(r, 'EU')?.total_individual).toBeCloseTo(20);
+    expect(pessoa(r, 'EU')?.itens[0].descricao).toBe('Almoço');
+  });
 });

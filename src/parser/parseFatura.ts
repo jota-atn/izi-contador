@@ -135,6 +135,12 @@ function categorizarItem(
     explicitDono = null;
   }
 
+  // sufixo "- Almoço" etc. não é o nome de uma pessoa, é o nome de uma categoria
+  // (usuário anotando a categoria, não um dono) — não deixa virar "pessoa" fictícia
+  if (explicitDono && Object.keys(categorias).some((c) => normalizeName(c) === explicitDono)) {
+    explicitDono = null;
+  }
+
   const titleBase = titleClean.split('(')[0].trim();
 
   for (const [categoria, palavras] of Object.entries(categorias)) {
