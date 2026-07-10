@@ -23,6 +23,7 @@ import { useRelatorio } from './src/hooks/useRelatorio';
 import { useCategorias } from './src/hooks/useCategorias';
 import { useHistorico } from './src/hooks/useHistorico';
 import { useRegrasAlocacao } from './src/hooks/useRegrasAlocacao';
+import { useAssinaturas } from './src/hooks/useAssinaturas';
 import { useEstadoFatura } from './src/hooks/useEstadoFatura';
 import { useEdicoesFatura } from './src/hooks/useEdicoesFatura';
 import { usePixKey } from './src/hooks/usePixKey';
@@ -35,6 +36,7 @@ import { PersonCard } from './src/components/PersonCard';
 import { SemCategoriaCard } from './src/components/SemCategoriaCard';
 import { AnotacoesInvalidasCard } from './src/components/AnotacoesInvalidasCard';
 import { RegrasModal } from './src/components/RegrasModal';
+import { AssinaturasModal } from './src/components/AssinaturasModal';
 import { CategoriasModal } from './src/components/CategoriasModal';
 import { EditarItemModal } from './src/components/EditarItemModal';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
@@ -47,6 +49,7 @@ import { SearchBar } from './src/components/SearchBar';
 import { IconShare } from './src/components/icons/IconShare';
 import { IconSettings } from './src/components/icons/IconSettings';
 import { IconSliders } from './src/components/icons/IconSliders';
+import { IconUsers } from './src/components/icons/IconUsers';
 import { IconBook } from './src/components/icons/IconBook';
 import { IconCard } from './src/components/icons/IconCard';
 import { IconLogOut } from './src/components/icons/IconLogOut';
@@ -94,8 +97,16 @@ function AppContent() {
   const { categorias, addKeyword, removeKeyword, addCategoria, removeCategoria, reset } =
     useCategorias(userEmail);
   const { regras, addRegra, removeRegra } = useRegrasAlocacao(userEmail);
+  const { assinaturas, salvarAssinatura, removerAssinatura } = useAssinaturas(userEmail);
   const { getEstado, toggleOculto, togglePago, marcarTodosPago } = useEstadoFatura(userEmail);
-  const { state, refresh } = useRelatorio(getAccessToken, authStatus, userName, categorias, regras);
+  const { state, refresh } = useRelatorio(
+    getAccessToken,
+    authStatus,
+    userName,
+    categorias,
+    regras,
+    assinaturas,
+  );
   const { historico, meses, upsert } = useHistorico(userEmail);
   const [mesSelecionado, setMesSelecionado] = useState('');
   const { edicoes, salvar: salvarEdicao, limparMes } = useEdicoesFatura(userEmail, mesSelecionado);
@@ -105,6 +116,7 @@ function AppContent() {
   const [showCategorias, setShowCategorias] = useState(false);
   const [showNotificacoes, setShowNotificacoes] = useState(false);
   const [showRegras, setShowRegras] = useState(false);
+  const [showAssinaturas, setShowAssinaturas] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showPixKey, setShowPixKey] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -359,6 +371,11 @@ function AppContent() {
                   icon: <IconSliders size={15} color="#a78bfa" />,
                 },
                 {
+                  label: 'Assinaturas',
+                  onPress: () => setShowAssinaturas(true),
+                  icon: <IconUsers size={15} color="#a78bfa" />,
+                },
+                {
                   label: 'Chave Pix',
                   onPress: () => setShowPixKey(true),
                   icon: <IconCard size={15} color="#a78bfa" />,
@@ -525,6 +542,13 @@ function AppContent() {
         regras={regras}
         addRegra={addRegra}
         removeRegra={removeRegra}
+      />
+      <AssinaturasModal
+        visible={showAssinaturas}
+        onClose={() => setShowAssinaturas(false)}
+        assinaturas={assinaturas}
+        salvarAssinatura={salvarAssinatura}
+        removerAssinatura={removerAssinatura}
       />
       <CategoriasModal
         visible={showCategorias}

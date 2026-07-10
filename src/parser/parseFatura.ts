@@ -2,6 +2,7 @@ import Papa from 'papaparse';
 import { RelatorioFatura, RelatorioPessoa, Gasto, AnotacaoInvalida } from '../types';
 import { Categorias, DEFAULT_CATEGORIAS } from '../config/categorias';
 import { RegrasAlocacao } from '../config/regrasAlocacao';
+import { Assinatura } from '../config/assinaturas';
 
 export const SEM_CATEGORIA = '__SEM_CATEGORIA__';
 
@@ -118,6 +119,60 @@ function expandSplitRows(
   return { rows: result, invalidas };
 }
 
+function temSplitManual(title: string): boolean {
+  return (
+    SPLIT_MULTI.test(title) ||
+    SPLIT_FIXED.test(title) ||
+    SPLIT_FIXED_DASH.test(title) ||
+    SPLIT_PARENS.test(title) ||
+    SPLIT_DASH.test(title)
+  );
+}
+
+// aplica a divisão fixa configurada em "Assinaturas" (ex.: Netflix dividido
+// sempre com as mesmas pessoas) sem precisar anotar isso na fatura todo mês.
+// Uma anotação manual no título daquele mês tem prioridade sobre a assinatura.
+function expandAssinaturas(
+  rows: Row[],
+  defaultOwner: string,
+  assinaturas: Assinatura[],
+): { rows: Row[]; invalidas: AnotacaoInvalida[] } {
+  if (assinaturas.length === 0) return { rows, invalidas: [] };
+
+  const result: Row[] = [];
+  const invalidas: AnotacaoInvalida[] = [];
+
+  for (const row of rows) {
+    const titleUpper = row.title.toUpperCase();
+    const assinatura = assinaturas.find((a) => titleUpper.includes(a.keyword.toUpperCase()));
+
+    if (!assinatura || assinatura.participantes.length === 0 || temSplitManual(row.title)) {
+      result.push(row);
+      continue;
+    }
+
+    const somaParticipantes = parseFloat(
+      assinatura.participantes.reduce((s, p) => s + p.valor, 0).toFixed(2),
+    );
+
+    if (somaParticipantes > row.amount + 0.01) {
+      // participantes configurados somam mais que o valor real da fatura —
+      // não divide (evita sobra negativa), só avisa pro usuário revisar
+      invalidas.push({ titulo: row.title, valor: row.amount, soma: somaParticipantes });
+      result.push(row);
+      continue;
+    }
+
+    const restante = parseFloat((row.amount - somaParticipantes).toFixed(2));
+    for (const { pessoa, valor } of assinatura.participantes) {
+      result.push({ ...row, amount: valor, title: `${row.title} - ${normalizeName(pessoa)}` });
+    }
+    result.push({ ...row, amount: restante, title: `${row.title} - ${normalizeName(defaultOwner)}` });
+  }
+
+  return { rows: result, invalidas };
+}
+
 function categorizarItem(
   title: string,
   categorias: Categorias,
@@ -197,6 +252,7 @@ export function parseFatura(
   defaultOwnerRaw = 'EU',
   categorias: Categorias = DEFAULT_CATEGORIAS,
   regrasAlocacao: RegrasAlocacao = {},
+  assinaturas: Assinatura[] = [],
 ): RelatorioFatura {
   const defaultOwner = normalizeName(defaultOwnerRaw);
   const { data } = Papa.parse<Record<string, string>>(csvText, {
@@ -211,8 +267,17 @@ export function parseFatura(
     .map((r) => ({ date: r.date, title: r.title, amount: parseAmount(r.amount) }))
     .filter((r) => !isNaN(r.amount));
 
-  const { rows: expandedRows, invalidas } = expandSplitRows(rows, defaultOwner);
+  const { rows: rowsComAssinaturas, invalidas: invalidasAssinaturas } = expandAssinaturas(
+    rows,
+    defaultOwner,
+    assinaturas,
+  );
+  const { rows: expandedRows, invalidas: invalidasSplit } = expandSplitRows(
+    rowsComAssinaturas,
+    defaultOwner,
+  );
   rows = expandedRows;
+  const invalidas = [...invalidasAssinaturas, ...invalidasSplit];
   const mes = inferirMes(rows);
 
   rows = rows.map((r) => ({ ...r, title: r.title.toUpperCase() }));

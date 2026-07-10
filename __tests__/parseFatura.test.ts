@@ -141,3 +141,62 @@ describe('parseFatura — categorias e regras', () => {
     expect(pessoa(r, SEM_CATEGORIA)?.total_individual).toBeCloseTo(20);
   });
 });
+
+describe('parseFatura — assinaturas recorrentes', () => {
+  it('divide automaticamente pelos participantes configurados, resto fica com o dono', () => {
+    const r = parseFatura(
+      csv('2025-01-10,NETFLIX,"55,90"'),
+      'JOAO',
+      { Streaming: ['NETFLIX'] },
+      {},
+      [{ keyword: 'NETFLIX', participantes: [{ pessoa: 'Sofia', valor: 14 }] }],
+    );
+    expect(pessoa(r, 'SOFIA')?.total_individual).toBeCloseTo(14);
+    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(41.9);
+    expect(pessoa(r, 'JOAO')?.itens[0].descricao).toBe('Streaming');
+  });
+
+  it('divide entre vários participantes configurados', () => {
+    const r = parseFatura(
+      csv('2025-01-10,NETFLIX,60'),
+      'JOAO',
+      { Streaming: ['NETFLIX'] },
+      {},
+      [
+        {
+          keyword: 'NETFLIX',
+          participantes: [
+            { pessoa: 'Sofia', valor: 15 },
+            { pessoa: 'Thales', valor: 15 },
+          ],
+        },
+      ],
+    );
+    expect(pessoa(r, 'SOFIA')?.total_individual).toBeCloseTo(15);
+    expect(pessoa(r, 'THALES')?.total_individual).toBeCloseTo(15);
+    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(30);
+  });
+
+  it('anotação manual no título daquele mês tem prioridade sobre a assinatura', () => {
+    const r = parseFatura(
+      csv('2025-01-10,NETFLIX (metade ANA),60'),
+      'JOAO',
+      { Streaming: ['NETFLIX'] },
+      {},
+      [{ keyword: 'NETFLIX', participantes: [{ pessoa: 'Sofia', valor: 15 }] }],
+    );
+    expect(pessoa(r, 'ANA')?.total_individual).toBeCloseTo(30);
+    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(30);
+    expect(pessoa(r, 'SOFIA')).toBeUndefined();
+  });
+
+  it('soma dos participantes maior que o valor real não divide e registra aviso', () => {
+    const r = parseFatura(csv('2025-01-10,NETFLIX,10'), 'JOAO', { Streaming: ['NETFLIX'] }, {}, [
+      { keyword: 'NETFLIX', participantes: [{ pessoa: 'Sofia', valor: 15 }] },
+    ]);
+    expect(r.anotacoes_invalidas).toHaveLength(1);
+    expect(r.anotacoes_invalidas![0].soma).toBeCloseTo(15);
+    expect(r.anotacoes_invalidas![0].valor).toBeCloseTo(10);
+    expect(pessoa(r, 'SOFIA')).toBeUndefined();
+  });
+});

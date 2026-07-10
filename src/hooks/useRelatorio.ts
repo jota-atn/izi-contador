@@ -4,6 +4,7 @@ import { findLatestFaturaMessage, downloadCsvAttachment } from '../gmail/gmailAp
 import { parseFatura } from '../parser/parseFatura';
 import { Categorias } from '../config/categorias';
 import { RegrasAlocacao } from '../config/regrasAlocacao';
+import { Assinatura } from '../config/assinaturas';
 
 type State =
   | { status: 'idle' }
@@ -18,12 +19,14 @@ export function useRelatorio(
   ownerName: string,
   categorias: Categorias,
   regrasAlocacao: RegrasAlocacao,
+  assinaturas: Assinatura[],
 ) {
   const [state, setState] = useState<State>({ status: 'idle' });
 
   // refs evitam que mudanças nessas deps causem re-fetch
   const categoriasRef = useRef(categorias);
   const regrasRef = useRef(regrasAlocacao);
+  const assinaturasRef = useRef(assinaturas);
   const ownerRef = useRef(ownerName);
 
   useEffect(() => {
@@ -32,6 +35,9 @@ export function useRelatorio(
   useEffect(() => {
     regrasRef.current = regrasAlocacao;
   }, [regrasAlocacao]);
+  useEffect(() => {
+    assinaturasRef.current = assinaturas;
+  }, [assinaturas]);
   useEffect(() => {
     ownerRef.current = ownerName;
   }, [ownerName]);
@@ -53,7 +59,13 @@ export function useRelatorio(
       }
 
       const csvText = await downloadCsvAttachment(token, messageId);
-      const data = parseFatura(csvText, ownerRef.current, categoriasRef.current, regrasRef.current);
+      const data = parseFatura(
+        csvText,
+        ownerRef.current,
+        categoriasRef.current,
+        regrasRef.current,
+        assinaturasRef.current,
+      );
       setState({ status: 'success', data });
     } catch (err: any) {
       if (err?.status === 401) {
