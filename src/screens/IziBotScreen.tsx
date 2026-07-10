@@ -21,7 +21,13 @@ import { Historico } from '../hooks/useHistorico';
 import { streamGemini, GeminiMessage } from '../services/geminiApi';
 import { serializarHistorico } from '../utils/serializarHistorico';
 import { nomeMes } from '../utils/meses';
-import { loadChatHistory, saveChatMessages, clearChatHistory, loadChips, saveChips } from '../storage/chatHistory';
+import {
+  loadChatHistory,
+  saveChatMessages,
+  clearChatHistory,
+  loadChips,
+  saveChips,
+} from '../storage/chatHistory';
 import { IconTrash } from '../components/icons/IconTrash';
 import { IconSparkle } from '../components/icons/IconSparkle';
 
@@ -133,10 +139,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
     setMessages([]);
     setChips([]);
     setHistoryReady(false);
-    Promise.all([
-      loadChatHistory(db, userEmail, currentMes),
-      loadChips(db, userEmail, currentMes),
-    ])
+    Promise.all([loadChatHistory(db, userEmail, currentMes), loadChips(db, userEmail, currentMes)])
       .then(([rows, savedChips]) => {
         if (rows.length > 0) {
           setMessages(
@@ -230,14 +233,18 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
               { role: 'model', text: botTextBuffer },
               { role: 'user', text: CHIPS_PROMPT },
             ],
-            (chunk) => { chipsBuffer += chunk; },
+            (chunk) => {
+              chipsBuffer += chunk;
+            },
             () => {
               try {
                 const match = chipsBuffer.match(/\[[\s\S]*?\]/);
                 if (match) {
                   const parsed = JSON.parse(match[0]);
                   if (Array.isArray(parsed)) {
-                    const valid = parsed.slice(0, 3).filter((x): x is string => typeof x === 'string');
+                    const valid = parsed
+                      .slice(0, 3)
+                      .filter((x): x is string => typeof x === 'string');
                     setChips(valid);
                     if (valid.length > 0) {
                       saveChips(db, userEmail, mes, valid).catch(() => {});
@@ -265,83 +272,86 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
     );
   }, [historyReady, meses, systemPrompt]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const send = useCallback((textOverride?: string) => {
-    const text = (textOverride ?? input).trim();
-    if (!text || streaming || meses.length === 0) return;
+  const send = useCallback(
+    (textOverride?: string) => {
+      const text = (textOverride ?? input).trim();
+      if (!text || streaming || meses.length === 0) return;
 
-    setChips([]);
-    saveChips(db, userEmail, meses[0], []).catch(() => {});
-    if (!textOverride) setInput('');
+      setChips([]);
+      saveChips(db, userEmail, meses[0], []).catch(() => {});
+      if (!textOverride) setInput('');
 
-    if (!API_KEY) {
+      if (!API_KEY) {
+        setMessages((prev) => [
+          ...prev,
+          { id: uid(), role: 'user', text },
+          {
+            id: uid(),
+            role: 'bot',
+            text: 'API key não configurada. Adicione EXPO_PUBLIC_GEMINI_API_KEY no arquivo .env.',
+          },
+        ]);
+        return;
+      }
+
+      const snapshot = messages;
+      const mes = meses[0];
+      setStreaming(true);
+
+      const apiMessages: GeminiMessage[] = [
+        ...snapshot
+          .filter((m) => !m.streaming)
+          .map((m) => ({
+            role: m.role === 'bot' ? ('model' as const) : ('user' as const),
+            text: m.text,
+          })),
+        { role: 'user' as const, text },
+      ];
+
       setMessages((prev) => [
         ...prev,
         { id: uid(), role: 'user', text },
-        {
-          id: uid(),
-          role: 'bot',
-          text: 'API key não configurada. Adicione EXPO_PUBLIC_GEMINI_API_KEY no arquivo .env.',
-        },
+        { id: uid(), role: 'bot', text: '', streaming: true },
       ]);
-      return;
-    }
 
-    const snapshot = messages;
-    const mes = meses[0];
-    setStreaming(true);
-
-    const apiMessages: GeminiMessage[] = [
-      ...snapshot
-        .filter((m) => !m.streaming)
-        .map((m) => ({
-          role: m.role === 'bot' ? ('model' as const) : ('user' as const),
-          text: m.text,
-        })),
-      { role: 'user' as const, text },
-    ];
-
-    setMessages((prev) => [
-      ...prev,
-      { id: uid(), role: 'user', text },
-      { id: uid(), role: 'bot', text: '', streaming: true },
-    ]);
-
-    cancelRef.current = streamGemini(
-      API_KEY,
-      systemPromptRef.current,
-      apiMessages,
-      (chunk) => {
-        setMessages((prev) => {
-          const last = prev[prev.length - 1];
-          if (!last || last.role !== 'bot') return prev;
-          return [...prev.slice(0, -1), { ...last, text: last.text + chunk }];
-        });
-      },
-      () => {
-        setMessages((prev) => {
-          const last = prev[prev.length - 1];
-          if (!last || last.role !== 'bot') return prev;
-          const final = [...prev.slice(0, -1), { ...last, streaming: false }];
-          saveChatMessages(db, userEmail, mes, [
-            { role: 'user', content: text },
-            { role: 'bot', content: last.text },
-          ]).catch((e) => console.error('[IziBotScreen] saveChatMessages falhou:', e));
-          return final;
-        });
-        setStreaming(false);
-        cancelRef.current = null;
-      },
-      (err) => {
-        setMessages((prev) => {
-          const last = prev[prev.length - 1];
-          if (!last || last.role !== 'bot') return prev;
-          return [...prev.slice(0, -1), { ...last, text: `Erro: ${err}`, streaming: false }];
-        });
-        setStreaming(false);
-        cancelRef.current = null;
-      },
-    );
-  }, [input, streaming, messages, meses.length]); // eslint-disable-line react-hooks/exhaustive-deps
+      cancelRef.current = streamGemini(
+        API_KEY,
+        systemPromptRef.current,
+        apiMessages,
+        (chunk) => {
+          setMessages((prev) => {
+            const last = prev[prev.length - 1];
+            if (!last || last.role !== 'bot') return prev;
+            return [...prev.slice(0, -1), { ...last, text: last.text + chunk }];
+          });
+        },
+        () => {
+          setMessages((prev) => {
+            const last = prev[prev.length - 1];
+            if (!last || last.role !== 'bot') return prev;
+            const final = [...prev.slice(0, -1), { ...last, streaming: false }];
+            saveChatMessages(db, userEmail, mes, [
+              { role: 'user', content: text },
+              { role: 'bot', content: last.text },
+            ]).catch((e) => console.error('[IziBotScreen] saveChatMessages falhou:', e));
+            return final;
+          });
+          setStreaming(false);
+          cancelRef.current = null;
+        },
+        (err) => {
+          setMessages((prev) => {
+            const last = prev[prev.length - 1];
+            if (!last || last.role !== 'bot') return prev;
+            return [...prev.slice(0, -1), { ...last, text: `Erro: ${err}`, streaming: false }];
+          });
+          setStreaming(false);
+          cancelRef.current = null;
+        },
+      );
+    },
+    [input, streaming, messages, meses.length],
+  ); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleClear = useCallback(() => {
     const currentMes = meses[0];
@@ -501,7 +511,13 @@ const s = StyleSheet.create({
   },
 
   scroll: { flex: 1 },
-  scrollContent: { flexGrow: 1, justifyContent: 'flex-end', padding: 16, gap: 8, paddingBottom: 12 },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'flex-end',
+    padding: 16,
+    gap: 8,
+    paddingBottom: 12,
+  },
 
   bubbleWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
   bubbleWrapUser: { justifyContent: 'flex-end' },

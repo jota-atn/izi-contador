@@ -42,10 +42,10 @@ export async function saveChips(
   mes: string,
   chips: string[],
 ): Promise<void> {
-  await db.runAsync(
-    "DELETE FROM chat_v1 WHERE user_id = ? AND mes = ? AND role = 'chips'",
-    [userEmail, mes],
-  );
+  await db.runAsync("DELETE FROM chat_v1 WHERE user_id = ? AND mes = ? AND role = 'chips'", [
+    userEmail,
+    mes,
+  ]);
   if (chips.length > 0) {
     await db.runAsync(
       "INSERT INTO chat_v1 (user_id, mes, role, content, is_hidden, created_at) VALUES (?, ?, 'chips', ?, 0, ?)",

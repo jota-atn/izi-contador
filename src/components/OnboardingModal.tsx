@@ -1,13 +1,5 @@
 import React, { useRef, useState } from 'react';
-import {
-  Dimensions,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Dimensions, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconSparkle } from './icons/IconSparkle';
 import { IconCard } from './icons/IconCard';
@@ -86,9 +78,7 @@ export function OnboardingModal({ visible, onClose }: Props) {
             ))}
           </View>
           <Pressable style={s.btn} onPress={avancar}>
-            <Text style={s.btnTxt}>
-              {currentIndex < SLIDES.length - 1 ? 'Próximo' : 'Começar'}
-            </Text>
+            <Text style={s.btnTxt}>{currentIndex < SLIDES.length - 1 ? 'Próximo' : 'Começar'}</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -122,7 +112,8 @@ function SlideComo() {
         <IconCard size={40} color="#38bdf8" />
       </View>
       <Text style={s.slideTitle}>
-        <Text style={s.white}>Como</Text>{' funciona'}
+        <Text style={s.white}>Como</Text>
+        {' funciona'}
       </Text>
       <Text style={s.slideBody}>
         Conectamos ao seu Gmail, encontramos o CSV da fatura Nubank e importamos os gastos
@@ -149,7 +140,8 @@ function SlideAnotar() {
         <IconBook size={40} color="#fb7185" />
       </View>
       <Text style={s.slideTitle}>
-        <Text style={s.white}>Como</Text>{' anotar'}
+        <Text style={s.white}>Como</Text>
+        {' anotar'}
       </Text>
       <Text style={s.slideBody}>
         No app do Nubank, edite a descrição do gasto e adicione o nome da pessoa:
@@ -173,7 +165,8 @@ function SlideNotif() {
         <IconBell size={40} color="#818cf8" />
       </View>
       <Text style={s.slideTitle}>
-        <Text style={s.white}>Nunca perca</Text>{' o fechamento'}
+        <Text style={s.white}>Nunca perca</Text>
+        {' o fechamento'}
       </Text>
       <Text style={s.slideBody}>
         Configure o dia de fechamento da sua fatura e te avisamos 1 dia antes para sincronizar.

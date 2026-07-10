@@ -91,8 +91,8 @@ export function AssinaturasModal({
           keyboardShouldPersistTaps="handled"
         >
           <Text style={s.hint}>
-            Cadastre uma assinatura recorrente (ex.: Netflix) e quem divide ela com você. Todo mês
-            o valor real da fatura já entra dividido nesses valores fixos automaticamente — sem
+            Cadastre uma assinatura recorrente (ex.: Netflix) e quem divide ela com você. Todo mês o
+            valor real da fatura já entra dividido nesses valores fixos automaticamente — sem
             precisar anotar nada. Uma anotação manual no título daquele mês sempre tem prioridade.
           </Text>
 
@@ -116,9 +116,7 @@ export function AssinaturasModal({
             </View>
           ))}
 
-          {assinaturas.length === 0 && (
-            <Text style={s.empty}>Nenhuma assinatura cadastrada.</Text>
-          )}
+          {assinaturas.length === 0 && <Text style={s.empty}>Nenhuma assinatura cadastrada.</Text>}
 
           <View style={[s.card, { marginTop: 8 }]}>
             <Text style={s.newCatLabel}>Nova assinatura</Text>

@@ -99,9 +99,9 @@ export function TutorialModal({ visible, onClose }: Props) {
             </Text>
             <Text style={s.dicaItem}>
               • Sufixo de nome tem prioridade máxima. Sem sufixo, vale a regra de alocação. Sem
-              sufixo e sem regra, o item cai em &ldquo;Não identificados&rdquo; — mesmo que bata
-              com uma categoria (ex.: &ldquo;Netflix&rdquo; ou &ldquo;Almoço&rdquo; sozinhos não
-              são mais atribuídos a você automaticamente).
+              sufixo e sem regra, o item cai em &ldquo;Não identificados&rdquo; — mesmo que bata com
+              uma categoria (ex.: &ldquo;Netflix&rdquo; ou &ldquo;Almoço&rdquo; sozinhos não são
+              mais atribuídos a você automaticamente).
             </Text>
             <Text style={s.dicaItem}>
               • O separador no split múltiplo pode ser vírgula ou espaço.

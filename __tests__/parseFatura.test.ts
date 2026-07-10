@@ -157,21 +157,15 @@ describe('parseFatura — assinaturas recorrentes', () => {
   });
 
   it('divide entre vários participantes configurados', () => {
-    const r = parseFatura(
-      csv('2025-01-10,NETFLIX,60'),
-      'JOAO',
-      { Streaming: ['NETFLIX'] },
-      {},
-      [
-        {
-          keyword: 'NETFLIX',
-          participantes: [
-            { pessoa: 'Sofia', valor: 15 },
-            { pessoa: 'Thales', valor: 15 },
-          ],
-        },
-      ],
-    );
+    const r = parseFatura(csv('2025-01-10,NETFLIX,60'), 'JOAO', { Streaming: ['NETFLIX'] }, {}, [
+      {
+        keyword: 'NETFLIX',
+        participantes: [
+          { pessoa: 'Sofia', valor: 15 },
+          { pessoa: 'Thales', valor: 15 },
+        ],
+      },
+    ]);
     expect(pessoa(r, 'SOFIA')?.total_individual).toBeCloseTo(15);
     expect(pessoa(r, 'THALES')?.total_individual).toBeCloseTo(15);
     expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(30);

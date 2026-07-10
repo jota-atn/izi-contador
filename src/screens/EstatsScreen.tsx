@@ -265,7 +265,10 @@ export const EstatsScreen = memo(function EstatsScreen({ historico, meses }: Pro
             {pessoasChart.map(({ dono }, i) => (
               <View key={dono} style={s.legendItem}>
                 <View
-                  style={[s.legendDot, { backgroundColor: PERSON_COLORS[i % PERSON_COLORS.length] }]}
+                  style={[
+                    s.legendDot,
+                    { backgroundColor: PERSON_COLORS[i % PERSON_COLORS.length] },
+                  ]}
                 />
                 <Text style={s.legendLabel}>{dono}</Text>
               </View>

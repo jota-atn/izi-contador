@@ -31,12 +31,7 @@ function renderItem(item: Gasto, even: boolean): string {
     </div>`;
 }
 
-function renderPessoa(
-  dono: string,
-  itens: Gasto[],
-  total: number,
-  pago: boolean,
-): string {
+function renderPessoa(dono: string, itens: Gasto[], total: number, pago: boolean): string {
   const badge = pago
     ? `<span style="background:#166534;color:#bbf7d0;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:0.4px;">PAGO</span>`
     : `<span style="background:#7c2d12;color:#fed7aa;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:0.4px;">PENDENTE</span>`;
@@ -75,10 +70,7 @@ export function gerarPdfHtml(
     { totalPago: 0, qtdPago: 0, totalPendente: 0, qtdPendente: 0 },
   );
 
-  const pct =
-    dados.total_fatura > 0
-      ? Math.round((totalPago / dados.total_fatura) * 100)
-      : 0;
+  const pct = dados.total_fatura > 0 ? Math.round((totalPago / dados.total_fatura) * 100) : 0;
 
   const sincStr = dados.sincronizadoEm
     ? `<div style="font-size:12px;color:#94a3b8;margin-top:3px;">sinc. ${formatSincronizacao(dados.sincronizadoEm)}</div>`
@@ -87,14 +79,19 @@ export function gerarPdfHtml(
   const iconSrc = iconBase64 ? `data:image/png;base64,${iconBase64}` : '';
 
   const now = new Date();
-  const geradoEm = now.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }) + ' às ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const geradoEm =
+    now.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }) +
+    ' às ' +
+    now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
   const pessoasHtml = pessoas
-    .map((p) => renderPessoa(p.dono, p.itens, p.total_individual, estadoPorPessoa[p.dono]?.pago ?? false))
+    .map((p) =>
+      renderPessoa(p.dono, p.itens, p.total_individual, estadoPorPessoa[p.dono]?.pago ?? false),
+    )
     .join('');
 
   const pagoLabel = `${qtdPago} ${qtdPago === 1 ? 'paga' : 'pagas'}`;

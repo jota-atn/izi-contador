@@ -52,9 +52,7 @@ export const PixKeyModal = memo(function PixKeyModal({ visible, pixKey, onSave, 
             onSubmitEditing={handleSave}
           />
 
-          {showPreview && (
-            <Text style={s.preview}>Será salvo como: {sanitized}</Text>
-          )}
+          {showPreview && <Text style={s.preview}>Será salvo como: {sanitized}</Text>}
 
           <View style={s.actions}>
             {value.trim().length > 0 && (

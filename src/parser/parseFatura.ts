@@ -167,7 +167,11 @@ function expandAssinaturas(
     for (const { pessoa, valor } of assinatura.participantes) {
       result.push({ ...row, amount: valor, title: `${row.title} - ${normalizeName(pessoa)}` });
     }
-    result.push({ ...row, amount: restante, title: `${row.title} - ${normalizeName(defaultOwner)}` });
+    result.push({
+      ...row,
+      amount: restante,
+      title: `${row.title} - ${normalizeName(defaultOwner)}`,
+    });
   }
 
   return { rows: result, invalidas };

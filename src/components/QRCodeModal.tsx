@@ -39,9 +39,15 @@ export const QRCodeModal = memo(function QRCodeModal({
         ]);
         const path = `${fs.cacheDirectory}pix_qr_${pessoa.dono}.png`;
         await fs.writeAsStringAsync(path, data, { encoding: fs.EncodingType.Base64 });
-        await sharing.shareAsync(path, { mimeType: 'image/png', dialogTitle: 'Compartilhar QR Pix' });
+        await sharing.shareAsync(path, {
+          mimeType: 'image/png',
+          dialogTitle: 'Compartilhar QR Pix',
+        });
       } catch {
-        Alert.alert('Indisponível', 'Compartilhamento de imagem requer uma atualização do app instalada.');
+        Alert.alert(
+          'Indisponível',
+          'Compartilhamento de imagem requer uma atualização do app instalada.',
+        );
       }
     });
   };

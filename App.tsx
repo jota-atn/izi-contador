@@ -111,7 +111,11 @@ function AppContent() {
   const [mesSelecionado, setMesSelecionado] = useState('');
   const { edicoes, salvar: salvarEdicao, limparMes } = useEdicoesFatura(userEmail, mesSelecionado);
   const { pixKey, salvarPixKey } = usePixKey(userEmail);
-  const { diaFechamento, salvar: salvarNotif, cancelar: cancelarNotif } = useNotificacoes(userEmail);
+  const {
+    diaFechamento,
+    salvar: salvarNotif,
+    cancelar: cancelarNotif,
+  } = useNotificacoes(userEmail);
   const { mostrar: mostrarOnboarding, marcarVisto } = useOnboarding(userEmail);
   const [showCategorias, setShowCategorias] = useState(false);
   const [showNotificacoes, setShowNotificacoes] = useState(false);

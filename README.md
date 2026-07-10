@@ -14,14 +14,14 @@ App mobile que lê o extrato da fatura Nubank via Gmail e divide os gastos por p
 
 Para dividir gastos, edite a descrição da compra diretamente no app do Nubank:
 
-| Sintaxe                      | Resultado                            |
-| ----------------------------- | ------------------------------------- |
-| `Compra - Maria`              | 100% para Maria                       |
-| `Compra (metade Maria)`       | 50% para você, 50% para Maria         |
-| `Compra - metade Maria`       | 50% para você, 50% para Maria (via traço) |
-| `Compra (menos 30 Maria)`     | R$ 30 para Maria, restante para você  |
-| `Compra - menos 30 Maria`     | R$ 30 para Maria, restante para você (via traço) |
-| `Compra (Joao=40 Maria=20)`   | R$ 40 para João, R$ 20 para Maria     |
+| Sintaxe                     | Resultado                                        |
+| --------------------------- | ------------------------------------------------ |
+| `Compra - Maria`            | 100% para Maria                                  |
+| `Compra (metade Maria)`     | 50% para você, 50% para Maria                    |
+| `Compra - metade Maria`     | 50% para você, 50% para Maria (via traço)        |
+| `Compra (menos 30 Maria)`   | R$ 30 para Maria, restante para você             |
+| `Compra - menos 30 Maria`   | R$ 30 para Maria, restante para você (via traço) |
+| `Compra (Joao=40 Maria=20)` | R$ 40 para João, R$ 20 para Maria                |
 
 Prioridade de decisão de dono: **sufixo de nome** > **regra de alocação** > **categoria sem dono/regra** (vai para "Não identificados"). Um item que bate com uma categoria (ex.: "Almoço", "Streaming") mas não tem sufixo nem regra configurada **não é assumido como seu** — fica em "Não identificados" até ser alocado manualmente.
 

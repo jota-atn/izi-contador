@@ -46,12 +46,13 @@ function crc16(str: string): string {
 }
 
 export function gerarPixPayload(key: string, name: string, amount: number): string {
-  const safeName = name
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-zA-Z0-9 ]/g, '')
-    .substring(0, 25)
-    .toUpperCase() || 'NOME';
+  const safeName =
+    name
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-zA-Z0-9 ]/g, '')
+      .substring(0, 25)
+      .toUpperCase() || 'NOME';
 
   const merchantAccount = tlv('00', 'br.gov.bcb.pix') + tlv('01', key);
   const additionalData = tlv('05', '***');
