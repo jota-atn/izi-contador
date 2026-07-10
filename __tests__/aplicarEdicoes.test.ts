@@ -95,6 +95,38 @@ describe('aplicarEdicoes', () => {
     expect(r.relatorio_por_pessoa.find((p) => p.dono === 'JOAO')).toBeDefined();
   });
 
+  it('mover item para pessoa que já tem a mesma descrição soma em vez de duplicar', () => {
+    const dados: RelatorioFatura = {
+      mes: '2025-01',
+      total_fatura: 220,
+      relatorio_por_pessoa: [
+        {
+          dono: 'JOAO',
+          itens: [{ descricao: 'ALMOÇO', valor: 200, data: 'Agrupado' }],
+          total_individual: 200,
+        },
+        {
+          dono: 'SEM_CATEGORIA',
+          itens: [{ descricao: 'ALMOÇO', valor: 20, data: '2025-01-20' }],
+          total_individual: 20,
+        },
+      ],
+    };
+    const edicoes: Edicao[] = [
+      ed({
+        item_desc: 'ALMOÇO',
+        item_data: '2025-01-20',
+        item_valor: 20,
+        novo_dono: 'JOAO',
+      }),
+    ];
+    const r = aplicarEdicoes(dados, edicoes);
+    const joao = r.relatorio_por_pessoa.find((p) => p.dono === 'JOAO');
+    expect(joao?.itens).toHaveLength(1);
+    expect(joao?.itens[0].valor).toBeCloseTo(220);
+    expect(joao?.total_individual).toBeCloseTo(220);
+  });
+
   it('deletar todos os itens de uma pessoa remove o card', () => {
     const edicoes: Edicao[] = [
       ed({ item_desc: 'ALMOÇO', item_data: '2025-01-12', item_valor: 30, deletado: true }),

@@ -29,7 +29,12 @@ export function aplicarEdicoes(dados: RelatorioFatura, edicoes: Edicao[]): Relat
         pessoasMap.set(dono, { dono, itens: [], total_individual: 0 });
       }
       const p = pessoasMap.get(dono)!;
-      p.itens.push(gastoFinal);
+      const existente = p.itens.find((i) => i.descricao === desc);
+      if (existente) {
+        existente.valor = parseFloat((existente.valor + item.valor).toFixed(2));
+      } else {
+        p.itens.push(gastoFinal);
+      }
       p.total_individual = parseFloat((p.total_individual + item.valor).toFixed(2));
     }
   }
