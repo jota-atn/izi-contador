@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 import { IconUsers } from './icons/IconUsers';
 import { IconPdf } from './icons/IconPdf';
 import { nomeMes } from '../utils/meses';
@@ -100,7 +101,10 @@ export const TotalCard = memo(function TotalCard({
       {numeroPessoas > 0 && (
         <View style={s.painel}>
           <View style={s.barTrack}>
-            <View style={[s.barFill, { flex: ratio }]} />
+            <Animated.View
+              layout={LinearTransition.duration(300)}
+              style={[s.barFill, { flex: ratio }]}
+            />
             <View style={{ flex: 1 - ratio }} />
           </View>
 
