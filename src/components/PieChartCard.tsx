@@ -3,8 +3,8 @@ import { Dimensions, Text, View } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
 import { RelatorioPessoa } from '../types';
 import { IconPieChart } from './icons/IconPieChart';
+import { corCategorica } from '../utils/chartColors';
 
-const COLORS = ['#7C3AED', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', '#6366F1'];
 const SCREEN_W = Dimensions.get('window').width;
 
 interface Props {
@@ -12,13 +12,15 @@ interface Props {
 }
 
 export const PieChartCard = memo(function PieChartCard({ pessoas }: Props) {
-  const data = pessoas.map((p, i) => ({
-    name: p.dono,
-    population: p.total_individual,
-    color: COLORS[i % COLORS.length],
-    legendFontColor: '#94a3b8',
-    legendFontSize: 12,
-  }));
+  const data = [...pessoas]
+    .sort((a, b) => b.total_individual - a.total_individual)
+    .map((p, i) => ({
+      name: p.dono,
+      population: p.total_individual,
+      color: corCategorica(i),
+      legendFontColor: '#94a3b8',
+      legendFontSize: 12,
+    }));
 
   return (
     <View className="bg-slate-900 rounded-3xl p-6 border border-slate-800 items-center">

@@ -3,21 +3,12 @@ import { Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { Historico } from '../hooks/useHistorico';
 import { MESES_PT, nomeMes } from '../utils/meses';
+import { CHART_COLOR_OUTROS, corCategorica, corCategoricaRgb } from '../utils/chartColors';
 
 const SCREEN_W = Dimensions.get('window').width;
 const MESES_CURTOS = MESES_PT.map((m) => m.substring(0, 3));
 const SEM_CATEGORIA = '__SEM_CATEGORIA__';
 const CHART_MAX_MESES = 7;
-
-const PERSON_COLORS = ['#7c3aed', '#0ea5e9', '#ec4899', '#f59e0b', '#22c55e', '#f97316'];
-const PERSON_COLORS_RGB = [
-  '124, 58, 237',
-  '14, 165, 233',
-  '236, 72, 153',
-  '245, 158, 11',
-  '34, 197, 94',
-  '249, 115, 22',
-];
 
 const CHART_CONFIG = {
   backgroundColor: '#0f172a',
@@ -99,10 +90,23 @@ export const EstatsScreen = memo(function EstatsScreen({ historico, meses }: Pro
     [pessoasAcumulado],
   );
 
+  // cor por pessoa é fixada uma vez (ranking do acumulado, a ordenação mais
+  // estável) e reaproveitada em todos os gráficos/listas da tela — assim a
+  // mesma pessoa nunca muda de cor entre a linha do tempo, a distribuição e a
+  // média, e ninguém repete a cor de outra pessoa (além da 8ª cai num cinza
+  // neutro em vez de reciclar uma cor já usada)
   const personColors = useMemo(() => {
     const map: Record<string, string> = {};
     pessoasAcumulado.forEach(({ dono }, i) => {
-      map[dono] = PERSON_COLORS[i % PERSON_COLORS.length];
+      map[dono] = corCategorica(i);
+    });
+    return map;
+  }, [pessoasAcumulado]);
+
+  const personColorsRgb = useMemo(() => {
+    const map: Record<string, string> = {};
+    pessoasAcumulado.forEach(({ dono }, i) => {
+      map[dono] = corCategoricaRgb(i);
     });
     return map;
   }, [pessoasAcumulado]);
@@ -242,10 +246,9 @@ export const EstatsScreen = memo(function EstatsScreen({ historico, meses }: Pro
           <LineChart
             data={{
               labels,
-              datasets: pessoasChart.map((p, i) => ({
+              datasets: pessoasChart.map((p) => ({
                 data: p.data,
-                color: (opacity = 1) =>
-                  `rgba(${PERSON_COLORS_RGB[i % PERSON_COLORS_RGB.length]}, ${opacity})`,
+                color: (opacity = 1) => `rgba(${personColorsRgb[p.dono]}, ${opacity})`,
                 strokeWidth: 2,
               })),
             }}
@@ -262,12 +265,12 @@ export const EstatsScreen = memo(function EstatsScreen({ historico, meses }: Pro
             formatYLabel={(v) => `${Math.round(Number(v) / 100) * 100}`}
           />
           <View style={s.legendRow}>
-            {pessoasChart.map(({ dono }, i) => (
+            {pessoasChart.map(({ dono }) => (
               <View key={dono} style={s.legendItem}>
                 <View
                   style={[
                     s.legendDot,
-                    { backgroundColor: PERSON_COLORS[i % PERSON_COLORS.length] },
+                    { backgroundColor: personColors[dono] ?? CHART_COLOR_OUTROS },
                   ]}
                 />
                 <Text style={s.legendLabel}>{dono}</Text>
@@ -281,8 +284,8 @@ export const EstatsScreen = memo(function EstatsScreen({ historico, meses }: Pro
       <View style={s.card}>
         <Text style={s.cardTitle}>Distribuição por pessoa</Text>
         <Text style={s.cardSub}>total acumulado no período</Text>
-        {pessoasAcumulado.map(({ dono, total }, i) => {
-          const color = PERSON_COLORS[i % PERSON_COLORS.length];
+        {pessoasAcumulado.map(({ dono, total }) => {
+          const color = personColors[dono] ?? CHART_COLOR_OUTROS;
           const pct = total / maxAcumulado;
           return (
             <View key={dono} style={s.barRow}>
@@ -306,7 +309,9 @@ export const EstatsScreen = memo(function EstatsScreen({ historico, meses }: Pro
         {pessoasStats.map(({ dono, media: m, meses: qtd }, i) => (
           <View key={dono} style={[s.pessoaRow, i === 0 && s.pessoaRowFirst]}>
             <View style={s.pessoaLeft}>
-              <View style={[s.dot, { backgroundColor: personColors[dono] ?? '#7c3aed' }]} />
+              <View
+                style={[s.dot, { backgroundColor: personColors[dono] ?? CHART_COLOR_OUTROS }]}
+              />
               <View>
                 <Text style={s.pessoaNome}>{dono}</Text>
                 <Text style={s.pessoaMeses}>
@@ -314,7 +319,7 @@ export const EstatsScreen = memo(function EstatsScreen({ historico, meses }: Pro
                 </Text>
               </View>
             </View>
-            <Text style={[s.pessoaValor, { color: personColors[dono] ?? '#a78bfa' }]}>
+            <Text style={[s.pessoaValor, { color: personColors[dono] ?? CHART_COLOR_OUTROS }]}>
               {fmtBRL(m)}
             </Text>
           </View>
