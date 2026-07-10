@@ -120,7 +120,6 @@ function expandSplitRows(
 
 function categorizarItem(
   title: string,
-  defaultOwner: string,
   categorias: Categorias,
   regras: RegrasAlocacao,
 ): { exibicao: string; dono: string } {
@@ -143,9 +142,18 @@ function categorizarItem(
 
   const titleBase = titleClean.split('(')[0].trim();
 
+  function regraDono(): string | null {
+    for (const [keyword, pessoa] of Object.entries(regras)) {
+      if (titleBase.includes(keyword.toUpperCase())) return normalizeName(pessoa);
+    }
+    return null;
+  }
+
   for (const [categoria, palavras] of Object.entries(categorias)) {
     if (palavras.some((p) => titleBase.includes(p))) {
-      return { exibicao: categoria, dono: explicitDono ?? defaultOwner };
+      // sem sufixo de nome nem regra, não assume que é do titular — vai pra
+      // Não identificados (ex.: "Almoço" sozinho pode ser de qualquer um da casa)
+      return { exibicao: categoria, dono: explicitDono ?? regraDono() ?? SEM_CATEGORIA };
     }
   }
 
@@ -154,10 +162,9 @@ function categorizarItem(
     return { exibicao: (titleDisplay || titleClean) + parcelaStr, dono: explicitDono };
   }
 
-  for (const [keyword, pessoa] of Object.entries(regras)) {
-    if (titleBase.includes(keyword.toUpperCase())) {
-      return { exibicao: titleClean + parcelaStr, dono: normalizeName(pessoa) };
-    }
+  const rd = regraDono();
+  if (rd) {
+    return { exibicao: titleClean + parcelaStr, dono: rd };
   }
 
   return { exibicao: titleClean + parcelaStr, dono: SEM_CATEGORIA };
@@ -217,7 +224,7 @@ export function parseFatura(
   >();
 
   for (const row of rows) {
-    const { exibicao, dono } = categorizarItem(row.title, defaultOwner, categorias, regrasAlocacao);
+    const { exibicao, dono } = categorizarItem(row.title, categorias, regrasAlocacao);
     const key = normalizeName(dono);
 
     if (!porDono.has(key)) porDono.set(key, { display: dono, itensMap: new Map() });

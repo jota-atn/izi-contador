@@ -48,7 +48,9 @@ export function RegrasModal({ visible, onClose, regras, addRegra, removeRegra }:
         >
           <Text style={s.hint}>
             Define que compras com certa palavra vão para uma pessoa específica. Tem prioridade
-            menor que categorias e dono explícito no título.
+            menor que o sufixo &ldquo;- Nome&rdquo; no título, mas decide o dono quando o item bate com uma
+            categoria (ex.: Almoço, Streaming) e não tem sufixo. Sem regra nesses casos, o item
+            vai para Não identificados.
           </Text>
 
           {Object.entries(regras).map(([kw, p]) => (

@@ -98,10 +98,24 @@ describe('parseFatura — splits', () => {
 });
 
 describe('parseFatura — categorias e regras', () => {
-  it('item na categoria vai para o dono com label da categoria', () => {
+  it('item na categoria sem sufixo de nome nem regra vai para Não identificados', () => {
+    // "Netflix" sozinho não indica de quem é a assinatura — nada assume que é do titular
     const r = parseFatura(csv('2025-01-10,NETFLIX,30,00'), 'EU', { Streaming: ['NETFLIX'] }, {});
-    const p = pessoa(r, 'EU');
+    const p = pessoa(r, SEM_CATEGORIA);
     expect(p?.itens[0].descricao).toBe('Streaming');
+    expect(pessoa(r, 'EU')).toBeUndefined();
+  });
+
+  it('regra de alocação vale mesmo quando o título bate com uma categoria', () => {
+    const r = parseFatura(
+      csv('2025-01-10,NETFLIX,30,00'),
+      'EU',
+      { Streaming: ['NETFLIX'] },
+      { NETFLIX: 'JOAO' },
+    );
+    const p = pessoa(r, 'JOAO');
+    expect(p?.itens[0].descricao).toBe('Streaming');
+    expect(p?.total_individual).toBeCloseTo(30);
   });
 
   it('regra de alocação atribui item a pessoa correta', () => {
@@ -114,7 +128,7 @@ describe('parseFatura — categorias e regras', () => {
     expect(pessoa(r, 'ANA')?.total_individual).toBeCloseTo(50);
   });
 
-  it('sufixo "- NOME-DA-CATEGORIA" não vira pessoa fictícia', () => {
+  it('sufixo "- NOME-DA-CATEGORIA" não vira pessoa fictícia e vai para Não identificados', () => {
     // "Mini Box Vitoria - Almoço" anota a categoria, não indica de quem é a compra
     const r = parseFatura(
       csv('2025-01-10,MINI BOX VITORIA - Almoço,20,00'),
@@ -123,7 +137,7 @@ describe('parseFatura — categorias e regras', () => {
       {},
     );
     expect(pessoa(r, 'ALMOCO')).toBeUndefined();
-    expect(pessoa(r, 'EU')?.total_individual).toBeCloseTo(20);
-    expect(pessoa(r, 'EU')?.itens[0].descricao).toBe('Almoço');
+    expect(pessoa(r, 'EU')).toBeUndefined();
+    expect(pessoa(r, SEM_CATEGORIA)?.total_individual).toBeCloseTo(20);
   });
 });
