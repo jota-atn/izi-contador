@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
+  Keyboard,
   Modal,
   ScrollView,
   StyleSheet,
@@ -17,6 +18,7 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   assinaturas: Assinatura[];
+  pessoas: string[];
   salvarAssinatura: (assinatura: Assinatura) => void;
   removerAssinatura: (keyword: string) => void;
 }
@@ -32,14 +34,50 @@ export function AssinaturasModal({
   visible,
   onClose,
   assinaturas,
+  pessoas,
   salvarAssinatura,
   removerAssinatura,
 }: Props) {
   const [keyword, setKeyword] = useState('');
   const [participantes, setParticipantes] = useState<ParticipanteForm[]>([PARTICIPANTE_VAZIO]);
+  const [editandoOriginal, setEditandoOriginal] = useState<string | null>(null);
+  const [kbHeight, setKbHeight] = useState(0);
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', (e) =>
+      setKbHeight(e.endCoordinates.height),
+    );
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKbHeight(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+
+  function resetForm() {
+    setKeyword('');
+    setParticipantes([PARTICIPANTE_VAZIO]);
+    setEditandoOriginal(null);
+  }
+
+  function handleEditar(a: Assinatura) {
+    setKeyword(a.keyword);
+    setParticipantes(a.participantes.map((p) => ({ pessoa: p.pessoa, valor: String(p.valor) })));
+    setEditandoOriginal(a.keyword);
+  }
 
   function handleParticipanteChange(idx: number, campo: keyof ParticipanteForm, valor: string) {
     setParticipantes((prev) => prev.map((p, i) => (i === idx ? { ...p, [campo]: valor } : p)));
+  }
+
+  function handleAddParticipanteRapido(pessoa: string) {
+    setParticipantes((prev) => {
+      // se só tem uma linha vazia, preenche ela em vez de criar uma nova
+      if (prev.length === 1 && !prev[0].pessoa && !prev[0].valor) {
+        return [{ pessoa, valor: '' }];
+      }
+      return [...prev, { pessoa, valor: '' }];
+    });
   }
 
   function handleAddParticipanteRow() {
@@ -63,31 +101,65 @@ export function AssinaturasModal({
       return;
     }
 
+    // renomeou a palavra-chave durante a edição — remove a entrada antiga
+    if (editandoOriginal && editandoOriginal !== kw) {
+      removerAssinatura(editandoOriginal);
+    }
+
     salvarAssinatura({ keyword: kw, participantes: validos });
-    setKeyword('');
-    setParticipantes([PARTICIPANTE_VAZIO]);
+    resetForm();
   }
 
   function handleRemover(kw: string) {
     Alert.alert('Remover assinatura', `Remover a divisão automática de "${kw}"?`, [
       { text: 'Cancelar', style: 'cancel' },
-      { text: 'Remover', style: 'destructive', onPress: () => removerAssinatura(kw) },
+      {
+        text: 'Remover',
+        style: 'destructive',
+        onPress: () => {
+          if (editandoOriginal === kw) resetForm();
+          removerAssinatura(kw);
+        },
+      },
     ]);
   }
 
+  const nomesJaAdicionados = new Set(
+    participantes.map((p) => p.pessoa.trim().toUpperCase()).filter(Boolean),
+  );
+  const pessoasRapidas = pessoas.filter((p) => !nomesJaAdicionados.has(p.trim().toUpperCase()));
+
+  const totalConfigurado = participantes.reduce((s, p) => {
+    const v = parseFloat(p.valor.replace(',', '.'));
+    return s + (isNaN(v) ? 0 : v);
+  }, 0);
+
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      onRequestClose={() => {
+        resetForm();
+        onClose();
+      }}
+    >
       <SafeAreaView style={s.root}>
         <View style={s.header}>
           <Text style={s.headerTitle}>Assinaturas</Text>
-          <TouchableOpacity onPress={onClose} style={s.closeBtn}>
+          <TouchableOpacity
+            onPress={() => {
+              resetForm();
+              onClose();
+            }}
+            style={s.closeBtn}
+          >
             <Text style={s.closeBtnText}>Fechar</Text>
           </TouchableOpacity>
         </View>
 
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={s.scroll}
+          contentContainerStyle={[s.scroll, kbHeight > 0 && { paddingBottom: kbHeight + 24 }]}
           keyboardShouldPersistTaps="handled"
         >
           <Text style={s.hint}>
@@ -97,7 +169,12 @@ export function AssinaturasModal({
           </Text>
 
           {assinaturas.map((a) => (
-            <View key={a.keyword} style={s.card}>
+            <TouchableOpacity
+              key={a.keyword}
+              style={[s.card, editandoOriginal === a.keyword && s.cardEditando]}
+              onPress={() => handleEditar(a)}
+              activeOpacity={0.8}
+            >
               <View style={s.catHeader}>
                 <Text style={s.catName}>{a.keyword}</Text>
                 <TouchableOpacity onPress={() => handleRemover(a.keyword)} style={s.removeBtn}>
@@ -113,13 +190,25 @@ export function AssinaturasModal({
                   </View>
                 ))}
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
 
           {assinaturas.length === 0 && <Text style={s.empty}>Nenhuma assinatura cadastrada.</Text>}
 
           <View style={[s.card, { marginTop: 8 }]}>
-            <Text style={s.newCatLabel}>Nova assinatura</Text>
+            <View style={s.formHeaderRow}>
+              <Text style={s.newCatLabel}>
+                {editandoOriginal ? 'Editando assinatura' : 'Nova assinatura'}
+              </Text>
+              {editandoOriginal && (
+                <TouchableOpacity
+                  onPress={resetForm}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text style={s.cancelarEdicaoText}>Cancelar edição</Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
             <View style={s.cardBody}>
               <TextInput
@@ -160,12 +249,37 @@ export function AssinaturasModal({
                 </View>
               ))}
 
+              {pessoasRapidas.length > 0 && (
+                <View style={s.rapidasWrap}>
+                  <Text style={s.rapidasLabel}>Adicionar</Text>
+                  <View style={s.rapidasChips}>
+                    {pessoasRapidas.map((p) => (
+                      <TouchableOpacity
+                        key={p}
+                        style={s.chipRapido}
+                        onPress={() => handleAddParticipanteRapido(p)}
+                      >
+                        <Text style={s.chipRapidoText}>+ {p}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+
               <TouchableOpacity onPress={handleAddParticipanteRow} style={s.addParticipanteBtn}>
-                <Text style={s.addParticipanteText}>+ Adicionar pessoa</Text>
+                <Text style={s.addParticipanteText}>+ Novo nome</Text>
               </TouchableOpacity>
 
+              {totalConfigurado > 0 && (
+                <Text style={s.totalConfigurado}>
+                  Total configurado: R$ {totalConfigurado.toFixed(2)}
+                </Text>
+              )}
+
               <TouchableOpacity onPress={handleSalvar} style={s.saveBtn}>
-                <Text style={s.saveBtnText}>Salvar assinatura</Text>
+                <Text style={s.saveBtnText}>
+                  {editandoOriginal ? 'Salvar alterações' : 'Salvar assinatura'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -205,6 +319,7 @@ const s = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 12,
   },
+  cardEditando: { borderColor: '#7c3aed' },
   catHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -241,6 +356,14 @@ const s = StyleSheet.create({
   },
   chipText: { color: '#cbd5e1', fontSize: 12, fontWeight: '700' },
   empty: { color: '#334155', fontSize: 13, textAlign: 'center', marginVertical: 24 },
+  formHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 14,
+  },
+  cancelarEdicaoText: { color: '#f87171', fontSize: 11, fontWeight: '700' },
   cardBody: { padding: 14, gap: 10 },
   newCatLabel: {
     color: '#64748b',
@@ -248,8 +371,6 @@ const s = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 1,
     textTransform: 'uppercase',
-    paddingHorizontal: 16,
-    paddingTop: 14,
   },
   input: {
     backgroundColor: '#1e293b',
@@ -263,8 +384,27 @@ const s = StyleSheet.create({
   },
   participanteRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   removeParticipanteBtn: { padding: 4 },
+  rapidasWrap: { marginTop: 2, gap: 6 },
+  rapidasLabel: {
+    color: '#475569',
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  rapidasChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chipRapido: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    backgroundColor: '#1e1040',
+    borderWidth: 1,
+    borderColor: '#4c1d95',
+  },
+  chipRapidoText: { color: '#c4b5fd', fontSize: 12, fontWeight: '700' },
   addParticipanteBtn: { paddingVertical: 8, alignItems: 'flex-start' },
   addParticipanteText: { color: '#a78bfa', fontSize: 12, fontWeight: '700' },
+  totalConfigurado: { color: '#64748b', fontSize: 11, fontWeight: '600', textAlign: 'right' },
   saveBtn: {
     backgroundColor: '#7c3aed',
     borderRadius: 12,

@@ -559,6 +559,7 @@ function AppContent() {
         visible={showAssinaturas}
         onClose={() => setShowAssinaturas(false)}
         assinaturas={assinaturas}
+        pessoas={pessoas.map((p) => p.dono)}
         salvarAssinatura={salvarAssinatura}
         removerAssinatura={removerAssinatura}
       />
