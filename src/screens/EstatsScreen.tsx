@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { Historico } from '../hooks/useHistorico';
 import { MESES_PT, nomeMes } from '../utils/meses';
@@ -28,9 +28,16 @@ function fmtBRL(value: number): string {
 interface Props {
   historico: Historico;
   meses: string[]; // sorted descending (newest first)
+  refreshing: boolean;
+  onRefresh: () => void;
 }
 
-export const EstatsScreen = memo(function EstatsScreen({ historico, meses }: Props) {
+export const EstatsScreen = memo(function EstatsScreen({
+  historico,
+  meses,
+  refreshing,
+  onRefresh,
+}: Props) {
   const mesesCron = useMemo(() => [...meses].reverse(), [meses]);
   const mesesChart = useMemo(() => mesesCron.slice(-CHART_MAX_MESES), [mesesCron]);
 
@@ -173,12 +180,24 @@ export const EstatsScreen = memo(function EstatsScreen({ historico, meses }: Pro
 
   if (meses.length < 2) {
     return (
-      <View style={s.empty}>
-        <Text style={s.emptyTitle}>Sem dados suficientes</Text>
-        <Text style={s.emptyText}>
-          Acumule pelo menos 2 meses de fatura para ver a evolução dos gastos.
-        </Text>
-      </View>
+      <ScrollView
+        contentContainerStyle={s.emptyScroll}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#7c3aed"
+            colors={['#7c3aed']}
+          />
+        }
+      >
+        <View style={s.empty}>
+          <Text style={s.emptyTitle}>Sem dados suficientes</Text>
+          <Text style={s.emptyText}>
+            Acumule pelo menos 2 meses de fatura para ver a evolução dos gastos.
+          </Text>
+        </View>
+      </ScrollView>
     );
   }
 
@@ -189,6 +208,14 @@ export const EstatsScreen = memo(function EstatsScreen({ historico, meses }: Pro
       style={s.scroll}
       contentContainerStyle={s.content}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#7c3aed"
+          colors={['#7c3aed']}
+        />
+      }
     >
       {/* Header */}
       <View style={s.headerRow}>
@@ -391,6 +418,7 @@ const s = StyleSheet.create({
   scroll: { flex: 1 },
   content: { padding: 16, gap: 14, paddingBottom: 32 },
 
+  emptyScroll: { flexGrow: 1 },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
   emptyTitle: { color: '#f1f5f9', fontSize: 16, fontWeight: '700', marginBottom: 8 },
   emptyText: { color: '#64748b', fontSize: 14, textAlign: 'center', lineHeight: 22 },
