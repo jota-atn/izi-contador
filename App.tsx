@@ -137,7 +137,8 @@ function AppContent() {
     const existing = historicoRef.current[mes];
     if (!existing || hashFatura(existing) === hashFatura(state.data)) {
       upsert(mes, { ...state.data, sincronizadoEm: new Date().toISOString() });
-      limparMes(mes);
+      // nada mudou (ou é a primeira sincronização) — não há motivo para apagar
+      // as edições/alocações já feitas pelo usuário nesse mês
       return;
     }
 
