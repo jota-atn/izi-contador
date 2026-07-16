@@ -95,6 +95,31 @@ describe('parseFatura — splits', () => {
     const r = parseFatura(csv('2025-01-10,SUPERMERCADO (SOFIA=40 JOAO=60),100,00'), 'JOAO');
     expect(pessoa(r, SEM_CATEGORIA)).toBeUndefined();
   });
+
+  it('SPLIT_MULTI com soma > total registra anotação inválida e não divide', () => {
+    const r = parseFatura(csv('2025-01-10,FARMACIA (MARIA=30 JOAO=20),40,00'), 'JOAO');
+    expect(r.anotacoes_invalidas).toHaveLength(1);
+    expect(r.anotacoes_invalidas![0].soma).toBeCloseTo(50);
+    expect(r.anotacoes_invalidas![0].valor).toBeCloseTo(40);
+    expect(pessoa(r, 'MARIA')).toBeUndefined();
+    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(40);
+  });
+
+  it('(menos N NOME) com N maior que o total não divide e registra aviso', () => {
+    const r = parseFatura(csv('2025-01-10,UBER (menos 50 SOFIA),30,00'), 'JOAO');
+    expect(r.anotacoes_invalidas).toHaveLength(1);
+    expect(r.anotacoes_invalidas![0].soma).toBeCloseTo(50);
+    expect(r.anotacoes_invalidas![0].valor).toBeCloseTo(30);
+    expect(pessoa(r, 'SOFIA')).toBeUndefined();
+    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(30);
+  });
+
+  it('- menos N NOME com N maior que o total não divide e registra aviso', () => {
+    const r = parseFatura(csv('2025-01-10,TAXI - Menos 50 Sofia,30,00'), 'JOAO');
+    expect(r.anotacoes_invalidas).toHaveLength(1);
+    expect(pessoa(r, 'SOFIA')).toBeUndefined();
+    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(30);
+  });
 });
 
 describe('parseFatura — categorias e regras', () => {
