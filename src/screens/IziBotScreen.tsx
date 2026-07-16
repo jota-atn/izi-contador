@@ -20,7 +20,6 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { Historico } from '../hooks/useHistorico';
 import { streamGemini, GeminiMessage } from '../services/geminiApi';
 import { serializarHistorico } from '../utils/serializarHistorico';
-import { nomeMes } from '../utils/meses';
 import {
   loadChatHistory,
   saveChatMessages,
@@ -50,7 +49,7 @@ function TypingDot({ delay }: { delay: number }) {
         -1,
       ),
     );
-  }, []);
+  }, [delay, opacity, translateY]);
 
   const style = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
@@ -116,6 +115,16 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
   useEffect(() => {
     systemPromptRef.current = systemPrompt;
   }, [systemPrompt]);
+
+  const userEmailRef = useRef(userEmail);
+  useEffect(() => {
+    userEmailRef.current = userEmail;
+  }, [userEmail]);
+
+  const mesesRef = useRef(meses);
+  useEffect(() => {
+    mesesRef.current = meses;
+  }, [meses]);
 
   const db = useSQLiteContext();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -274,6 +283,8 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
 
   const send = useCallback(
     (textOverride?: string) => {
+      const meses = mesesRef.current;
+      const userEmail = userEmailRef.current;
       const text = (textOverride ?? input).trim();
       if (!text || streaming || meses.length === 0) return;
 
@@ -350,8 +361,8 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
         },
       );
     },
-    [input, streaming, messages, meses.length],
-  ); // eslint-disable-line react-hooks/exhaustive-deps
+    [input, streaming, messages, db],
+  );
 
   const handleClear = useCallback(() => {
     const currentMes = meses[0];
@@ -366,7 +377,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
     clearChatHistory(db, userEmail, currentMes).catch((e) =>
       console.error('[IziBotScreen] clearChatHistory falhou:', e),
     );
-  }, [db, userEmail, meses]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [db, userEmail, meses]);
 
   if (meses.length === 0) {
     return (
