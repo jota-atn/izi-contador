@@ -1,9 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import * as SecureStore from 'expo-secure-store';
-
-function storeKey(email: string) {
-  return `pix_key_v1_${email.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-}
+import { loadPixKey, savePixKey } from '../config/pixKey';
 
 export function usePixKey(userEmail: string) {
   const [pixKey, setPixKey] = useState('');
@@ -17,12 +13,12 @@ export function usePixKey(userEmail: string) {
       setPixKey('');
       return;
     }
-    SecureStore.getItemAsync(storeKey(userEmail)).then((v) => setPixKey(v ?? ''));
+    loadPixKey(userEmail).then(setPixKey);
   }, [userEmail]);
 
   const salvarPixKey = useCallback(async (value: string) => {
     const trimmed = value.trim();
-    await SecureStore.setItemAsync(storeKey(emailRef.current), trimmed);
+    await savePixKey(emailRef.current, trimmed);
     setPixKey(trimmed);
   }, []);
 

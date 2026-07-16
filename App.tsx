@@ -14,7 +14,7 @@ import Animated, { LinearTransition } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
-import { SQLiteProvider } from 'expo-sqlite';
+import { SQLiteProvider, useSQLiteContext } from 'expo-sqlite';
 
 import { Gasto, RelatorioPessoa } from './src/types';
 import { migrateDbAsync } from './src/storage/db';
@@ -69,6 +69,8 @@ import { filtrarPessoas } from './src/utils/busca';
 import { haptic } from './src/utils/haptic';
 import { hashFatura } from './src/utils/hashFatura';
 import { exportarPdf } from './src/utils/exportarPdf';
+import { exportarBackup, importarBackup } from './src/utils/backupIO';
+import { IconDatabase } from './src/components/icons/IconDatabase';
 
 export default function App() {
   return (
@@ -86,6 +88,7 @@ export default function App() {
 }
 
 function AppContent() {
+  const db = useSQLiteContext();
   const {
     status: authStatus,
     userName,
@@ -329,6 +332,52 @@ function AppContent() {
     await exportarPdf(dadosExibidos, estadoPorPessoa);
   };
 
+  const handleExportarBackup = async () => {
+    try {
+      await exportarBackup(db, userEmail);
+    } catch (e) {
+      console.error('[App] exportarBackup falhou:', e);
+      Alert.alert('Erro', 'Não foi possível gerar o backup.');
+    }
+  };
+
+  const handleImportarBackup = () => {
+    Alert.alert(
+      'Importar backup',
+      'Isso substitui todos os dados atuais deste usuário (faturas, edições, categorias, regras, assinaturas e chave Pix) pelos dados do arquivo escolhido. Deseja continuar?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Importar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const backup = await importarBackup(db, userEmail);
+              if (!backup) return; // usuário cancelou a seleção do arquivo
+              try {
+                const Updates = await import('expo-updates');
+                if (Updates.isEnabled) {
+                  await Updates.reloadAsync();
+                  return;
+                }
+              } catch {}
+              Alert.alert(
+                'Backup importado',
+                'Feche e abra o app novamente para ver os dados restaurados.',
+              );
+            } catch (e) {
+              console.error('[App] importarBackup falhou:', e);
+              Alert.alert(
+                'Erro',
+                'Não foi possível importar o backup. Verifique se o arquivo é válido.',
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: '#020617' }}>
       {authStatus === 'loading' && <LoadingScreen message="Verificando autenticação..." />}
@@ -401,6 +450,18 @@ function AppContent() {
                   onPress: () => setShowNotificacoes(true),
                   icon: <IconBell size={15} color="#a78bfa" />,
                   section: 'Configuração',
+                },
+                {
+                  label: 'Exportar backup',
+                  onPress: handleExportarBackup,
+                  icon: <IconDatabase size={15} color="#a78bfa" />,
+                  section: 'Dados',
+                },
+                {
+                  label: 'Importar backup',
+                  onPress: handleImportarBackup,
+                  icon: <IconDatabase size={15} color="#a78bfa" />,
+                  section: 'Dados',
                 },
                 {
                   label: 'Como anotar',
