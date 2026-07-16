@@ -26,9 +26,15 @@ export function useCategorias(userEmail: string) {
     });
   }, [userEmail]);
 
+  const persist = (next: Categorias) => {
+    saveCategorias(emailRef.current, next).catch((e) =>
+      console.error('[useCategorias] saveCategorias falhou:', e),
+    );
+  };
+
   const update = useCallback((next: Categorias) => {
     setCategorias(next);
-    saveCategorias(emailRef.current, next);
+    persist(next);
   }, []);
 
   const addKeyword = useCallback((categoria: string, keyword: string) => {
@@ -36,7 +42,7 @@ export function useCategorias(userEmail: string) {
       const kw = keyword.trim().toUpperCase();
       if (!kw || prev[categoria]?.includes(kw)) return prev;
       const next = { ...prev, [categoria]: [...(prev[categoria] ?? []), kw] };
-      saveCategorias(emailRef.current, next);
+      persist(next);
       return next;
     });
   }, []);
@@ -44,7 +50,7 @@ export function useCategorias(userEmail: string) {
   const removeKeyword = useCallback((categoria: string, keyword: string) => {
     setCategorias((prev) => {
       const next = { ...prev, [categoria]: prev[categoria].filter((k) => k !== keyword) };
-      saveCategorias(emailRef.current, next);
+      persist(next);
       return next;
     });
   }, []);
@@ -55,7 +61,7 @@ export function useCategorias(userEmail: string) {
     setCategorias((prev) => {
       if (prev[key]) return prev;
       const next = { ...prev, [key]: [] };
-      saveCategorias(emailRef.current, next);
+      persist(next);
       return next;
     });
   }, []);
@@ -64,7 +70,7 @@ export function useCategorias(userEmail: string) {
     setCategorias((prev) => {
       const next = { ...prev };
       delete next[nome];
-      saveCategorias(emailRef.current, next);
+      persist(next);
       return next;
     });
   }, []);

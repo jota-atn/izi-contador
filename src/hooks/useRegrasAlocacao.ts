@@ -16,13 +16,19 @@ export function useRegrasAlocacao(userEmail: string) {
     loadRegras(userEmail).then(setRegras);
   }, [userEmail]);
 
+  const persist = (next: RegrasAlocacao) => {
+    saveRegras(emailRef.current, next).catch((e) =>
+      console.error('[useRegrasAlocacao] saveRegras falhou:', e),
+    );
+  };
+
   const addRegra = useCallback((keyword: string, pessoa: string) => {
     const kw = keyword.trim().toUpperCase();
     const p = pessoa.trim();
     if (!kw || !p) return;
     setRegras((prev) => {
       const next = { ...prev, [kw]: p };
-      saveRegras(emailRef.current, next);
+      persist(next);
       return next;
     });
   }, []);
@@ -30,7 +36,7 @@ export function useRegrasAlocacao(userEmail: string) {
   const removeRegra = useCallback((keyword: string) => {
     setRegras((prev) => {
       const { [keyword]: _, ...next } = prev;
-      saveRegras(emailRef.current, next);
+      persist(next);
       return next;
     });
   }, []);

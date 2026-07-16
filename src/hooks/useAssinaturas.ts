@@ -16,12 +16,18 @@ export function useAssinaturas(userEmail: string) {
     loadAssinaturas(userEmail).then(setAssinaturas);
   }, [userEmail]);
 
+  const persist = (next: Assinatura[]) => {
+    saveAssinaturas(emailRef.current, next).catch((e) =>
+      console.error('[useAssinaturas] saveAssinaturas falhou:', e),
+    );
+  };
+
   const salvarAssinatura = useCallback((assinatura: Assinatura) => {
     const keyword = assinatura.keyword.trim().toUpperCase();
     if (!keyword) return;
     setAssinaturas((prev) => {
       const next = [...prev.filter((a) => a.keyword !== keyword), { ...assinatura, keyword }];
-      saveAssinaturas(emailRef.current, next);
+      persist(next);
       return next;
     });
   }, []);
@@ -29,7 +35,7 @@ export function useAssinaturas(userEmail: string) {
   const removerAssinatura = useCallback((keyword: string) => {
     setAssinaturas((prev) => {
       const next = prev.filter((a) => a.keyword !== keyword);
-      saveAssinaturas(emailRef.current, next);
+      persist(next);
       return next;
     });
   }, []);
