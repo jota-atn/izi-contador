@@ -25,6 +25,7 @@ import { useHistorico } from './src/hooks/useHistorico';
 import { useRegrasAlocacao } from './src/hooks/useRegrasAlocacao';
 import { useAssinaturas } from './src/hooks/useAssinaturas';
 import { useEstadoFatura } from './src/hooks/useEstadoFatura';
+import { useAvisosDispensados } from './src/hooks/useAvisosDispensados';
 import { useEdicoesFatura } from './src/hooks/useEdicoesFatura';
 import { usePixKey } from './src/hooks/usePixKey';
 import { LoadingScreen } from './src/components/LoadingScreen';
@@ -102,6 +103,7 @@ function AppContent() {
   const { regras, addRegra, removeRegra } = useRegrasAlocacao(userEmail);
   const { assinaturas, salvarAssinatura, removerAssinatura } = useAssinaturas(userEmail);
   const { getEstado, toggleOculto, togglePago, marcarTodosPago } = useEstadoFatura(userEmail);
+  const { isDispensado, dispensar } = useAvisosDispensados(userEmail);
   const { state, refresh } = useRelatorio(
     getAccessToken,
     authStatus,
@@ -202,6 +204,16 @@ function AppContent() {
     () => dadosExibidos?.relatorio_por_pessoa.find((p) => p.dono === SEM_CATEGORIA),
     [dadosExibidos],
   );
+
+  // só mostra avisos de anotação inválida no mês mais recente — meses antigos ficam
+  // arquivados sem o aviso, e itens já dispensados não voltam a aparecer nesse mês
+  // a não ser que o próprio item mude (soma/valor diferentes na resincronização)
+  const avisosAtivos = useMemo(() => {
+    if (!dadosExibidos || mesSelecionado !== meses[0]) return [];
+    return (dadosExibidos.anotacoes_invalidas ?? []).filter(
+      (item) => !isDispensado(mesSelecionado, item),
+    );
+  }, [dadosExibidos, mesSelecionado, meses, isDispensado]);
 
   const idxMes = meses.indexOf(mesSelecionado);
   const mesAnterior = meses[idxMes + 1];
@@ -533,12 +545,14 @@ function AppContent() {
                     <SemCategoriaCard grupo={semCategoria} onEditarItem={handleEditarItem} />
                   </View>
                 )}
-                {dadosExibidos.anotacoes_invalidas &&
-                  dadosExibidos.anotacoes_invalidas.length > 0 && (
-                    <View style={{ marginHorizontal: 16 }}>
-                      <AnotacoesInvalidasCard itens={dadosExibidos.anotacoes_invalidas} />
-                    </View>
-                  )}
+                {avisosAtivos.length > 0 && (
+                  <View style={{ marginHorizontal: 16 }}>
+                    <AnotacoesInvalidasCard
+                      itens={avisosAtivos}
+                      onDispensar={(item) => dispensar(mesSelecionado, item)}
+                    />
+                  </View>
+                )}
                 {pessoasOrdenadas.map((pessoa) => {
                   const ep = getEstado(mesSelecionado, pessoa.dono);
                   return (

@@ -8,6 +8,7 @@ function backupValido() {
     estado: [],
     edicoes: [],
     chat: [],
+    avisosDispensados: [],
     config: { categorias: {}, regras: {}, assinaturas: [], pixKey: '' },
   };
 }

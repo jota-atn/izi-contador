@@ -37,5 +37,13 @@ export async function migrateDbAsync(db: SQLiteDatabase): Promise<void> {
       created_at INTEGER NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_chat_v1_user_mes ON chat_v1 (user_id, mes);
+    CREATE TABLE IF NOT EXISTS avisos_dispensados_v1 (
+      user_id TEXT NOT NULL,
+      mes     TEXT NOT NULL,
+      titulo  TEXT NOT NULL,
+      valor   REAL NOT NULL,
+      soma    REAL NOT NULL,
+      PRIMARY KEY (user_id, mes, titulo, valor, soma)
+    );
   `);
 }

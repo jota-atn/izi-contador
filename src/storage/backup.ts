@@ -36,6 +36,13 @@ interface ChatRow {
   is_hidden: boolean;
 }
 
+interface AvisoDispensadoRow {
+  mes: string;
+  titulo: string;
+  valor: number;
+  soma: number;
+}
+
 export interface BackupData {
   version: number;
   exportadoEm: string;
@@ -43,6 +50,7 @@ export interface BackupData {
   estado: EstadoRow[];
   edicoes: EdicaoRow[];
   chat: ChatRow[];
+  avisosDispensados: AvisoDispensadoRow[];
   config: {
     categorias: Categorias;
     regras: RegrasAlocacao;
@@ -52,37 +60,50 @@ export interface BackupData {
 }
 
 export async function gerarBackup(db: SQLiteDatabase, userEmail: string): Promise<BackupData> {
-  const [faturasRaw, estadoRaw, edicoesRaw, chatRaw, categorias, regras, assinaturas, pixKey] =
-    await Promise.all([
-      db.getAllAsync<{ mes: string; data: string }>(
-        'SELECT mes, data FROM faturas_v2 WHERE user_id = ?',
-        userEmail,
-      ),
-      db.getAllAsync<{ mes: string; dono: string; oculto: number; pago: number }>(
-        'SELECT mes, dono, oculto, pago FROM estado_v2 WHERE user_id = ?',
-        userEmail,
-      ),
-      db.getAllAsync<{
-        mes: string;
-        item_desc: string;
-        item_data: string;
-        item_valor: number;
-        novo_dono: string | null;
-        nova_desc: string | null;
-        deletado: number;
-      }>(
-        'SELECT mes, item_desc, item_data, item_valor, novo_dono, nova_desc, deletado FROM edicoes_v1 WHERE user_id = ?',
-        userEmail,
-      ),
-      db.getAllAsync<{ mes: string; role: string; content: string; is_hidden: number }>(
-        'SELECT mes, role, content, is_hidden FROM chat_v1 WHERE user_id = ?',
-        userEmail,
-      ),
-      loadCategorias(userEmail),
-      loadRegras(userEmail),
-      loadAssinaturas(userEmail),
-      loadPixKey(userEmail),
-    ]);
+  const [
+    faturasRaw,
+    estadoRaw,
+    edicoesRaw,
+    chatRaw,
+    avisosDispensados,
+    categorias,
+    regras,
+    assinaturas,
+    pixKey,
+  ] = await Promise.all([
+    db.getAllAsync<{ mes: string; data: string }>(
+      'SELECT mes, data FROM faturas_v2 WHERE user_id = ?',
+      userEmail,
+    ),
+    db.getAllAsync<{ mes: string; dono: string; oculto: number; pago: number }>(
+      'SELECT mes, dono, oculto, pago FROM estado_v2 WHERE user_id = ?',
+      userEmail,
+    ),
+    db.getAllAsync<{
+      mes: string;
+      item_desc: string;
+      item_data: string;
+      item_valor: number;
+      novo_dono: string | null;
+      nova_desc: string | null;
+      deletado: number;
+    }>(
+      'SELECT mes, item_desc, item_data, item_valor, novo_dono, nova_desc, deletado FROM edicoes_v1 WHERE user_id = ?',
+      userEmail,
+    ),
+    db.getAllAsync<{ mes: string; role: string; content: string; is_hidden: number }>(
+      'SELECT mes, role, content, is_hidden FROM chat_v1 WHERE user_id = ?',
+      userEmail,
+    ),
+    db.getAllAsync<AvisoDispensadoRow>(
+      'SELECT mes, titulo, valor, soma FROM avisos_dispensados_v1 WHERE user_id = ?',
+      userEmail,
+    ),
+    loadCategorias(userEmail),
+    loadRegras(userEmail),
+    loadAssinaturas(userEmail),
+    loadPixKey(userEmail),
+  ]);
 
   return {
     version: BACKUP_VERSION,
@@ -96,6 +117,7 @@ export async function gerarBackup(db: SQLiteDatabase, userEmail: string): Promis
     })),
     edicoes: edicoesRaw.map((r) => ({ ...r, deletado: r.deletado === 1 })),
     chat: chatRaw.map((r) => ({ ...r, is_hidden: r.is_hidden === 1 })),
+    avisosDispensados,
     config: { categorias, regras, assinaturas, pixKey },
   };
 }
@@ -127,6 +149,7 @@ export async function restaurarBackup(
     await db.runAsync('DELETE FROM estado_v2 WHERE user_id = ?', userEmail);
     await db.runAsync('DELETE FROM edicoes_v1 WHERE user_id = ?', userEmail);
     await db.runAsync('DELETE FROM chat_v1 WHERE user_id = ?', userEmail);
+    await db.runAsync('DELETE FROM avisos_dispensados_v1 WHERE user_id = ?', userEmail);
 
     for (const f of backup.faturas) {
       await db.runAsync(
@@ -162,6 +185,12 @@ export async function restaurarBackup(
       await db.runAsync(
         'INSERT INTO chat_v1 (user_id, mes, role, content, is_hidden, created_at) VALUES (?, ?, ?, ?, ?, ?)',
         [userEmail, c.mes, c.role, c.content, c.is_hidden ? 1 : 0, now + i],
+      );
+    }
+    for (const a of backup.avisosDispensados ?? []) {
+      await db.runAsync(
+        'INSERT OR REPLACE INTO avisos_dispensados_v1 (user_id, mes, titulo, valor, soma) VALUES (?, ?, ?, ?, ?)',
+        [userEmail, a.mes, a.titulo, a.valor, a.soma],
       );
     }
   });
