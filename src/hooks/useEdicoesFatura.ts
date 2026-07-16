@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSQLiteContext } from 'expo-sqlite';
 import {
   Edicao,
@@ -12,18 +12,25 @@ import {
 export function useEdicoesFatura(userId: string, mes: string) {
   const db = useSQLiteContext();
   const [edicoes, setEdicoes] = useState<Edicao[]>([]);
+  const mesRef = useRef(mes);
+  useEffect(() => {
+    mesRef.current = mes;
+  }, [mes]);
 
+  // estável entre trocas de mês (usa mesRef) para não invalidar salvar/remover/limparMes,
+  // que por sua vez são passados como dependência de efeitos em App.tsx
   const load = useCallback(async () => {
-    if (!userId || !mes) {
+    const currentMes = mesRef.current;
+    if (!userId || !currentMes) {
       setEdicoes([]);
       return;
     }
-    setEdicoes(await loadEdicoes(db, userId, mes));
-  }, [db, userId, mes]);
+    setEdicoes(await loadEdicoes(db, userId, currentMes));
+  }, [db, userId]);
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, [db, userId, mes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const salvar = useCallback(
     async (ed: Edicao) => {
