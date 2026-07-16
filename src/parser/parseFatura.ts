@@ -52,8 +52,9 @@ function expandSplitRows(
         }
       }
 
-      if (Math.abs(assignedTotal - row.amount) > 0.01) {
-        // soma != total → anotação incompleta/incorreta: não divide, registra aviso
+      if (assignedTotal < row.amount - 0.01) {
+        // soma < total → anotação incompleta: não divide, registra aviso.
+        // soma > total é válido (ex.: acerto de algo que a pessoa já devia à parte).
         invalidas.push({
           titulo: row.title,
           valor: row.amount,
@@ -80,35 +81,25 @@ function expandSplitRows(
       const splitPerson = normalizeName(fixedMatch[2]);
       const baseTitle = row.title.replace(SPLIT_FIXED, '').trim();
 
-      if (personAmount > row.amount + 0.01) {
-        // valor fixo maior que a compra → não divide (evita sobra negativa), registra aviso
-        invalidas.push({ titulo: row.title, valor: row.amount, soma: personAmount });
-        result.push({ ...row, title: `${baseTitle} - ${normalizeName(defaultOwner)}` });
-      } else {
-        result.push({
-          ...row,
-          amount: row.amount - personAmount,
-          title: `${baseTitle} - ${normalizeName(defaultOwner)}`,
-        });
-        result.push({ ...row, amount: personAmount, title: `${baseTitle} - ${splitPerson}` });
-      }
+      // valor fixo pode ser maior que a compra (ex.: acerto de algo que a pessoa já devia
+      // à parte) — o resto do dono padrão fica negativo de propósito nesse caso.
+      result.push({
+        ...row,
+        amount: row.amount - personAmount,
+        title: `${baseTitle} - ${normalizeName(defaultOwner)}`,
+      });
+      result.push({ ...row, amount: personAmount, title: `${baseTitle} - ${splitPerson}` });
     } else if (fixedDashMatch) {
       const personAmount = parseFloat(fixedDashMatch[1].replace(',', '.'));
       const splitPerson = normalizeName(fixedDashMatch[2]);
       const baseTitle = row.title.replace(SPLIT_FIXED_DASH, '').trim();
 
-      if (personAmount > row.amount + 0.01) {
-        // valor fixo maior que a compra → não divide (evita sobra negativa), registra aviso
-        invalidas.push({ titulo: row.title, valor: row.amount, soma: personAmount });
-        result.push({ ...row, title: `${baseTitle} - ${normalizeName(defaultOwner)}` });
-      } else {
-        result.push({
-          ...row,
-          amount: row.amount - personAmount,
-          title: `${baseTitle} - ${normalizeName(defaultOwner)}`,
-        });
-        result.push({ ...row, amount: personAmount, title: `${baseTitle} - ${splitPerson}` });
-      }
+      result.push({
+        ...row,
+        amount: row.amount - personAmount,
+        title: `${baseTitle} - ${normalizeName(defaultOwner)}`,
+      });
+      result.push({ ...row, amount: personAmount, title: `${baseTitle} - ${splitPerson}` });
     } else if (parensMatch) {
       const half = row.amount / 2;
       const splitPerson = normalizeName(parensMatch[1]);

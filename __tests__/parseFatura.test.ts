@@ -96,29 +96,25 @@ describe('parseFatura — splits', () => {
     expect(pessoa(r, SEM_CATEGORIA)).toBeUndefined();
   });
 
-  it('SPLIT_MULTI com soma > total registra anotação inválida e não divide', () => {
+  it('SPLIT_MULTI com soma > total divide normalmente (acerto à parte é válido)', () => {
     const r = parseFatura(csv('2025-01-10,FARMACIA (MARIA=30 JOAO=20),40,00'), 'JOAO');
-    expect(r.anotacoes_invalidas).toHaveLength(1);
-    expect(r.anotacoes_invalidas![0].soma).toBeCloseTo(50);
-    expect(r.anotacoes_invalidas![0].valor).toBeCloseTo(40);
-    expect(pessoa(r, 'MARIA')).toBeUndefined();
-    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(40);
+    expect(r.anotacoes_invalidas).toBeUndefined();
+    expect(pessoa(r, 'MARIA')?.total_individual).toBeCloseTo(30);
+    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(20);
   });
 
-  it('(menos N NOME) com N maior que o total não divide e registra aviso', () => {
+  it('(menos N NOME) com N maior que o total divide normalmente (resto do dono fica negativo)', () => {
     const r = parseFatura(csv('2025-01-10,UBER (menos 50 SOFIA),30,00'), 'JOAO');
-    expect(r.anotacoes_invalidas).toHaveLength(1);
-    expect(r.anotacoes_invalidas![0].soma).toBeCloseTo(50);
-    expect(r.anotacoes_invalidas![0].valor).toBeCloseTo(30);
-    expect(pessoa(r, 'SOFIA')).toBeUndefined();
-    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(30);
+    expect(r.anotacoes_invalidas).toBeUndefined();
+    expect(pessoa(r, 'SOFIA')?.total_individual).toBeCloseTo(50);
+    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(-20);
   });
 
-  it('- menos N NOME com N maior que o total não divide e registra aviso', () => {
+  it('- menos N NOME com N maior que o total divide normalmente via sufixo dash', () => {
     const r = parseFatura(csv('2025-01-10,TAXI - Menos 50 Sofia,30,00'), 'JOAO');
-    expect(r.anotacoes_invalidas).toHaveLength(1);
-    expect(pessoa(r, 'SOFIA')).toBeUndefined();
-    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(30);
+    expect(r.anotacoes_invalidas).toBeUndefined();
+    expect(pessoa(r, 'SOFIA')?.total_individual).toBeCloseTo(50);
+    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(-20);
   });
 });
 
