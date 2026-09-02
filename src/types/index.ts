@@ -5,6 +5,7 @@ export interface Gasto {
   dividido?: boolean; // fatia de uma divisão (anotação no Nubank ou feita no app)
   editado?: boolean; // dono/descrição alterados via edição no app
   origemDivisao?: { item_desc: string; item_data: string; item_valor: number }; // chave do item original, só quando a divisão foi feita no app
+  parcela?: { atual: number; total: number }; // ex.: 3/12, extraído do sufixo "- Parcela N/M" do Nubank
 }
 
 export interface RelatorioPessoa {

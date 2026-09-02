@@ -5,6 +5,7 @@ import { Historico } from '../hooks/useHistorico';
 import { Categorias } from '../config/categorias';
 import { SEM_CATEGORIA, SEM_CATEGORIA_LABEL } from '../parser/parseFatura';
 import { categorizarGasto } from '../utils/categorizarGasto';
+import { listarParcelasAbertas, projetarComprometido } from '../utils/projetarParcelas';
 import { MESES_PT, nomeMes } from '../utils/meses';
 import {
   CHART_COLOR_OUTROS,
@@ -34,6 +35,13 @@ const CHART_CONFIG = {
 
 function fmtBRL(value: number): string {
   return 'R$ ' + Math.round(value).toLocaleString('pt-BR');
+}
+
+// rótulo curto do mês daqui a `offset` meses a partir de `mesBase` ("YYYY-MM")
+function mesFuturoLabel(mesBase: string, offset: number): string {
+  const [ano, mes] = mesBase.split('-').map(Number);
+  const totalMeses = ano * 12 + (mes - 1) + offset;
+  return MESES_CURTOS[totalMeses % 12];
 }
 
 interface Props {
@@ -202,6 +210,18 @@ export const EstatsScreen = memo(function EstatsScreen({
     return itens.sort((a, b) => b.valor - a.valor).slice(0, 5);
   }, [mesesCron, historico]);
 
+  // parcelamentos em andamento no mês mais recente — quanto já está garantido pros
+  // próximos meses sem nenhuma compra nova
+  const parcelasAbertas = useMemo(() => {
+    if (meses.length === 0) return [];
+    return listarParcelasAbertas(historico[meses[0]]);
+  }, [meses, historico]);
+
+  const comprometidoFuturo = useMemo(
+    () => projetarComprometido(parcelasAbertas),
+    [parcelasAbertas],
+  );
+
   if (meses.length < 2) {
     return (
       <ScrollView
@@ -227,6 +247,7 @@ export const EstatsScreen = memo(function EstatsScreen({
 
   const maxAcumulado = pessoasAcumulado[0]?.total ?? 1;
   const maxCategoria = categoriasAcumulado[0]?.total ?? 1;
+  const maxComprometido = comprometidoFuturo[0]?.total ?? 1;
 
   return (
     <ScrollView
@@ -272,6 +293,49 @@ export const EstatsScreen = memo(function EstatsScreen({
           sub={nomeMes(menorMes)}
         />
       </View>
+
+      {/* Compromissos futuros (parcelamentos em andamento) */}
+      {comprometidoFuturo.length > 0 && (
+        <View style={s.card}>
+          <Text style={s.cardTitle}>Compromissos futuros</Text>
+          <Text style={s.cardSub}>já garantido nos próximos meses só de parcelamentos</Text>
+          {comprometidoFuturo.map(({ mes, total }) => {
+            const pct = total / maxComprometido;
+            return (
+              <View key={mes} style={s.barRow}>
+                <View style={s.barHeader}>
+                  <Text style={[s.barNome, { color: '#a78bfa' }]}>
+                    {mesFuturoLabel(meses[0], mes)}
+                  </Text>
+                  <Text style={s.barValor}>{fmtBRL(total)}</Text>
+                </View>
+                <View style={s.barTrack}>
+                  <View
+                    style={[
+                      s.barFill,
+                      { width: `${pct * 100}%` as any, backgroundColor: '#a78bfa' },
+                    ]}
+                  />
+                </View>
+              </View>
+            );
+          })}
+
+          {parcelasAbertas.map((p, i) => (
+            <View key={i} style={[s.topItemRow, i === 0 && s.topItemRowFirst]}>
+              <View style={s.topItemLeft}>
+                <Text style={s.topItemDesc} numberOfLines={1}>
+                  {p.descricao}
+                </Text>
+                <Text style={s.topItemMeta}>
+                  {p.dono} · faltam {p.restantes} de {p.total}
+                </Text>
+              </View>
+              <Text style={s.topItemValor}>{fmtBRL(p.valorMensal)}</Text>
+            </View>
+          ))}
+        </View>
+      )}
 
       {/* Trend chart */}
       <View style={s.card}>

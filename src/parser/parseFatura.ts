@@ -209,13 +209,22 @@ function expandAssinaturas(
   return { rows: result, invalidas };
 }
 
+interface Parcela {
+  atual: number;
+  total: number;
+}
+
 function categorizarItem(
   title: string,
   categorias: Categorias,
   regras: RegrasAlocacao,
-): { exibicao: string; dono: string } {
+): { exibicao: string; dono: string; parcela?: Parcela } {
   const parcelaMatch = PARCELA_SUFFIX.exec(title);
-  const parcelaStr = parcelaMatch ? ` - ${/(\d+\/\d+)/.exec(parcelaMatch[0])?.[1] ?? ''}` : '';
+  const parcelaNums = parcelaMatch ? /(\d+)\/(\d+)/.exec(parcelaMatch[0]) : null;
+  const parcelaStr = parcelaNums ? ` - ${parcelaNums[1]}/${parcelaNums[2]}` : '';
+  const parcela: Parcela | undefined = parcelaNums
+    ? { atual: parseInt(parcelaNums[1], 10), total: parseInt(parcelaNums[2], 10) }
+    : undefined;
 
   const titleClean = title.replace(PARCELA_SUFFIX, '').trim();
   const donoMatch = /\s*-\s*([^-()\n]+)$/.exec(titleClean);
@@ -250,15 +259,15 @@ function categorizarItem(
 
   if (explicitDono && !/^\d+$/.test(explicitDono)) {
     const titleDisplay = titleClean.replace(/\s*-\s*[^-()\n]+$/, '').trim();
-    return { exibicao: (titleDisplay || titleClean) + parcelaStr, dono: explicitDono };
+    return { exibicao: (titleDisplay || titleClean) + parcelaStr, dono: explicitDono, parcela };
   }
 
   const rd = regraDono();
   if (rd) {
-    return { exibicao: titleClean + parcelaStr, dono: rd };
+    return { exibicao: titleClean + parcelaStr, dono: rd, parcela };
   }
 
-  return { exibicao: titleClean + parcelaStr, dono: SEM_CATEGORIA };
+  return { exibicao: titleClean + parcelaStr, dono: SEM_CATEGORIA, parcela };
 }
 
 function normalizeName(s: string): string {
@@ -321,11 +330,14 @@ export function parseFatura(
   // chave interna = nome normalizado (sem acentos); display = primeira forma vista
   const porDono = new Map<
     string,
-    { display: string; itensMap: Map<string, { total: number; date: string; dividido: boolean }> }
+    {
+      display: string;
+      itensMap: Map<string, { total: number; date: string; dividido: boolean; parcela?: Parcela }>;
+    }
   >();
 
   for (const row of rows) {
-    const { exibicao, dono } = categorizarItem(row.title, categorias, regrasAlocacao);
+    const { exibicao, dono, parcela } = categorizarItem(row.title, categorias, regrasAlocacao);
     const key = normalizeName(dono);
 
     if (!porDono.has(key)) porDono.set(key, { display: dono, itensMap: new Map() });
@@ -341,6 +353,7 @@ export function parseFatura(
         total: row.amount,
         date: isCategoria ? 'Agrupado' : row.date,
         dividido: !!row.dividido,
+        parcela,
       });
     }
   }
@@ -350,11 +363,12 @@ export function parseFatura(
 
   for (const [, { display: dono, itensMap }] of porDono.entries()) {
     const itens: Gasto[] = Array.from(itensMap.entries())
-      .map(([descricao, { total, date, dividido }]) => ({
+      .map(([descricao, { total, date, dividido, parcela }]) => ({
         descricao,
         valor: total,
         data: date,
         ...(dividido && { dividido: true }),
+        ...(parcela && { parcela }),
       }))
       .sort((a, b) => b.valor - a.valor);
 

@@ -227,3 +227,17 @@ describe('parseFatura — assinaturas recorrentes', () => {
     expect(pessoa(r, 'SOFIA')).toBeUndefined();
   });
 });
+
+describe('parseFatura — parcelas', () => {
+  it('item com "- Parcela N/M" ganha campo estruturado parcela', () => {
+    const r = parseFatura(csv('2025-01-10,NOTEBOOK - Parcela 3/12,500,00'), 'JOAO');
+    const item = pessoa(r, SEM_CATEGORIA)?.itens[0];
+    expect(item?.parcela).toEqual({ atual: 3, total: 12 });
+  });
+
+  it('item sem parcela não tem o campo', () => {
+    const r = parseFatura(csv('2025-01-10,MERCADO - JOAO,50,00'));
+    const item = pessoa(r, 'JOAO')?.itens[0];
+    expect(item?.parcela).toBeUndefined();
+  });
+});
