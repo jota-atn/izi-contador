@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { RegrasAlocacao } from '../config/regrasAlocacao';
 import { useKeyboardHeight } from '../hooks/useKeyboardHeight';
 import { IconClose } from './icons/IconClose';
+import { useTheme } from '../hooks/useTheme';
+import { ThemeColors } from '../theme/tokens';
 
 interface Props {
   regras: RegrasAlocacao;
@@ -11,6 +13,8 @@ interface Props {
 }
 
 export function RegrasContent({ regras, addRegra, removeRegra }: Props) {
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
   const [keyword, setKeyword] = useState('');
   const [pessoa, setPessoa] = useState('');
   const kbHeight = useKeyboardHeight();
@@ -47,7 +51,7 @@ export function RegrasContent({ regras, addRegra, removeRegra }: Props) {
             style={s.removeBtn}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <IconClose size={12} color="#f87171" />
+            <IconClose size={12} color={colors.danger} />
           </TouchableOpacity>
         </View>
       ))}
@@ -60,7 +64,7 @@ export function RegrasContent({ regras, addRegra, removeRegra }: Props) {
           <TextInput
             style={[s.input, { flex: 1 }]}
             placeholder="Palavra-chave"
-            placeholderTextColor="#475569"
+            placeholderTextColor={colors.placeholder}
             value={keyword}
             onChangeText={setKeyword}
             autoCapitalize="characters"
@@ -70,7 +74,7 @@ export function RegrasContent({ regras, addRegra, removeRegra }: Props) {
           <TextInput
             style={[s.input, { flex: 1 }]}
             placeholder="Pessoa"
-            placeholderTextColor="#475569"
+            placeholderTextColor={colors.placeholder}
             value={pessoa}
             onChangeText={setPessoa}
             autoCapitalize="words"
@@ -86,68 +90,70 @@ export function RegrasContent({ regras, addRegra, removeRegra }: Props) {
   );
 }
 
-const s = StyleSheet.create({
-  scroll: { padding: 16, paddingBottom: 40 },
-  hint: {
-    color: '#475569',
-    fontSize: 12,
-    lineHeight: 18,
-    marginBottom: 20,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#0f172a',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 8,
-  },
-  rowLabels: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  keyword: { color: '#a78bfa', fontSize: 13, fontWeight: '800', letterSpacing: 0.5 },
-  arrow: { color: '#475569', fontSize: 13, fontWeight: '700' },
-  pessoa: { color: '#e2e8f0', fontSize: 13, fontWeight: '700' },
-  removeBtn: {
-    padding: 4,
-  },
-  empty: { color: '#334155', fontSize: 13, textAlign: 'center', marginVertical: 24 },
-  addCard: {
-    backgroundColor: '#0f172a',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    padding: 16,
-    marginTop: 8,
-  },
-  addLabel: {
-    color: '#64748b',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 12,
-  },
-  inputs: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  input: {
-    backgroundColor: '#1e293b',
-    color: '#fff',
-    fontSize: 13,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  addBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: '#7c3aed',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addBtnText: { color: '#fff', fontSize: 22, fontWeight: '700', lineHeight: 26 },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    scroll: { padding: 16, paddingBottom: 40 },
+    hint: {
+      color: c.placeholder,
+      fontSize: 12,
+      lineHeight: 18,
+      marginBottom: 20,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: c.bgElevated,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: c.border,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      marginBottom: 8,
+    },
+    rowLabels: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    keyword: { color: c.accentLight, fontSize: 13, fontWeight: '800', letterSpacing: 0.5 },
+    arrow: { color: c.placeholder, fontSize: 13, fontWeight: '700' },
+    pessoa: { color: c.textValue, fontSize: 13, fontWeight: '700' },
+    removeBtn: {
+      padding: 4,
+    },
+    empty: { color: c.borderStrong, fontSize: 13, textAlign: 'center', marginVertical: 24 },
+    addCard: {
+      backgroundColor: c.bgElevated,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+      padding: 16,
+      marginTop: 8,
+    },
+    addLabel: {
+      color: c.textFaint,
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+      marginBottom: 12,
+    },
+    inputs: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    input: {
+      backgroundColor: c.bgElevated2,
+      color: c.textPrimary,
+      fontSize: 13,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: c.borderStrong,
+    },
+    addBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      backgroundColor: c.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    addBtnText: { color: '#fff', fontSize: 22, fontWeight: '700', lineHeight: 26 },
+  });
+}

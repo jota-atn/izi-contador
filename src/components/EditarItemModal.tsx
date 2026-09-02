@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Modal,
@@ -16,6 +16,8 @@ import { IconCheck } from './icons/IconCheck';
 import { IconClose } from './icons/IconClose';
 import { IconSplit } from './icons/IconSplit';
 import { IconWarning } from './icons/IconWarning';
+import { useTheme } from '../hooks/useTheme';
+import { ThemeColors } from '../theme/tokens';
 
 interface Props {
   visible: boolean;
@@ -40,6 +42,8 @@ export function EditarItemModal({
   onCriarRegra,
   onClose,
 }: Props) {
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
   const [desc, setDesc] = useState('');
   const [donoPicker, setDonoPicker] = useState('');
   const [donoCustom, setDonoCustom] = useState('');
@@ -122,7 +126,7 @@ export function EditarItemModal({
             onPress={onClose}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <IconClose size={18} color="#64748b" />
+            <IconClose size={18} color={colors.textFaint} />
           </TouchableOpacity>
         </View>
 
@@ -140,7 +144,7 @@ export function EditarItemModal({
             value={desc}
             onChangeText={setDesc}
             autoCapitalize="characters"
-            placeholderTextColor="#475569"
+            placeholderTextColor={colors.placeholder}
           />
 
           <Text style={s.label}>Dono</Text>
@@ -170,11 +174,11 @@ export function EditarItemModal({
                 onChangeText={setDonoCustom}
                 placeholder="Nome do novo dono"
                 autoCapitalize="characters"
-                placeholderTextColor="#475569"
+                placeholderTextColor={colors.placeholder}
                 autoFocus
               />
               <View style={s.aviso}>
-                <IconWarning size={13} color="#f59e0b" />
+                <IconWarning size={13} color={colors.pending} />
                 <Text style={s.avisoText}>
                   Novos nomes não são reconhecidos pelo parser. Use com cuidado.
                 </Text>
@@ -190,6 +194,7 @@ export function EditarItemModal({
             >
               <View style={[s.checkbox, criarRegra && s.checkboxAtivo]}>
                 {criarRegra && <IconCheck size={10} color="#fff" />}
+                {/* branco fixo — sobre checkbox roxo preenchido nos dois temas */}
               </View>
               <Text style={s.regraText}>
                 Sempre atribuir &ldquo;{item.descricao}&rdquo; a {donoFinal}
@@ -200,7 +205,7 @@ export function EditarItemModal({
 
         <View style={s.footer}>
           <TouchableOpacity style={s.btnDividir} onPress={handleDividir}>
-            <IconSplit size={13} color="#a78bfa" />
+            <IconSplit size={13} color={colors.accentLight} />
             <Text style={s.btnDividirText}>
               {item.origemDivisao ? 'Editar divisão' : 'Dividir compra'}
             </Text>
@@ -219,108 +224,110 @@ export function EditarItemModal({
   );
 }
 
-const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020617' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
-  },
-  title: { color: '#fff', fontSize: 17, fontWeight: '800' },
-  scroll: { flex: 1 },
-  content: { padding: 24, gap: 8 },
-  valorDisplay: {
-    color: '#a78bfa',
-    fontSize: 32,
-    fontWeight: '900',
-    fontFamily: 'monospace',
-    marginBottom: 2,
-  },
-  dataDisplay: { color: '#475569', fontSize: 12, fontWeight: '600', marginBottom: 16 },
-  label: {
-    color: '#64748b',
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: 8,
-    marginBottom: 6,
-  },
-  input: {
-    backgroundColor: '#0f172a',
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    color: '#e2e8f0',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  pickerGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#0f172a',
-    borderWidth: 1,
-    borderColor: '#1e293b',
-  },
-  chipAtivo: { backgroundColor: '#4c1d95', borderColor: '#7c3aed' },
-  chipText: { color: '#64748b', fontSize: 12, fontWeight: '700' },
-  chipTextAtivo: { color: '#e9d5ff' },
-  aviso: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 8 },
-  avisoText: { color: '#f59e0b', fontSize: 11, fontWeight: '600', lineHeight: 16, flex: 1 },
-  regraRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 16 },
-  checkbox: {
-    width: 18,
-    height: 18,
-    borderRadius: 5,
-    borderWidth: 1.5,
-    borderColor: '#334155',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxAtivo: { backgroundColor: '#7c3aed', borderColor: '#7c3aed' },
-  regraText: { color: '#94a3b8', fontSize: 12, fontWeight: '600', flex: 1 },
-  footer: {
-    gap: 10,
-    padding: 24,
-    borderTopWidth: 1,
-    borderTopColor: '#1e293b',
-  },
-  footerRow: { flexDirection: 'row', gap: 12 },
-  btnDividir: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  btnDividirText: { color: '#a78bfa', fontSize: 13, fontWeight: '700' },
-  btnDeletar: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: '#1c0707',
-    borderWidth: 1,
-    borderColor: '#7f1d1d',
-    alignItems: 'center',
-  },
-  btnDeletarText: { color: '#f87171', fontSize: 14, fontWeight: '800' },
-  btnSalvar: {
-    flex: 2,
-    paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: '#4c1d95',
-    alignItems: 'center',
-  },
-  btnSalvarText: { color: '#fff', fontSize: 14, fontWeight: '800' },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.bg },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    title: { color: c.textPrimary, fontSize: 17, fontWeight: '800' },
+    scroll: { flex: 1 },
+    content: { padding: 24, gap: 8 },
+    valorDisplay: {
+      color: c.accentLight,
+      fontSize: 32,
+      fontWeight: '900',
+      fontFamily: 'monospace',
+      marginBottom: 2,
+    },
+    dataDisplay: { color: c.placeholder, fontSize: 12, fontWeight: '600', marginBottom: 16 },
+    label: {
+      color: c.textFaint,
+      fontSize: 11,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginTop: 8,
+      marginBottom: 6,
+    },
+    input: {
+      backgroundColor: c.bgElevated,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      color: c.textValue,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    pickerGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    chip: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: c.bgElevated,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    chipAtivo: { backgroundColor: c.accentSurfaceBorder, borderColor: c.accent },
+    chipText: { color: c.textFaint, fontSize: 12, fontWeight: '700' },
+    chipTextAtivo: { color: c.accentTextOn },
+    aviso: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 8 },
+    avisoText: { color: c.pending, fontSize: 11, fontWeight: '600', lineHeight: 16, flex: 1 },
+    regraRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 16 },
+    checkbox: {
+      width: 18,
+      height: 18,
+      borderRadius: 5,
+      borderWidth: 1.5,
+      borderColor: c.borderStrong,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkboxAtivo: { backgroundColor: c.accent, borderColor: c.accent },
+    regraText: { color: c.textMuted, fontSize: 12, fontWeight: '600', flex: 1 },
+    footer: {
+      gap: 10,
+      padding: 24,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    footerRow: { flexDirection: 'row', gap: 12 },
+    btnDividir: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 12,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: c.borderStrong,
+    },
+    btnDividirText: { color: c.accentLight, fontSize: 13, fontWeight: '700' },
+    btnDeletar: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: 14,
+      backgroundColor: c.dangerSurface,
+      borderWidth: 1,
+      borderColor: c.dangerBorder,
+      alignItems: 'center',
+    },
+    btnDeletarText: { color: c.danger, fontSize: 14, fontWeight: '800' },
+    btnSalvar: {
+      flex: 2,
+      paddingVertical: 14,
+      borderRadius: 14,
+      backgroundColor: c.accentSurfaceBorder,
+      alignItems: 'center',
+    },
+    btnSalvarText: { color: '#fff', fontSize: 14, fontWeight: '800' },
+  });
+}

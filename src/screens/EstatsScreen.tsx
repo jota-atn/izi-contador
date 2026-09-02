@@ -15,6 +15,8 @@ import {
   corCategorica,
   corCategoricaRgb,
 } from '../utils/chartColors';
+import { useTheme } from '../hooks/useTheme';
+import { ThemeColors } from '../theme/tokens';
 
 const SCREEN_W = Dimensions.get('window').width;
 const MESES_CURTOS = MESES_PT.map((m) => m.substring(0, 3));
@@ -24,16 +26,18 @@ function formatDono(dono: string): string {
   return dono === SEM_CATEGORIA ? SEM_CATEGORIA_LABEL : dono;
 }
 
-const CHART_CONFIG = {
-  backgroundColor: '#0f172a',
-  backgroundGradientFrom: '#0f172a',
-  backgroundGradientTo: '#0f172a',
-  decimalPlaces: 0,
-  color: (opacity = 1) => `rgba(124, 58, 237, ${opacity})`,
-  labelColor: () => '#475569',
-  propsForDots: { r: '4', strokeWidth: '2', stroke: '#7c3aed', fill: '#0f172a' },
-  propsForBackgroundLines: { stroke: '#1e293b', strokeWidth: 1, strokeDasharray: '' },
-};
+function chartConfig(c: ThemeColors) {
+  return {
+    backgroundColor: c.bgElevated,
+    backgroundGradientFrom: c.bgElevated,
+    backgroundGradientTo: c.bgElevated,
+    decimalPlaces: 0,
+    color: (opacity = 1) => `rgba(124, 58, 237, ${opacity})`,
+    labelColor: () => c.placeholder,
+    propsForDots: { r: '4', strokeWidth: '2', stroke: c.accent, fill: c.bgElevated },
+    propsForBackgroundLines: { stroke: c.border, strokeWidth: 1, strokeDasharray: '' },
+  };
+}
 
 function fmtBRL(value: number): string {
   return 'R$ ' + Math.round(value).toLocaleString('pt-BR');
@@ -63,6 +67,8 @@ export const EstatsScreen = memo(function EstatsScreen({
   categorias,
   orcamentos,
 }: Props) {
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
   const mesesCron = useMemo(() => [...meses].reverse(), [meses]);
   const mesesChart = useMemo(() => mesesCron.slice(-CHART_MAX_MESES), [mesesCron]);
 
@@ -240,8 +246,8 @@ export const EstatsScreen = memo(function EstatsScreen({
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#7c3aed"
-            colors={['#7c3aed']}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
           />
         }
       >
@@ -268,8 +274,8 @@ export const EstatsScreen = memo(function EstatsScreen({
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor="#7c3aed"
-          colors={['#7c3aed']}
+          tintColor={colors.accent}
+          colors={[colors.accent]}
         />
       }
     >
@@ -314,7 +320,7 @@ export const EstatsScreen = memo(function EstatsScreen({
             return (
               <View key={mes} style={s.barRow}>
                 <View style={s.barHeader}>
-                  <Text style={[s.barNome, { color: '#a78bfa' }]}>
+                  <Text style={[s.barNome, { color: colors.accentLight }]}>
                     {mesFuturoLabel(meses[0], mes)}
                   </Text>
                   <Text style={s.barValor}>{fmtBRL(total)}</Text>
@@ -323,7 +329,7 @@ export const EstatsScreen = memo(function EstatsScreen({
                   <View
                     style={[
                       s.barFill,
-                      { width: `${pct * 100}%` as any, backgroundColor: '#a78bfa' },
+                      { width: `${pct * 100}%` as any, backgroundColor: colors.accentLight },
                     ]}
                   />
                 </View>
@@ -353,7 +359,7 @@ export const EstatsScreen = memo(function EstatsScreen({
           <Text style={s.cardTitle}>Orçamento do mês</Text>
           <Text style={s.cardSub}>{nomeMes(meses[0])}, contra o limite de cada categoria</Text>
           {statusOrcamentos.map(({ categoria, total, limite, pct }) => {
-            const color = pct >= 1 ? '#f87171' : pct >= 0.8 ? '#f59e0b' : '#4ade80';
+            const color = pct >= 1 ? colors.danger : pct >= 0.8 ? colors.pending : colors.success;
             return (
               <View key={categoria} style={s.barRow}>
                 <View style={s.barHeader}>
@@ -383,7 +389,7 @@ export const EstatsScreen = memo(function EstatsScreen({
           data={{ labels, datasets: [{ data: totaisChart }] }}
           width={SCREEN_W - 64}
           height={200}
-          chartConfig={CHART_CONFIG}
+          chartConfig={chartConfig(colors)}
           bezier
           withShadow={false}
           withInnerLines
@@ -409,7 +415,7 @@ export const EstatsScreen = memo(function EstatsScreen({
             }}
             width={SCREEN_W - 64}
             height={220}
-            chartConfig={CHART_CONFIG}
+            chartConfig={chartConfig(colors)}
             bezier
             withShadow={false}
             withInnerLines
@@ -554,6 +560,8 @@ export const EstatsScreen = memo(function EstatsScreen({
 });
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
   return (
     <View style={s.statCard}>
       <Text style={s.statLabel} numberOfLines={1}>
@@ -567,168 +575,181 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
   );
 }
 
-const s = StyleSheet.create({
-  scroll: { flex: 1 },
-  content: { padding: 16, gap: 14, paddingBottom: 32 },
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    scroll: { flex: 1 },
+    content: { padding: 16, gap: 14, paddingBottom: 32 },
 
-  emptyScroll: { flexGrow: 1 },
-  empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
-  emptyTitle: { color: '#f1f5f9', fontSize: 16, fontWeight: '700', marginBottom: 8 },
-  emptyText: { color: '#64748b', fontSize: 14, textAlign: 'center', lineHeight: 22 },
+    emptyScroll: { flexGrow: 1 },
+    empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
+    emptyTitle: { color: c.textPrimary, fontSize: 16, fontWeight: '700', marginBottom: 8 },
+    emptyText: { color: c.textFaint, fontSize: 14, textAlign: 'center', lineHeight: 22 },
 
-  headerRow: { marginBottom: 2 },
-  headerTitle: { color: '#f1f5f9', fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
-  headerAccent: { color: '#7c3aed' },
-  headerSub: { color: '#475569', fontSize: 12, fontWeight: '500', marginTop: 2 },
+    headerRow: { marginBottom: 2 },
+    headerTitle: { color: c.textPrimary, fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
+    headerAccent: { color: c.accent },
+    headerSub: { color: c.placeholder, fontSize: 12, fontWeight: '500', marginTop: 2 },
 
-  acumuladoCard: {
-    backgroundColor: '#1e1040',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#4c1d95',
-    padding: 20,
-  },
-  acumuladoLabel: {
-    color: '#a78bfa',
-    fontSize: 10,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  acumuladoValor: {
-    color: '#f1f5f9',
-    fontSize: 32,
-    fontWeight: '900',
-    letterSpacing: -1,
-    marginTop: 6,
-  },
-  acumuladoSub: { color: '#7c3aed', fontSize: 12, fontWeight: '500', marginTop: 4 },
+    acumuladoCard: {
+      backgroundColor: c.accentSurface,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: c.accentSurfaceBorder,
+      padding: 20,
+    },
+    acumuladoLabel: {
+      color: c.accentLight,
+      fontSize: 10,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+    acumuladoValor: {
+      color: c.textPrimary,
+      fontSize: 32,
+      fontWeight: '900',
+      letterSpacing: -1,
+      marginTop: 6,
+    },
+    acumuladoSub: { color: c.accent, fontSize: 12, fontWeight: '500', marginTop: 4 },
 
-  row: { flexDirection: 'row', gap: 10 },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#0f172a',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    padding: 14,
-  },
-  statLabel: {
-    color: '#475569',
-    fontSize: 10,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  statValue: { color: '#f1f5f9', fontSize: 15, fontWeight: '900', marginTop: 6 },
-  statSub: {
-    color: '#7c3aed',
-    fontSize: 10,
-    fontWeight: '600',
-    marginTop: 3,
-    textTransform: 'capitalize',
-  },
+    row: { flexDirection: 'row', gap: 10 },
+    statCard: {
+      flex: 1,
+      backgroundColor: c.bgElevated,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+      padding: 14,
+    },
+    statLabel: {
+      color: c.placeholder,
+      fontSize: 10,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    statValue: { color: c.textPrimary, fontSize: 15, fontWeight: '900', marginTop: 6 },
+    statSub: {
+      color: c.accent,
+      fontSize: 10,
+      fontWeight: '600',
+      marginTop: 3,
+      textTransform: 'capitalize',
+    },
 
-  card: {
-    backgroundColor: '#0f172a',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    padding: 20,
-    overflow: 'hidden',
-  },
-  cardTitle: {
-    color: '#f1f5f9',
-    fontSize: 13,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  cardSub: { color: '#475569', fontSize: 11, marginTop: 2, marginBottom: 4 },
-  chart: { borderRadius: 12, marginTop: 12, marginLeft: -12 },
+    card: {
+      backgroundColor: c.bgElevated,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: c.border,
+      padding: 20,
+      overflow: 'hidden',
+    },
+    cardTitle: {
+      color: c.textPrimary,
+      fontSize: 13,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    cardSub: { color: c.placeholder, fontSize: 11, marginTop: 2, marginBottom: 4 },
+    chart: { borderRadius: 12, marginTop: 12, marginLeft: -12 },
 
-  // Legenda multi-linha
-  legendRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 14,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  legendLabel: {
-    color: '#94a3b8',
-    fontSize: 12,
-    fontWeight: '600',
-  },
+    // Legenda multi-linha
+    legendRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+      marginTop: 14,
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    legendDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    legendLabel: {
+      color: c.textMuted,
+      fontSize: 12,
+      fontWeight: '600',
+    },
 
-  // Distribuição
-  barRow: { marginTop: 14 },
-  barHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  barNome: { fontSize: 12, fontWeight: '700' },
-  barValor: { color: '#94a3b8', fontSize: 12, fontWeight: '600' },
-  barTrack: { height: 6, backgroundColor: '#1e293b', borderRadius: 3, overflow: 'hidden' },
-  barFill: { height: 6, borderRadius: 3 },
+    // Distribuição
+    barRow: { marginTop: 14 },
+    barHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+    barNome: { fontSize: 12, fontWeight: '700' },
+    barValor: { color: c.textMuted, fontSize: 12, fontWeight: '600' },
+    barTrack: { height: 6, backgroundColor: c.border, borderRadius: 3, overflow: 'hidden' },
+    barFill: { height: 6, borderRadius: 3 },
 
-  // Média por pessoa
-  pessoaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#1e293b',
-    marginTop: 4,
-  },
-  pessoaRowFirst: { marginTop: 12 },
-  pessoaLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  dot: { width: 6, height: 6, borderRadius: 3 },
-  pessoaNome: { color: '#f1f5f9', fontSize: 13, fontWeight: '700' },
-  pessoaMeses: { color: '#475569', fontSize: 11, marginTop: 1 },
-  pessoaValor: { fontSize: 14, fontWeight: '700', fontFamily: 'monospace' },
+    // Média por pessoa
+    pessoaRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+      marginTop: 4,
+    },
+    pessoaRowFirst: { marginTop: 12 },
+    pessoaLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+    dot: { width: 6, height: 6, borderRadius: 3 },
+    pessoaNome: { color: c.textPrimary, fontSize: 13, fontWeight: '700' },
+    pessoaMeses: { color: c.placeholder, fontSize: 11, marginTop: 1 },
+    pessoaValor: { fontSize: 14, fontWeight: '700', fontFamily: 'monospace' },
 
-  // Top itens
-  topItemRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#1e293b',
-  },
-  topItemRowFirst: { marginTop: 10 },
-  topItemLeft: { flex: 1, marginRight: 12 },
-  topItemDesc: { color: '#f1f5f9', fontSize: 12, fontWeight: '700' },
-  topItemMeta: { color: '#475569', fontSize: 11, marginTop: 2 },
-  topItemValor: { color: '#a78bfa', fontSize: 14, fontWeight: '700', fontFamily: 'monospace' },
+    // Top itens
+    topItemRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 10,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    topItemRowFirst: { marginTop: 10 },
+    topItemLeft: { flex: 1, marginRight: 12 },
+    topItemDesc: { color: c.textPrimary, fontSize: 12, fontWeight: '700' },
+    topItemMeta: { color: c.placeholder, fontSize: 11, marginTop: 2 },
+    topItemValor: {
+      color: c.accentLight,
+      fontSize: 14,
+      fontWeight: '700',
+      fontFamily: 'monospace',
+    },
 
-  // Recorrentes
-  frequenteRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#1e293b',
-  },
-  frequenteRowFirst: { marginTop: 10 },
-  frequenteDesc: { color: '#cbd5e1', fontSize: 12, fontWeight: '600', flex: 1, marginRight: 8 },
-  frequenteMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  frequenteMedia: { color: '#64748b', fontSize: 11, fontFamily: 'monospace' },
-  frequenteBadge: {
-    backgroundColor: '#1e293b',
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  frequenteBadgeFull: { backgroundColor: '#4c1d95' },
-  frequenteBadgeText: { color: '#a78bfa', fontSize: 11, fontWeight: '700' },
-});
+    // Recorrentes
+    frequenteRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 10,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    frequenteRowFirst: { marginTop: 10 },
+    frequenteDesc: {
+      color: c.textSecondary,
+      fontSize: 12,
+      fontWeight: '600',
+      flex: 1,
+      marginRight: 8,
+    },
+    frequenteMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    frequenteMedia: { color: c.textFaint, fontSize: 11, fontFamily: 'monospace' },
+    frequenteBadge: {
+      backgroundColor: c.border,
+      borderRadius: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    frequenteBadgeFull: { backgroundColor: c.accentSurfaceBorder },
+    frequenteBadgeText: { color: c.accentLight, fontSize: 11, fontWeight: '700' },
+  });
+}

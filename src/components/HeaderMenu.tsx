@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   Modal,
   Pressable,
@@ -8,6 +8,8 @@ import {
   Text,
   type MeasureInWindowOnSuccessCallback,
 } from 'react-native';
+import { useTheme } from '../hooks/useTheme';
+import { ThemeColors } from '../theme/tokens';
 
 interface Item {
   label: string;
@@ -22,6 +24,8 @@ interface Props {
 }
 
 export function HeaderMenu({ items }: Props) {
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
   const [open, setOpen] = useState(false);
   const [top, setTop] = useState(0);
   const btnRef = useRef<React.ElementRef<typeof TouchableOpacity>>(null);
@@ -81,72 +85,75 @@ export function HeaderMenu({ items }: Props) {
   );
 }
 
-const s = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-  },
-  btn: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-  },
-  bar: {
-    width: 20,
-    height: 2,
-    backgroundColor: '#cbd5e1',
-    borderRadius: 1,
-  },
-  dropdown: {
-    position: 'absolute',
-    right: 16,
-    minWidth: 210,
-    backgroundColor: '#0f172a',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#334155',
-    overflow: 'hidden',
-    elevation: 8,
-  },
-  item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-  },
-  itemBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
-  },
-  iconWrap: {
-    width: 20,
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  itemText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#e2e8f0',
-  },
-  itemDanger: {
-    color: '#f87171',
-  },
-  sectionLabel: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 4,
-    backgroundColor: '#0b1220',
-  },
-  sectionLabelBorder: {
-    borderTopWidth: 1,
-    borderTopColor: '#1e293b',
-  },
-  sectionLabelText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#475569',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    backdrop: {
+      flex: 1,
+    },
+    btn: {
+      width: 44,
+      height: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 5,
+    },
+    bar: {
+      width: 20,
+      height: 2,
+      backgroundColor: c.textSecondary,
+      borderRadius: 1,
+    },
+    dropdown: {
+      position: 'absolute',
+      right: 16,
+      minWidth: 210,
+      backgroundColor: c.bgElevated,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: c.borderStrong,
+      overflow: 'hidden',
+      elevation: 8,
+    },
+    item: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 14,
+    },
+    itemBorder: {
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    iconWrap: {
+      width: 20,
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    itemText: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: c.textValue,
+    },
+    itemDanger: {
+      color: c.danger,
+    },
+    sectionLabel: {
+      paddingHorizontal: 20,
+      paddingTop: 12,
+      paddingBottom: 4,
+      // tom levemente distinto do bgElevated, específico da faixa de seção — mantido
+      backgroundColor: '#0b1220',
+    },
+    sectionLabelBorder: {
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    sectionLabelText: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: c.placeholder,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+  });
+}

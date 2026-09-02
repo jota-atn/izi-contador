@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Categorias } from '../config/categorias';
@@ -9,6 +9,8 @@ import { CategoriasContent } from './CategoriasContent';
 import { RegrasContent } from './RegrasContent';
 import { AssinaturasContent } from './AssinaturasContent';
 import { OrcamentoContent } from './OrcamentoContent';
+import { useTheme } from '../hooks/useTheme';
+import { ThemeColors } from '../theme/tokens';
 
 type Tab = 'categorias' | 'regras' | 'assinaturas' | 'orcamento';
 
@@ -58,6 +60,8 @@ export function AutomacaoModal({
   orcamentos,
   setLimite,
 }: Props) {
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
   const [tab, setTab] = useState<Tab>('categorias');
 
   return (
@@ -111,43 +115,45 @@ export function AutomacaoModal({
   );
 }
 
-const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#020617' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
-  },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '900', letterSpacing: -0.5 },
-  closeBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  closeBtnText: { color: '#94a3b8', fontSize: 13, fontWeight: '700' },
-  tabs: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 4,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: '#0f172a',
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    alignItems: 'center',
-  },
-  tabAtivo: { backgroundColor: '#4c1d95', borderColor: '#7c3aed' },
-  tabText: { color: '#64748b', fontSize: 12, fontWeight: '700' },
-  tabTextAtivo: { color: '#e9d5ff' },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    root: { flex: 1, backgroundColor: c.bg },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    headerTitle: { color: c.textPrimary, fontSize: 18, fontWeight: '900', letterSpacing: -0.5 },
+    closeBtn: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: c.borderStrong,
+    },
+    closeBtnText: { color: c.textMuted, fontSize: 13, fontWeight: '700' },
+    tabs: {
+      flexDirection: 'row',
+      gap: 8,
+      paddingHorizontal: 16,
+      paddingTop: 14,
+      paddingBottom: 4,
+    },
+    tab: {
+      flex: 1,
+      paddingVertical: 10,
+      borderRadius: 12,
+      backgroundColor: c.bgElevated,
+      borderWidth: 1,
+      borderColor: c.border,
+      alignItems: 'center',
+    },
+    tabAtivo: { backgroundColor: c.accentSurfaceBorder, borderColor: c.accent },
+    tabText: { color: c.textFaint, fontSize: 12, fontWeight: '700' },
+    tabTextAtivo: { color: c.accentTextOn },
+  });
+}

@@ -1,6 +1,9 @@
+import { useMemo } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconClose } from './icons/IconClose';
+import { useTheme } from '../hooks/useTheme';
+import { ThemeColors } from '../theme/tokens';
 
 interface Props {
   visible: boolean;
@@ -50,6 +53,8 @@ const REGRAS: Regra[] = [
 ];
 
 export function TutorialModal({ visible, onClose, onRevisarOnboarding }: Props) {
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
   function handleRever() {
     onClose();
     onRevisarOnboarding();
@@ -69,7 +74,7 @@ export function TutorialModal({ visible, onClose, onRevisarOnboarding }: Props) 
             onPress={onClose}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <IconClose size={18} color="#64748b" />
+            <IconClose size={18} color={colors.textFaint} />
           </TouchableOpacity>
         </View>
 
@@ -123,106 +128,108 @@ export function TutorialModal({ visible, onClose, onRevisarOnboarding }: Props) 
   );
 }
 
-const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020617' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
-  },
-  title: { color: '#fff', fontSize: 17, fontWeight: '800' },
-  scroll: { flex: 1 },
-  content: { padding: 20, gap: 12 },
-  intro: { color: '#64748b', fontSize: 13, lineHeight: 20, marginBottom: 4 },
-  card: {
-    backgroundColor: '#0f172a',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    overflow: 'hidden',
-  },
-  sintaxeRow: {
-    backgroundColor: '#1e293b',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  sintaxe: {
-    color: '#a78bfa',
-    fontSize: 13,
-    fontWeight: '800',
-    fontFamily: 'monospace',
-    letterSpacing: 0.2,
-  },
-  descricao: {
-    color: '#94a3b8',
-    fontSize: 12,
-    lineHeight: 18,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  exemploBg: {
-    backgroundColor: '#020617',
-    marginHorizontal: 12,
-    marginBottom: 12,
-    borderRadius: 10,
-    padding: 12,
-    gap: 6,
-  },
-  exemploLabel: {
-    color: '#334155',
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  exemploTexto: {
-    color: '#e2e8f0',
-    fontSize: 13,
-    fontWeight: '600',
-    fontFamily: 'monospace',
-  },
-  divider: { height: 1, backgroundColor: '#1e293b' },
-  resultadoTexto: {
-    color: '#4ade80',
-    fontSize: 12,
-    fontWeight: '600',
-    fontFamily: 'monospace',
-  },
-  dica: {
-    backgroundColor: '#0f172a',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    padding: 16,
-    gap: 8,
-    marginTop: 4,
-  },
-  dicaTitle: {
-    color: '#64748b',
-    fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 2,
-  },
-  dicaItem: { color: '#475569', fontSize: 12, lineHeight: 18 },
-  reverBtn: {
-    paddingVertical: 14,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  reverBtnText: {
-    color: '#475569',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.bg },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    title: { color: c.textPrimary, fontSize: 17, fontWeight: '800' },
+    scroll: { flex: 1 },
+    content: { padding: 20, gap: 12 },
+    intro: { color: c.textFaint, fontSize: 13, lineHeight: 20, marginBottom: 4 },
+    card: {
+      backgroundColor: c.bgElevated,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+      overflow: 'hidden',
+    },
+    sintaxeRow: {
+      backgroundColor: c.bgElevated2,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+    },
+    sintaxe: {
+      color: c.accentLight,
+      fontSize: 13,
+      fontWeight: '800',
+      fontFamily: 'monospace',
+      letterSpacing: 0.2,
+    },
+    descricao: {
+      color: c.textMuted,
+      fontSize: 12,
+      lineHeight: 18,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+    },
+    exemploBg: {
+      backgroundColor: c.bg,
+      marginHorizontal: 12,
+      marginBottom: 12,
+      borderRadius: 10,
+      padding: 12,
+      gap: 6,
+    },
+    exemploLabel: {
+      color: c.borderStrong,
+      fontSize: 9,
+      fontWeight: '700',
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+    },
+    exemploTexto: {
+      color: c.textValue,
+      fontSize: 13,
+      fontWeight: '600',
+      fontFamily: 'monospace',
+    },
+    divider: { height: 1, backgroundColor: c.border },
+    resultadoTexto: {
+      color: c.success,
+      fontSize: 12,
+      fontWeight: '600',
+      fontFamily: 'monospace',
+    },
+    dica: {
+      backgroundColor: c.bgElevated,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+      padding: 16,
+      gap: 8,
+      marginTop: 4,
+    },
+    dicaTitle: {
+      color: c.textFaint,
+      fontSize: 10,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginBottom: 2,
+    },
+    dicaItem: { color: c.placeholder, fontSize: 12, lineHeight: 18 },
+    reverBtn: {
+      paddingVertical: 14,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+      alignItems: 'center',
+      marginTop: 4,
+    },
+    reverBtnText: {
+      color: c.placeholder,
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+    },
+  });
+}

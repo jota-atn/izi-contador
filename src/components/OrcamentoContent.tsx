@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Categorias } from '../config/categorias';
 import { Orcamentos } from '../config/orcamentos';
 import { useKeyboardHeight } from '../hooks/useKeyboardHeight';
+import { useTheme } from '../hooks/useTheme';
+import { ThemeColors } from '../theme/tokens';
 
 interface Props {
   categorias: Categorias;
@@ -11,6 +13,8 @@ interface Props {
 }
 
 export function OrcamentoContent({ categorias, orcamentos, setLimite }: Props) {
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
   const kbHeight = useKeyboardHeight();
   const [textos, setTextos] = useState<Record<string, string>>({});
 
@@ -49,7 +53,7 @@ export function OrcamentoContent({ categorias, orcamentos, setLimite }: Props) {
             <TextInput
               style={s.input}
               placeholder="Sem limite"
-              placeholderTextColor="#475569"
+              placeholderTextColor={colors.placeholder}
               value={textos[categoria] ?? ''}
               onChangeText={(t) => setTextos((prev) => ({ ...prev, [categoria]: t }))}
               onBlur={() => handleBlur(categoria)}
@@ -66,40 +70,48 @@ export function OrcamentoContent({ categorias, orcamentos, setLimite }: Props) {
   );
 }
 
-const s = StyleSheet.create({
-  scroll: { padding: 16, paddingBottom: 40 },
-  hint: { color: '#475569', fontSize: 12, lineHeight: 18, marginBottom: 20 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#0f172a',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 8,
-    gap: 12,
-  },
-  categoria: { color: '#a78bfa', fontSize: 12, fontWeight: '800', letterSpacing: 0.5, flex: 1 },
-  inputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1e293b',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#334155',
-    paddingHorizontal: 10,
-  },
-  prefixo: { color: '#64748b', fontSize: 12, fontWeight: '700' },
-  input: {
-    width: 70,
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-  },
-  empty: { color: '#334155', fontSize: 13, textAlign: 'center', marginVertical: 24 },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    scroll: { padding: 16, paddingBottom: 40 },
+    hint: { color: c.placeholder, fontSize: 12, lineHeight: 18, marginBottom: 20 },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: c.bgElevated,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: c.border,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      marginBottom: 8,
+      gap: 12,
+    },
+    categoria: {
+      color: c.accentLight,
+      fontSize: 12,
+      fontWeight: '800',
+      letterSpacing: 0.5,
+      flex: 1,
+    },
+    inputWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: c.bgElevated2,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: c.borderStrong,
+      paddingHorizontal: 10,
+    },
+    prefixo: { color: c.textFaint, fontSize: 12, fontWeight: '700' },
+    input: {
+      width: 70,
+      color: c.textPrimary,
+      fontSize: 13,
+      fontWeight: '600',
+      paddingVertical: 8,
+      paddingHorizontal: 4,
+    },
+    empty: { color: c.borderStrong, fontSize: 13, textAlign: 'center', marginVertical: 24 },
+  });
+}

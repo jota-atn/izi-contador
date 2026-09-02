@@ -1,4 +1,4 @@
-import { memo, useRef, useState } from 'react';
+import { memo, useMemo, useRef, useState } from 'react';
 import { Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 import ReanimatedSwipeable, {
@@ -11,6 +11,8 @@ import { IconShare } from './icons/IconShare';
 import { IconChevron } from './icons/IconChevron';
 import { IconCheck } from './icons/IconCheck';
 import { IconQR } from './icons/IconQR';
+import { useTheme } from '../hooks/useTheme';
+import { ThemeColors } from '../theme/tokens';
 
 interface Props {
   pessoa: RelatorioPessoa;
@@ -44,7 +46,9 @@ export const PersonCard = memo(function PersonCard({
   onEditarItem,
   onCompartilharQR,
 }: Props) {
-  const accentColor = pago ? '#4ade80' : '#7c3aed';
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
+  const accentColor = pago ? colors.success : colors.accent;
   const expanded = !oculto;
   const [shared, setShared] = useState(false);
   const swipeableRef = useRef<SwipeableMethods>(null);
@@ -76,7 +80,7 @@ export const PersonCard = memo(function PersonCard({
   const renderLeftAction = () => (
     <View style={[s.swipeAction, pago ? s.swipeActionUndo : s.swipeActionPay]}>
       <View style={[s.swipeActionFill, pago ? s.swipeActionUndo : s.swipeActionPay]} />
-      <IconCheck size={20} color={pago ? '#f97316' : '#4ade80'} />
+      <IconCheck size={20} color={pago ? '#f97316' : colors.success} />
       <Text style={[s.swipeText, pago && s.swipeTextUndo]}>{pago ? 'Desfazer' : 'Pago'}</Text>
     </View>
   );
@@ -120,7 +124,7 @@ export const PersonCard = memo(function PersonCard({
               style={[s.iconBtn, shared && s.iconBtnShared]}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <IconShare size={13} color={shared ? '#4ade80' : '#a78bfa'} />
+              <IconShare size={13} color={shared ? colors.success : colors.accentLight} />
             </TouchableOpacity>
 
             {pixKey && (
@@ -129,7 +133,7 @@ export const PersonCard = memo(function PersonCard({
                 style={s.iconBtn}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <IconQR size={13} color="#a78bfa" />
+                <IconQR size={13} color={colors.accentLight} />
               </TouchableOpacity>
             )}
 
@@ -141,7 +145,7 @@ export const PersonCard = memo(function PersonCard({
               style={s.iconBtn}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <IconChevron size={14} color="#475569" up={expanded} />
+              <IconChevron size={14} color={colors.placeholder} up={expanded} />
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -189,109 +193,120 @@ export const PersonCard = memo(function PersonCard({
   );
 });
 
-const s = StyleSheet.create({
-  swipeAction: {
-    marginLeft: 16,
-    width: 88,
-    alignSelf: 'stretch',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 4,
-    borderTopLeftRadius: 24,
-    borderBottomLeftRadius: 24,
-  },
-  swipeActionFill: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: -30,
-    borderTopLeftRadius: 24,
-    borderBottomLeftRadius: 24,
-  },
-  swipeActionPay: { backgroundColor: '#052e16' },
-  swipeActionUndo: { backgroundColor: '#431407' },
-  swipeText: {
-    color: '#4ade80',
-    fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  swipeTextUndo: { color: '#f97316' },
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    swipeAction: {
+      marginLeft: 16,
+      width: 88,
+      alignSelf: 'stretch',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 4,
+      borderTopLeftRadius: 24,
+      borderBottomLeftRadius: 24,
+    },
+    swipeActionFill: {
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      left: 0,
+      right: -30,
+      borderTopLeftRadius: 24,
+      borderBottomLeftRadius: 24,
+    },
+    swipeActionPay: { backgroundColor: c.successSurface },
+    swipeActionUndo: { backgroundColor: '#431407' },
+    swipeText: {
+      color: c.success,
+      fontSize: 10,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    swipeTextUndo: { color: '#f97316' },
 
-  card: {
-    backgroundColor: '#0f172a',
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    overflow: 'hidden',
-    marginHorizontal: 16,
-  },
-  cardPago: { borderColor: '#14532d' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    backgroundColor: '#1e293b40',
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
-  },
-  left: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  bar: { width: 6, borderRadius: 3, alignSelf: 'stretch' },
-  nameValueCol: { flex: 1, gap: 3 },
-  name: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: -0.3,
-  },
-  right: { flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 8 },
-  total: { color: '#a78bfa', fontFamily: 'monospace', fontWeight: '700', fontSize: 15 },
-  totalPago: { color: '#4ade80' },
-  itemCount: {
-    color: '#475569',
-    fontSize: 9,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: 1,
-  },
-  iconBtn: {
-    width: 26,
-    height: 26,
-    borderRadius: 7,
-    backgroundColor: '#1e293b',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconBtnShared: { backgroundColor: '#052e16', borderWidth: 1, borderColor: '#14532d' },
-  body: { paddingHorizontal: 24, paddingVertical: 16, gap: 12 },
-  row: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-  descCol: { flex: 1, marginRight: 16 },
-  descRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
-  desc: {
-    color: '#cbd5e1',
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  date: { color: '#475569', fontSize: 10, marginTop: 2 },
-  tag: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 5 },
-  tagEditado: { backgroundColor: '#2e1065' },
-  tagDividido: { backgroundColor: '#1e293b' },
-  tagText: {
-    fontSize: 8,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  tagTextEditado: { color: '#a78bfa' },
-  tagTextDividido: { color: '#64748b' },
-  badge: { backgroundColor: '#1e293b', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  badgeText: { color: '#94a3b8', fontFamily: 'monospace', fontSize: 11, fontWeight: '700' },
-});
+    card: {
+      backgroundColor: c.bgElevated,
+      borderRadius: 24,
+      borderWidth: 1,
+      borderColor: c.border,
+      overflow: 'hidden',
+      marginHorizontal: 16,
+    },
+    cardPago: { borderColor: c.successBorder },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+      backgroundColor: `${c.bgElevated2}40`,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    left: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+    bar: { width: 6, borderRadius: 3, alignSelf: 'stretch' },
+    nameValueCol: { flex: 1, gap: 3 },
+    name: {
+      color: c.textPrimary,
+      fontSize: 16,
+      fontWeight: '900',
+      textTransform: 'uppercase',
+      letterSpacing: -0.3,
+    },
+    right: { flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 8 },
+    total: { color: c.accentLight, fontFamily: 'monospace', fontWeight: '700', fontSize: 15 },
+    totalPago: { color: c.success },
+    itemCount: {
+      color: c.placeholder,
+      fontSize: 9,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginTop: 1,
+    },
+    iconBtn: {
+      width: 26,
+      height: 26,
+      borderRadius: 7,
+      backgroundColor: c.bgElevated2,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    iconBtnShared: {
+      backgroundColor: c.successSurface,
+      borderWidth: 1,
+      borderColor: c.successBorder,
+    },
+    body: { paddingHorizontal: 24, paddingVertical: 16, gap: 12 },
+    row: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+    descCol: { flex: 1, marginRight: 16 },
+    descRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
+    desc: {
+      color: c.textSecondary,
+      fontSize: 11,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.3,
+    },
+    date: { color: c.placeholder, fontSize: 10, marginTop: 2 },
+    tag: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 5 },
+    tagEditado: { backgroundColor: '#2e1065' },
+    tagDividido: { backgroundColor: c.bgElevated2 },
+    tagText: {
+      fontSize: 8,
+      fontWeight: '800',
+      textTransform: 'uppercase',
+      letterSpacing: 0.3,
+    },
+    tagTextEditado: { color: c.accentLight },
+    tagTextDividido: { color: c.textFaint },
+    badge: {
+      backgroundColor: c.bgElevated2,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+    },
+    badgeText: { color: c.textMuted, fontFamily: 'monospace', fontSize: 11, fontWeight: '700' },
+  });
+}

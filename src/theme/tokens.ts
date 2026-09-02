@@ -8,6 +8,8 @@ export interface ThemeColors {
   textSecondary: string;
   textMuted: string;
   textFaint: string;
+  placeholder: string; // placeholder de input, ícones bem apagados — mais fraco que textFaint
+  textValue: string; // valor digitado/exibido em inputs e linhas de detalhe
   accent: string;
   accentLight: string;
   accentSurface: string;
@@ -23,6 +25,7 @@ export interface ThemeColors {
   warningSurface: string;
   warningBorder: string;
   warningTextOn: string; // texto sobre warningSurface
+  pending: string; // âmbar de "pendente" (fatura/pagamento) — distinto do warning de avisos
 }
 
 // valores atuais do app, só reorganizados em nomes semânticos — nada muda
@@ -37,6 +40,8 @@ export const darkTheme: ThemeColors = {
   textSecondary: '#cbd5e1',
   textMuted: '#94a3b8',
   textFaint: '#64748b',
+  placeholder: '#475569',
+  textValue: '#e2e8f0',
   accent: '#7c3aed',
   accentLight: '#a78bfa',
   accentSurface: '#1e1040',
@@ -52,6 +57,7 @@ export const darkTheme: ThemeColors = {
   warningSurface: '#1c0a00',
   warningBorder: '#7c2d12',
   warningTextOn: '#fdba74',
+  pending: '#f59e0b',
 };
 
 // clara, mas suave de propósito — fundo cinza-azulado em vez de branco puro,
@@ -67,6 +73,8 @@ export const lightTheme: ThemeColors = {
   textSecondary: '#334155',
   textMuted: '#64748b',
   textFaint: '#94a3b8',
+  placeholder: '#94a3b8',
+  textValue: '#334155',
   accent: '#7c3aed',
   accentLight: '#8b5cf6',
   accentSurface: '#ede9fe',
@@ -82,4 +90,5 @@ export const lightTheme: ThemeColors = {
   warningSurface: '#fef3c7',
   warningBorder: '#fcd34d',
   warningTextOn: '#92400e',
+  pending: '#b45309',
 };

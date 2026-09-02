@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Alert,
   ScrollView,
@@ -11,6 +11,8 @@ import {
 import { Assinatura } from '../config/assinaturas';
 import { useKeyboardHeight } from '../hooks/useKeyboardHeight';
 import { IconClose } from './icons/IconClose';
+import { useTheme } from '../hooks/useTheme';
+import { ThemeColors } from '../theme/tokens';
 
 interface Props {
   assinaturas: Assinatura[];
@@ -32,6 +34,8 @@ export function AssinaturasContent({
   salvarAssinatura,
   removerAssinatura,
 }: Props) {
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
   const [keyword, setKeyword] = useState('');
   const [participantes, setParticipantes] = useState<ParticipanteForm[]>([PARTICIPANTE_VAZIO]);
   const [editandoOriginal, setEditandoOriginal] = useState<string | null>(null);
@@ -112,9 +116,9 @@ export function AssinaturasContent({
   );
   const pessoasRapidas = pessoas.filter((p) => !nomesJaAdicionados.has(p.trim().toUpperCase()));
 
-  const totalConfigurado = participantes.reduce((s, p) => {
+  const totalConfigurado = participantes.reduce((acc, p) => {
     const v = parseFloat(p.valor.replace(',', '.'));
-    return s + (isNaN(v) ? 0 : v);
+    return acc + (isNaN(v) ? 0 : v);
   }, 0);
 
   return (
@@ -175,7 +179,7 @@ export function AssinaturasContent({
           <TextInput
             style={s.input}
             placeholder="Palavra-chave (ex: NETFLIX)"
-            placeholderTextColor="#475569"
+            placeholderTextColor={colors.placeholder}
             value={keyword}
             onChangeText={setKeyword}
             autoCapitalize="characters"
@@ -187,7 +191,7 @@ export function AssinaturasContent({
               <TextInput
                 style={[s.input, { flex: 1 }]}
                 placeholder="Pessoa"
-                placeholderTextColor="#475569"
+                placeholderTextColor={colors.placeholder}
                 value={p.pessoa}
                 onChangeText={(t) => handleParticipanteChange(idx, 'pessoa', t)}
                 autoCapitalize="words"
@@ -195,7 +199,7 @@ export function AssinaturasContent({
               <TextInput
                 style={[s.input, { width: 90 }]}
                 placeholder="Valor"
-                placeholderTextColor="#475569"
+                placeholderTextColor={colors.placeholder}
                 value={p.valor}
                 onChangeText={(t) => handleParticipanteChange(idx, 'valor', t)}
                 keyboardType="decimal-pad"
@@ -205,7 +209,7 @@ export function AssinaturasContent({
                 style={s.removeParticipanteBtn}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <IconClose size={12} color="#f87171" />
+                <IconClose size={12} color={colors.danger} />
               </TouchableOpacity>
             </View>
           ))}
@@ -248,109 +252,113 @@ export function AssinaturasContent({
   );
 }
 
-const s = StyleSheet.create({
-  scroll: { padding: 16, paddingBottom: 40 },
-  hint: { color: '#475569', fontSize: 12, lineHeight: 18, marginBottom: 20 },
-  card: {
-    backgroundColor: '#0f172a',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
-  cardEditando: { borderColor: '#7c3aed' },
-  catHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
-  },
-  catName: {
-    color: '#a78bfa',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-  },
-  removeBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    backgroundColor: '#1e0a0a',
-    borderWidth: 1,
-    borderColor: '#7f1d1d',
-  },
-  removeBtnText: { color: '#f87171', fontSize: 11, fontWeight: '700' },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 14 },
-  chip: {
-    backgroundColor: '#1e293b',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  chipText: { color: '#cbd5e1', fontSize: 12, fontWeight: '700' },
-  empty: { color: '#334155', fontSize: 13, textAlign: 'center', marginVertical: 24 },
-  formHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 14,
-  },
-  cancelarEdicaoText: { color: '#f87171', fontSize: 11, fontWeight: '700' },
-  cardBody: { padding: 14, gap: 10 },
-  newCatLabel: {
-    color: '#64748b',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  input: {
-    backgroundColor: '#1e293b',
-    color: '#fff',
-    fontSize: 13,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  participanteRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  removeParticipanteBtn: { padding: 4 },
-  rapidasWrap: { marginTop: 2, gap: 6 },
-  rapidasLabel: {
-    color: '#475569',
-    fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  rapidasChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chipRapido: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: '#1e1040',
-    borderWidth: 1,
-    borderColor: '#4c1d95',
-  },
-  chipRapidoText: { color: '#c4b5fd', fontSize: 12, fontWeight: '700' },
-  addParticipanteBtn: { paddingVertical: 8, alignItems: 'flex-start' },
-  addParticipanteText: { color: '#a78bfa', fontSize: 12, fontWeight: '700' },
-  totalConfigurado: { color: '#64748b', fontSize: 11, fontWeight: '600', textAlign: 'right' },
-  saveBtn: {
-    backgroundColor: '#7c3aed',
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  saveBtnText: { color: '#fff', fontSize: 13, fontWeight: '800' },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    scroll: { padding: 16, paddingBottom: 40 },
+    hint: { color: c.placeholder, fontSize: 12, lineHeight: 18, marginBottom: 20 },
+    card: {
+      backgroundColor: c.bgElevated,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+      overflow: 'hidden',
+      marginBottom: 12,
+    },
+    cardEditando: { borderColor: c.accent },
+    catHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    catName: {
+      color: c.accentLight,
+      fontSize: 12,
+      fontWeight: '900',
+      letterSpacing: 1.5,
+      textTransform: 'uppercase',
+    },
+    // tom de vermelho bem escuro específico deste botão — mantido
+    removeBtn: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 8,
+      backgroundColor: '#1e0a0a',
+      borderWidth: 1,
+      borderColor: c.dangerBorder,
+    },
+    removeBtnText: { color: c.danger, fontSize: 11, fontWeight: '700' },
+    chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 14 },
+    chip: {
+      backgroundColor: c.bgElevated2,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: c.borderStrong,
+    },
+    chipText: { color: c.textSecondary, fontSize: 12, fontWeight: '700' },
+    empty: { color: c.borderStrong, fontSize: 13, textAlign: 'center', marginVertical: 24 },
+    formHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingTop: 14,
+    },
+    cancelarEdicaoText: { color: c.danger, fontSize: 11, fontWeight: '700' },
+    cardBody: { padding: 14, gap: 10 },
+    newCatLabel: {
+      color: c.textFaint,
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+    },
+    input: {
+      backgroundColor: c.bgElevated2,
+      color: c.textPrimary,
+      fontSize: 13,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: c.borderStrong,
+    },
+    participanteRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    removeParticipanteBtn: { padding: 4 },
+    rapidasWrap: { marginTop: 2, gap: 6 },
+    rapidasLabel: {
+      color: c.placeholder,
+      fontSize: 10,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    rapidasChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    chipRapido: {
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      borderRadius: 20,
+      backgroundColor: c.accentSurface,
+      borderWidth: 1,
+      borderColor: c.accentSurfaceBorder,
+    },
+    // tom claro específico deste chip, sem token equivalente exato — mantido
+    chipRapidoText: { color: '#c4b5fd', fontSize: 12, fontWeight: '700' },
+    addParticipanteBtn: { paddingVertical: 8, alignItems: 'flex-start' },
+    addParticipanteText: { color: c.accentLight, fontSize: 12, fontWeight: '700' },
+    totalConfigurado: { color: c.textFaint, fontSize: 11, fontWeight: '600', textAlign: 'right' },
+    saveBtn: {
+      backgroundColor: c.accent,
+      borderRadius: 12,
+      paddingVertical: 12,
+      alignItems: 'center',
+      marginTop: 4,
+    },
+    saveBtnText: { color: '#fff', fontSize: 13, fontWeight: '800' },
+  });
+}

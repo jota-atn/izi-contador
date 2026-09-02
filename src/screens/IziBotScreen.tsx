@@ -29,8 +29,12 @@ import {
 } from '../storage/chatHistory';
 import { IconTrash } from '../components/icons/IconTrash';
 import { IconSparkle } from '../components/icons/IconSparkle';
+import { useTheme } from '../hooks/useTheme';
+import { ThemeColors } from '../theme/tokens';
 
 function TypingDot({ delay }: { delay: number }) {
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
   const translateY = useSharedValue(0);
   const opacity = useSharedValue(0.4);
 
@@ -93,6 +97,8 @@ interface Props {
 }
 
 export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }: Props) {
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
   const systemPrompt = useMemo(() => {
     if (meses.length === 0) return '';
     return (
@@ -403,7 +409,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
             style={s.clearBtn}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <IconTrash size={15} color="#475569" />
+            <IconTrash size={15} color={colors.placeholder} />
           </TouchableOpacity>
         )}
       </View>
@@ -421,7 +427,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
           >
             {msg.role === 'bot' && (
               <View style={s.avatar}>
-                <IconSparkle size={11} color="#a78bfa" />
+                <IconSparkle size={11} color={colors.accentLight} />
               </View>
             )}
             <View style={[s.bubble, msg.role === 'user' ? s.bubbleUser : s.bubbleBot]}>
@@ -437,7 +443,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
         {streaming && visibleMessages[visibleMessages.length - 1]?.text === '' && (
           <View style={s.bubbleWrapBot}>
             <View style={s.avatar}>
-              <IconSparkle size={11} color="#a78bfa" />
+              <IconSparkle size={11} color={colors.accentLight} />
             </View>
             <View style={[s.bubbleBot, s.typingBubble]}>
               <TypingDot delay={0} />
@@ -476,7 +482,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
           value={input}
           onChangeText={setInput}
           placeholder="Pergunte sobre seus gastos..."
-          placeholderTextColor="#475569"
+          placeholderTextColor={colors.placeholder}
           multiline
           maxLength={500}
           onSubmitEditing={() => send()}
@@ -496,140 +502,145 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
   );
 }
 
-const s = StyleSheet.create({
-  root: { flex: 1 },
-  empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
-  emptyText: { color: '#475569', fontSize: 14, textAlign: 'center' },
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    root: { flex: 1 },
+    empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
+    emptyText: { color: c.placeholder, fontSize: 14, textAlign: 'center' },
 
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
-  },
-  headerTitle: { color: '#f1f5f9', fontSize: 16, fontWeight: '900', letterSpacing: -0.3 },
-  headerAccent: { color: '#7c3aed' },
-  clearBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    backgroundColor: '#0f172a',
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    headerTitle: { color: c.textPrimary, fontSize: 16, fontWeight: '900', letterSpacing: -0.3 },
+    headerAccent: { color: c.accent },
+    clearBtn: {
+      width: 30,
+      height: 30,
+      borderRadius: 8,
+      backgroundColor: c.bgElevated,
+      borderWidth: 1,
+      borderColor: c.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
-  scroll: { flex: 1 },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'flex-end',
-    padding: 16,
-    gap: 8,
-    paddingBottom: 12,
-  },
+    scroll: { flex: 1 },
+    scrollContent: {
+      flexGrow: 1,
+      justifyContent: 'flex-end',
+      padding: 16,
+      gap: 8,
+      paddingBottom: 12,
+    },
 
-  bubbleWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
-  bubbleWrapUser: { justifyContent: 'flex-end' },
-  bubbleWrapBot: { justifyContent: 'flex-start' },
+    bubbleWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
+    bubbleWrapUser: { justifyContent: 'flex-end' },
+    bubbleWrapBot: { justifyContent: 'flex-start' },
 
-  avatar: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#150d2e',
-    borderWidth: 1,
-    borderColor: '#4c1d95',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
+    // tom de fundo do avatar específico deste chat — mantido
+    avatar: {
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      backgroundColor: '#150d2e',
+      borderWidth: 1,
+      borderColor: c.accentSurfaceBorder,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    },
 
-  bubble: { maxWidth: '78%', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10 },
-  bubbleUser: { backgroundColor: '#6d28d9', borderBottomRightRadius: 5 },
-  bubbleBot: {
-    backgroundColor: '#0f172a',
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    borderBottomLeftRadius: 5,
-  },
-  typingBubble: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    gap: 6,
-    borderRadius: 20,
-    borderBottomLeftRadius: 5,
-  },
+    bubble: { maxWidth: '78%', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10 },
+    // roxo específico da bolha do usuário, distinto do accent padrão — mantido
+    bubbleUser: { backgroundColor: '#6d28d9', borderBottomRightRadius: 5 },
+    bubbleBot: {
+      backgroundColor: c.bgElevated,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderBottomLeftRadius: 5,
+    },
+    typingBubble: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'flex-start',
+      paddingHorizontal: 18,
+      paddingVertical: 14,
+      gap: 6,
+      borderRadius: 20,
+      borderBottomLeftRadius: 5,
+    },
 
-  bubbleText: { fontSize: 14, lineHeight: 22 },
-  bubbleTextUser: { color: '#f1f5f9' },
-  bubbleTextBot: { color: '#cbd5e1' },
+    bubbleText: { fontSize: 14, lineHeight: 22 },
+    bubbleTextUser: { color: c.textPrimary },
+    bubbleTextBot: { color: c.textSecondary },
 
-  cursor: { color: '#7c3aed' },
+    cursor: { color: c.accent },
 
-  typingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#7c3aed',
-  },
+    typingDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: c.accent,
+    },
 
-  chipsScroll: {
-    borderTopWidth: 1,
-    borderTopColor: '#1e293b',
-    backgroundColor: '#020617',
-    height: 52,
-    justifyContent: 'center',
-  },
-  chipsContent: {
-    gap: 8,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  chip: {
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#4c1d95',
-    backgroundColor: '#1e1040',
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-  },
-  chipText: { color: '#a78bfa', fontSize: 12, fontWeight: '600' },
+    chipsScroll: {
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+      backgroundColor: c.bg,
+      height: 52,
+      justifyContent: 'center',
+    },
+    chipsContent: {
+      gap: 8,
+      paddingHorizontal: 16,
+      alignItems: 'center',
+    },
+    chip: {
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: c.accentSurfaceBorder,
+      backgroundColor: c.accentSurface,
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+    },
+    chipText: { color: c.accentLight, fontSize: 12, fontWeight: '600' },
 
-  inputBar: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#1e293b',
-    backgroundColor: '#020617',
-  },
-  input: {
-    flex: 1,
-    backgroundColor: '#0f172a',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    color: '#f1f5f9',
-    fontSize: 14,
-    maxHeight: 100,
-  },
-  sendBtn: {
-    backgroundColor: '#7c3aed',
-    borderRadius: 20,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-  },
-  sendBtnDisabled: { backgroundColor: '#3b1c7a', opacity: 0.5 },
-  sendBtnText: { color: '#f1f5f9', fontSize: 13, fontWeight: '700' },
-});
+    inputBar: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      gap: 10,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+      backgroundColor: c.bg,
+    },
+    input: {
+      flex: 1,
+      backgroundColor: c.bgElevated,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: c.border,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      color: c.textPrimary,
+      fontSize: 14,
+      maxHeight: 100,
+    },
+    sendBtn: {
+      backgroundColor: c.accent,
+      borderRadius: 20,
+      paddingHorizontal: 18,
+      paddingVertical: 10,
+    },
+    // tom apagado específico do botão desabilitado deste chat — mantido
+    sendBtnDisabled: { backgroundColor: '#3b1c7a', opacity: 0.5 },
+    sendBtnText: { color: c.textPrimary, fontSize: 13, fontWeight: '700' },
+  });
+}

@@ -1,8 +1,10 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { sanitizarChavePix } from '../utils/pixPayload';
 import { IconClose } from './icons/IconClose';
+import { useTheme } from '../hooks/useTheme';
+import { ThemeColors } from '../theme/tokens';
 
 interface Props {
   visible: boolean;
@@ -12,6 +14,8 @@ interface Props {
 }
 
 export const PixKeyModal = memo(function PixKeyModal({ visible, pixKey, onSave, onClose }: Props) {
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
   const [value, setValue] = useState(pixKey);
 
   useEffect(() => {
@@ -33,7 +37,7 @@ export const PixKeyModal = memo(function PixKeyModal({ visible, pixKey, onSave, 
           <View style={s.header}>
             <Text style={s.title}>Minha chave Pix</Text>
             <TouchableOpacity onPress={onClose} style={s.closeBtn} hitSlop={8}>
-              <IconClose size={18} color="#94a3b8" />
+              <IconClose size={18} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -46,7 +50,7 @@ export const PixKeyModal = memo(function PixKeyModal({ visible, pixKey, onSave, 
             value={value}
             onChangeText={setValue}
             placeholder="CPF, e-mail, telefone ou chave aleatória"
-            placeholderTextColor="#475569"
+            placeholderTextColor={colors.placeholder}
             autoCapitalize="none"
             autoCorrect={false}
             returnKeyType="done"
@@ -77,81 +81,83 @@ export const PixKeyModal = memo(function PixKeyModal({ visible, pixKey, onSave, 
   );
 });
 
-const s = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingBottom: 80,
-  },
-  container: {
-    backgroundColor: '#0f172a',
-    borderRadius: 16,
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    gap: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  title: {
-    color: '#f1f5f9',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  closeBtn: {
-    padding: 4,
-  },
-  label: {
-    color: '#64748b',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  input: {
-    backgroundColor: '#1e293b',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#334155',
-    color: '#f1f5f9',
-    fontSize: 15,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 10,
-  },
-  btnPrimary: {
-    backgroundColor: '#7c3aed',
-    borderRadius: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  btnPrimaryText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  btnSecondary: {
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  btnSecondaryText: {
-    color: '#94a3b8',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  preview: {
-    color: '#4ade80',
-    fontSize: 12,
-    fontFamily: 'monospace',
-    marginTop: -4,
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.7)',
+      justifyContent: 'center',
+      paddingHorizontal: 24,
+      paddingBottom: 80,
+    },
+    container: {
+      backgroundColor: c.bgElevated,
+      borderRadius: 16,
+      paddingHorizontal: 20,
+      paddingVertical: 20,
+      gap: 16,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    title: {
+      color: c.textPrimary,
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    closeBtn: {
+      padding: 4,
+    },
+    label: {
+      color: c.textFaint,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    input: {
+      backgroundColor: c.bgElevated2,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: c.borderStrong,
+      color: c.textPrimary,
+      fontSize: 15,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+    },
+    actions: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      gap: 10,
+    },
+    btnPrimary: {
+      backgroundColor: c.accent,
+      borderRadius: 8,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+    },
+    btnPrimaryText: {
+      color: '#fff',
+      fontWeight: '700',
+      fontSize: 14,
+    },
+    btnSecondary: {
+      borderRadius: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderWidth: 1,
+      borderColor: c.borderStrong,
+    },
+    btnSecondaryText: {
+      color: c.textMuted,
+      fontWeight: '600',
+      fontSize: 14,
+    },
+    preview: {
+      color: c.success,
+      fontSize: 12,
+      fontFamily: 'monospace',
+      marginTop: -4,
+    },
+  });
+}

@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconClose } from './icons/IconClose';
 import { IconDatabase } from './icons/IconDatabase';
 import { IconTable } from './icons/IconTable';
+import { useTheme } from '../hooks/useTheme';
+import { ThemeColors } from '../theme/tokens';
 
 interface Props {
   visible: boolean;
@@ -13,6 +16,8 @@ interface Props {
 }
 
 export function BackupModal({ visible, onClose, onExportar, onImportar, onExportarCsv }: Props) {
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
   return (
     <Modal
       visible={visible}
@@ -27,7 +32,7 @@ export function BackupModal({ visible, onClose, onExportar, onImportar, onExport
             onPress={onClose}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <IconClose size={18} color="#64748b" />
+            <IconClose size={18} color={colors.textFaint} />
           </TouchableOpacity>
         </View>
 
@@ -44,7 +49,7 @@ export function BackupModal({ visible, onClose, onExportar, onImportar, onExport
               onExportar();
             }}
           >
-            <IconDatabase size={16} color="#a78bfa" />
+            <IconDatabase size={16} color={colors.accentLight} />
             <Text style={s.btnText}>Exportar backup</Text>
           </TouchableOpacity>
 
@@ -55,7 +60,7 @@ export function BackupModal({ visible, onClose, onExportar, onImportar, onExport
               onImportar();
             }}
           >
-            <IconDatabase size={16} color="#a78bfa" />
+            <IconDatabase size={16} color={colors.accentLight} />
             <Text style={s.btnText}>Importar backup</Text>
           </TouchableOpacity>
 
@@ -73,7 +78,7 @@ export function BackupModal({ visible, onClose, onExportar, onImportar, onExport
               onExportarCsv();
             }}
           >
-            <IconTable size={16} color="#a78bfa" />
+            <IconTable size={16} color={colors.accentLight} />
             <Text style={s.btnText}>Exportar planilha (CSV)</Text>
           </TouchableOpacity>
         </View>
@@ -82,31 +87,33 @@ export function BackupModal({ visible, onClose, onExportar, onImportar, onExport
   );
 }
 
-const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#020617' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
-  },
-  headerTitle: { color: '#fff', fontSize: 17, fontWeight: '800' },
-  content: { padding: 24, gap: 14 },
-  hint: { color: '#64748b', fontSize: 12, lineHeight: 18, marginBottom: 4 },
-  divider: { height: 1, backgroundColor: '#1e293b', marginVertical: 4 },
-  btn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 16,
-    borderRadius: 14,
-    backgroundColor: '#0f172a',
-    borderWidth: 1,
-    borderColor: '#1e293b',
-  },
-  btnText: { color: '#e2e8f0', fontSize: 14, fontWeight: '800' },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    root: { flex: 1, backgroundColor: c.bg },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    headerTitle: { color: c.textPrimary, fontSize: 17, fontWeight: '800' },
+    content: { padding: 24, gap: 14 },
+    hint: { color: c.textFaint, fontSize: 12, lineHeight: 18, marginBottom: 4 },
+    divider: { height: 1, backgroundColor: c.border, marginVertical: 4 },
+    btn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 10,
+      paddingVertical: 16,
+      borderRadius: 14,
+      backgroundColor: c.bgElevated,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    btnText: { color: c.textValue, fontSize: 14, fontWeight: '800' },
+  });
+}

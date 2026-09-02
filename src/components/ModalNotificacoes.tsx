@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -9,6 +9,8 @@ import {
   View,
 } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
+import { useTheme } from '../hooks/useTheme';
+import { ThemeColors } from '../theme/tokens';
 
 interface Props {
   visible: boolean;
@@ -19,6 +21,8 @@ interface Props {
 }
 
 export function ModalNotificacoes({ visible, diaAtual, onSalvar, onCancelar, onFechar }: Props) {
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
   const [texto, setTexto] = useState('');
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
@@ -85,7 +89,7 @@ export function ModalNotificacoes({ visible, diaAtual, onSalvar, onCancelar, onF
               keyboardType="number-pad"
               maxLength={2}
               placeholder="Ex: 10"
-              placeholderTextColor="#475569"
+              placeholderTextColor={colors.placeholder}
               returnKeyType="done"
               onSubmitEditing={handleSalvar}
             />
@@ -121,85 +125,87 @@ export function ModalNotificacoes({ visible, diaAtual, onSalvar, onCancelar, onF
   );
 }
 
-const s = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  card: {
-    backgroundColor: '#0f172a',
-    borderRadius: 16,
-    padding: 24,
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    gap: 12,
-  },
-  titulo: {
-    color: '#f1f5f9',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  descricao: {
-    color: '#94a3b8',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  label: {
-    color: '#cbd5e1',
-    fontSize: 14,
-    fontWeight: '500',
-    marginTop: 4,
-  },
-  input: {
-    backgroundColor: '#1e293b',
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    color: '#f1f5f9',
-    fontSize: 18,
-    fontWeight: '600',
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  erro: {
-    color: '#f87171',
-    fontSize: 13,
-  },
-  botoes: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 4,
-  },
-  btn: {
-    flex: 1,
-    paddingVertical: 13,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  btnSalvar: {
-    backgroundColor: '#7c3aed',
-  },
-  btnSalvarTxt: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  btnDesativar: {
-    backgroundColor: '#1e293b',
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  btnDesativarTxt: {
-    color: '#94a3b8',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  btnDisabled: {
-    opacity: 0.5,
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 24,
+    },
+    card: {
+      backgroundColor: c.bgElevated,
+      borderRadius: 16,
+      padding: 24,
+      width: '100%',
+      borderWidth: 1,
+      borderColor: c.border,
+      gap: 12,
+    },
+    titulo: {
+      color: c.textPrimary,
+      fontSize: 18,
+      fontWeight: '700',
+    },
+    descricao: {
+      color: c.textMuted,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+    label: {
+      color: c.textSecondary,
+      fontSize: 14,
+      fontWeight: '500',
+      marginTop: 4,
+    },
+    input: {
+      backgroundColor: c.bgElevated2,
+      borderRadius: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      color: c.textPrimary,
+      fontSize: 18,
+      fontWeight: '600',
+      borderWidth: 1,
+      borderColor: c.borderStrong,
+    },
+    erro: {
+      color: c.danger,
+      fontSize: 13,
+    },
+    botoes: {
+      flexDirection: 'row',
+      gap: 10,
+      marginTop: 4,
+    },
+    btn: {
+      flex: 1,
+      paddingVertical: 13,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    btnSalvar: {
+      backgroundColor: c.accent,
+    },
+    btnSalvarTxt: {
+      color: '#fff',
+      fontSize: 15,
+      fontWeight: '700',
+    },
+    btnDesativar: {
+      backgroundColor: c.bgElevated2,
+      borderWidth: 1,
+      borderColor: c.borderStrong,
+    },
+    btnDesativarTxt: {
+      color: c.textMuted,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    btnDisabled: {
+      opacity: 0.5,
+    },
+  });
+}
