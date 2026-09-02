@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { SQLiteProvider, useSQLiteContext } from 'expo-sqlite';
@@ -121,6 +121,7 @@ function AppShell() {
 
 function AppContent() {
   const { colors, mode, toggle: toggleTema } = useTheme();
+  const insets = useSafeAreaInsets();
   const tabS = useMemo(() => createTabStyles(colors), [colors]);
   const db = useSQLiteContext();
   const {
@@ -630,7 +631,10 @@ function AppContent() {
       )}
 
       {authStatus === 'authenticated' && state.status === 'success' && dadosExibidos && (
-        <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+        <SafeAreaView
+          style={{ flex: 1, backgroundColor: colors.bg }}
+          edges={['top', 'left', 'right']}
+        >
           <View
             style={{
               flexDirection: 'row',
@@ -866,7 +870,10 @@ function AppContent() {
             />
           </View>
 
-          <View style={tabS.bar} onLayout={(e) => setTabBarHeight(e.nativeEvent.layout.height)}>
+          <View
+            style={[tabS.bar, { paddingBottom: insets.bottom }]}
+            onLayout={(e) => setTabBarHeight(e.nativeEvent.layout.height)}
+          >
             {(
               [
                 { key: 'fatura', label: 'Fatura', Icon: IconCard },
