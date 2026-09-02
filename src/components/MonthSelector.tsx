@@ -26,7 +26,7 @@ export function MonthSelector({ meses, selected, onChange }: Props) {
       <View style={s.labelWrap}>
         <Text style={s.label}>{selected ? formatMesAno(selected) : '—'}</Text>
         <Text style={s.counter}>
-          {idx + 1} de {meses.length}
+          {meses.length - idx} de {meses.length}
         </Text>
       </View>
 
