@@ -88,23 +88,40 @@ import { verificarOrcamentos } from './src/utils/verificarOrcamentos';
 import { notificarOrcamentosEstourados } from './src/utils/notificarOrcamentos';
 import { IconDatabase } from './src/components/icons/IconDatabase';
 import { IconEdit } from './src/components/icons/IconEdit';
+import { IconSun } from './src/components/icons/IconSun';
+import { IconMoon } from './src/components/icons/IconMoon';
+import { ThemeProvider, useTheme } from './src/hooks/useTheme';
+import { ThemeColors } from './src/theme/tokens';
 
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <StatusBar style="light" />
-        <SQLiteProvider databaseName="izicont.db" onInit={migrateDbAsync}>
-          <ErrorBoundary>
-            <AppContent />
-          </ErrorBoundary>
-        </SQLiteProvider>
+        <ThemeProvider>
+          <SQLiteProvider databaseName="izicont.db" onInit={migrateDbAsync}>
+            <ErrorBoundary>
+              <AppShell />
+            </ErrorBoundary>
+          </SQLiteProvider>
+        </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
 
+function AppShell() {
+  const { mode } = useTheme();
+  return (
+    <>
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
+      <AppContent />
+    </>
+  );
+}
+
 function AppContent() {
+  const { colors, mode, toggle: toggleTema } = useTheme();
+  const tabS = useMemo(() => createTabStyles(colors), [colors]);
   const db = useSQLiteContext();
   const {
     status: authStatus,
@@ -479,6 +496,14 @@ function AppContent() {
     ]);
   }
 
+  function handleToggleTema() {
+    const proximo = mode === 'dark' ? 'claro' : 'escuro';
+    Alert.alert(`Mudar para tema ${proximo}?`, undefined, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Mudar', onPress: toggleTema },
+    ]);
+  }
+
   function handlePagarFatura() {
     const donos = pessoas.map((p) => p.dono);
     Alert.alert(
@@ -605,74 +630,117 @@ function AppContent() {
       )}
 
       {authStatus === 'authenticated' && state.status === 'success' && dadosExibidos && (
-        <SafeAreaView className="flex-1 bg-slate-950">
-          <View className="flex-row items-center justify-between px-6 py-4 border-b border-slate-800">
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingHorizontal: 24,
+              paddingVertical: 16,
+              borderBottomWidth: 1,
+              borderBottomColor: colors.border,
+            }}
+          >
             <View>
-              <Text className="text-white text-xl font-black tracking-tight">
-                Izi<Text className="text-purple-500">Contador</Text>
+              <Text
+                style={{
+                  color: colors.textPrimary,
+                  fontSize: 20,
+                  fontWeight: '900',
+                  letterSpacing: -0.5,
+                }}
+              >
+                Izi<Text style={{ color: colors.accent }}>Contador</Text>
               </Text>
-              <Text className="text-slate-500 text-xs font-semibold tracking-wide">
+              <Text
+                style={{
+                  color: colors.textFaint,
+                  fontSize: 12,
+                  fontWeight: '600',
+                  letterSpacing: 0.3,
+                }}
+              >
                 {userName.split(' ')[0]}
               </Text>
               {dadosExibidos.sincronizadoEm && (
-                <Text className="text-slate-600 text-[10px] font-medium tracking-wide">
+                <Text
+                  style={{
+                    color: colors.textMuted,
+                    fontSize: 10,
+                    fontWeight: '500',
+                    letterSpacing: 0.3,
+                  }}
+                >
                   sinc. {formatSincronizacao(dadosExibidos.sincronizadoEm)}
                 </Text>
               )}
             </View>
-            <HeaderMenu
-              items={[
-                {
-                  label: 'Compartilhar',
-                  onPress: compartilharResumo,
-                  icon: <IconShare size={15} color="#a78bfa" />,
-                  section: 'Ações',
-                },
-                {
-                  label: 'Edições deste mês',
-                  onPress: () => setShowEdicoes(true),
-                  icon: <IconEdit size={15} color="#a78bfa" />,
-                  section: 'Ações',
-                },
-                {
-                  label: 'Automação',
-                  onPress: () => setShowAutomacao(true),
-                  icon: <IconSliders size={15} color="#a78bfa" />,
-                  section: 'Configuração',
-                },
-                {
-                  label: 'Chave Pix',
-                  onPress: () => setShowPixKey(true),
-                  icon: <IconCard size={15} color="#a78bfa" />,
-                  section: 'Configuração',
-                },
-                {
-                  label: diaFechamento ? `Notificações (dia ${diaFechamento})` : 'Notificações',
-                  onPress: () => setShowNotificacoes(true),
-                  icon: <IconBell size={15} color="#a78bfa" />,
-                  section: 'Configuração',
-                },
-                {
-                  label: 'Backup',
-                  onPress: () => setShowBackup(true),
-                  icon: <IconDatabase size={15} color="#a78bfa" />,
-                  section: 'Dados',
-                },
-                {
-                  label: 'Como anotar',
-                  onPress: () => setShowTutorial(true),
-                  icon: <IconBook size={15} color="#a78bfa" />,
-                  section: 'Ajuda',
-                },
-                {
-                  label: 'Sair',
-                  onPress: handleSignOut,
-                  danger: true,
-                  icon: <IconLogOut size={15} color="#f87171" />,
-                  section: 'Conta',
-                },
-              ]}
-            />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+              <TouchableOpacity
+                onPress={handleToggleTema}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                {mode === 'dark' ? (
+                  <IconSun size={18} color={colors.accentLight} />
+                ) : (
+                  <IconMoon size={18} color={colors.accentLight} />
+                )}
+              </TouchableOpacity>
+              <HeaderMenu
+                items={[
+                  {
+                    label: 'Compartilhar',
+                    onPress: compartilharResumo,
+                    icon: <IconShare size={15} color="#a78bfa" />,
+                    section: 'Ações',
+                  },
+                  {
+                    label: 'Edições deste mês',
+                    onPress: () => setShowEdicoes(true),
+                    icon: <IconEdit size={15} color="#a78bfa" />,
+                    section: 'Ações',
+                  },
+                  {
+                    label: 'Automação',
+                    onPress: () => setShowAutomacao(true),
+                    icon: <IconSliders size={15} color="#a78bfa" />,
+                    section: 'Configuração',
+                  },
+                  {
+                    label: 'Chave Pix',
+                    onPress: () => setShowPixKey(true),
+                    icon: <IconCard size={15} color="#a78bfa" />,
+                    section: 'Configuração',
+                  },
+                  {
+                    label: diaFechamento ? `Notificações (dia ${diaFechamento})` : 'Notificações',
+                    onPress: () => setShowNotificacoes(true),
+                    icon: <IconBell size={15} color="#a78bfa" />,
+                    section: 'Configuração',
+                  },
+                  {
+                    label: 'Backup',
+                    onPress: () => setShowBackup(true),
+                    icon: <IconDatabase size={15} color="#a78bfa" />,
+                    section: 'Dados',
+                  },
+                  {
+                    label: 'Como anotar',
+                    onPress: () => setShowTutorial(true),
+                    icon: <IconBook size={15} color="#a78bfa" />,
+                    section: 'Ajuda',
+                  },
+                  {
+                    label: 'Sair',
+                    onPress: handleSignOut,
+                    danger: true,
+                    icon: <IconLogOut size={15} color="#f87171" />,
+                    section: 'Conta',
+                  },
+                ]}
+              />
+            </View>
           </View>
 
           {activeTab === 'fatura' && (
@@ -760,7 +828,17 @@ function AppContent() {
                     </Animated.View>
                   );
                 })}
-                <Text className="text-slate-700 text-[10px] font-bold uppercase tracking-[0.2em] text-center py-4">
+                <Text
+                  style={{
+                    color: colors.textFaint,
+                    fontSize: 10,
+                    fontWeight: '700',
+                    textTransform: 'uppercase',
+                    letterSpacing: 3,
+                    textAlign: 'center',
+                    paddingVertical: 16,
+                  }}
+                >
                   IziContador • Automático • {new Date().getFullYear()}
                 </Text>
               </ScrollView>
@@ -804,7 +882,7 @@ function AppContent() {
                   onPress={() => setActiveTab(key)}
                   activeOpacity={0.7}
                 >
-                  <Icon size={20} color={active ? '#a78bfa' : '#475569'} />
+                  <Icon size={20} color={active ? colors.accentLight : colors.textFaint} />
                   <Text style={[tabS.label, active && tabS.labelActive]}>{label}</Text>
                 </TouchableOpacity>
               );
@@ -897,25 +975,27 @@ function AppContent() {
   );
 }
 
-const tabS = StyleSheet.create({
-  bar: {
-    flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: '#1e293b',
-    backgroundColor: '#0a0f1a',
-  },
-  item: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    gap: 3,
-  },
-  label: {
-    color: '#475569',
-    fontSize: 10,
-    fontWeight: '600',
-    letterSpacing: 0.2,
-  },
-  labelActive: { color: '#a78bfa' },
-});
+function createTabStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    bar: {
+      flexDirection: 'row',
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      backgroundColor: colors.bgElevated,
+    },
+    item: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 10,
+      gap: 3,
+    },
+    label: {
+      color: colors.textFaint,
+      fontSize: 10,
+      fontWeight: '600',
+      letterSpacing: 0.2,
+    },
+    labelActive: { color: colors.accentLight },
+  });
+}
