@@ -102,6 +102,8 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
       `Dados das faturas disponíveis:\n\n` +
       `${serializarHistorico(historico, meses)}\n\n` +
       `Instruções:\n` +
+      `- "Não identificados" no contexto acima são gastos que ainda não têm uma pessoa definida — ` +
+      `trate como uma categoria à parte, nunca como se fosse o nome de alguém\n` +
       `- Responda em português brasileiro, de forma concisa e direta\n` +
       `- Use valores em R$ com separador de milhar (ex: R$ 1.234)\n` +
       `- Mencione meses por extenso (Janeiro, Fevereiro, etc.)\n` +

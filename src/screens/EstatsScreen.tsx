@@ -3,13 +3,22 @@ import { Dimensions, RefreshControl, ScrollView, StyleSheet, Text, View } from '
 import { LineChart } from 'react-native-chart-kit';
 import { Historico } from '../hooks/useHistorico';
 import { Categorias } from '../config/categorias';
+import { SEM_CATEGORIA, SEM_CATEGORIA_LABEL } from '../parser/parseFatura';
 import { MESES_PT, nomeMes } from '../utils/meses';
-import { CHART_COLOR_OUTROS, corCategorica, corCategoricaRgb } from '../utils/chartColors';
+import {
+  CHART_COLOR_OUTROS,
+  CHART_COLOR_OUTROS_RGB,
+  corCategorica,
+  corCategoricaRgb,
+} from '../utils/chartColors';
 
 const SCREEN_W = Dimensions.get('window').width;
 const MESES_CURTOS = MESES_PT.map((m) => m.substring(0, 3));
-const SEM_CATEGORIA = '__SEM_CATEGORIA__';
 const CHART_MAX_MESES = 7;
+
+function formatDono(dono: string): string {
+  return dono === SEM_CATEGORIA ? SEM_CATEGORIA_LABEL : dono;
+}
 
 const CHART_CONFIG = {
   backgroundColor: '#0f172a',
@@ -52,9 +61,7 @@ export const EstatsScreen = memo(function EstatsScreen({
   const pessoasChart = useMemo(() => {
     const pessoasSet = new Set<string>();
     mesesChart.forEach((m) =>
-      historico[m].relatorio_por_pessoa
-        .filter((p) => p.dono !== SEM_CATEGORIA)
-        .forEach((p) => pessoasSet.add(p.dono)),
+      historico[m].relatorio_por_pessoa.forEach((p) => pessoasSet.add(p.dono)),
     );
     return Array.from(pessoasSet)
       .map((dono) => ({
@@ -84,11 +91,9 @@ export const EstatsScreen = memo(function EstatsScreen({
   const pessoasAcumulado = useMemo(() => {
     const byPessoa: Record<string, number> = {};
     mesesCron.forEach((mes) => {
-      historico[mes].relatorio_por_pessoa
-        .filter((p) => p.dono !== SEM_CATEGORIA)
-        .forEach((p) => {
-          byPessoa[p.dono] = (byPessoa[p.dono] ?? 0) + p.total_individual;
-        });
+      historico[mes].relatorio_por_pessoa.forEach((p) => {
+        byPessoa[p.dono] = (byPessoa[p.dono] ?? 0) + p.total_individual;
+      });
     });
     return Object.entries(byPessoa)
       .map(([dono, total]) => ({ dono, total }))
@@ -108,17 +113,15 @@ export const EstatsScreen = memo(function EstatsScreen({
     const nomesCategorias = Object.keys(categorias);
     const byCategoria: Record<string, number> = {};
     mesesCron.forEach((mes) => {
-      historico[mes].relatorio_por_pessoa
-        .filter((p) => p.dono !== SEM_CATEGORIA)
-        .forEach((p) => {
-          p.itens.forEach((item) => {
-            const categoria =
-              nomesCategorias.find(
-                (c) => item.descricao === c || item.descricao.startsWith(`${c} - `),
-              ) ?? 'Outros';
-            byCategoria[categoria] = (byCategoria[categoria] ?? 0) + item.valor;
-          });
+      historico[mes].relatorio_por_pessoa.forEach((p) => {
+        p.itens.forEach((item) => {
+          const categoria =
+            nomesCategorias.find(
+              (c) => item.descricao === c || item.descricao.startsWith(`${c} - `),
+            ) ?? 'Outros';
+          byCategoria[categoria] = (byCategoria[categoria] ?? 0) + item.valor;
         });
+      });
     });
     return Object.entries(byCategoria)
       .map(([categoria, total]) => ({ categoria, total }))
@@ -132,16 +135,18 @@ export const EstatsScreen = memo(function EstatsScreen({
   // neutro em vez de reciclar uma cor já usada)
   const personColors = useMemo(() => {
     const map: Record<string, string> = {};
-    pessoasAcumulado.forEach(({ dono }, i) => {
-      map[dono] = corCategorica(i);
+    let idx = 0;
+    pessoasAcumulado.forEach(({ dono }) => {
+      map[dono] = dono === SEM_CATEGORIA ? CHART_COLOR_OUTROS : corCategorica(idx++);
     });
     return map;
   }, [pessoasAcumulado]);
 
   const personColorsRgb = useMemo(() => {
     const map: Record<string, string> = {};
-    pessoasAcumulado.forEach(({ dono }, i) => {
-      map[dono] = corCategoricaRgb(i);
+    let idx = 0;
+    pessoasAcumulado.forEach(({ dono }) => {
+      map[dono] = dono === SEM_CATEGORIA ? CHART_COLOR_OUTROS_RGB : corCategoricaRgb(idx++);
     });
     return map;
   }, [pessoasAcumulado]);
@@ -150,11 +155,9 @@ export const EstatsScreen = memo(function EstatsScreen({
   const pessoasStats = useMemo(() => {
     const byPessoa: Record<string, number[]> = {};
     mesesCron.forEach((mes) => {
-      historico[mes].relatorio_por_pessoa
-        .filter((p) => p.dono !== SEM_CATEGORIA)
-        .forEach((p) => {
-          (byPessoa[p.dono] ??= []).push(p.total_individual);
-        });
+      historico[mes].relatorio_por_pessoa.forEach((p) => {
+        (byPessoa[p.dono] ??= []).push(p.total_individual);
+      });
     });
     return Object.entries(byPessoa)
       .map(([dono, vals]) => ({
@@ -169,16 +172,14 @@ export const EstatsScreen = memo(function EstatsScreen({
   const topFrequentes = useMemo(() => {
     const byDesc: Record<string, { meses: Set<string>; valores: number[] }> = {};
     mesesCron.forEach((mes) => {
-      historico[mes].relatorio_por_pessoa
-        .filter((p) => p.dono !== SEM_CATEGORIA)
-        .forEach((p) => {
-          p.itens.forEach((item) => {
-            const key = item.descricao.toUpperCase().trim();
-            if (!byDesc[key]) byDesc[key] = { meses: new Set(), valores: [] };
-            byDesc[key].meses.add(mes);
-            byDesc[key].valores.push(item.valor);
-          });
+      historico[mes].relatorio_por_pessoa.forEach((p) => {
+        p.itens.forEach((item) => {
+          const key = item.descricao.toUpperCase().trim();
+          if (!byDesc[key]) byDesc[key] = { meses: new Set(), valores: [] };
+          byDesc[key].meses.add(mes);
+          byDesc[key].valores.push(item.valor);
         });
+      });
     });
     return Object.entries(byDesc)
       .filter(([, v]) => v.meses.size > 1)
@@ -195,13 +196,11 @@ export const EstatsScreen = memo(function EstatsScreen({
   const topItens = useMemo(() => {
     const itens: Array<{ desc: string; valor: number; dono: string; mes: string }> = [];
     mesesCron.forEach((mes) => {
-      historico[mes].relatorio_por_pessoa
-        .filter((p) => p.dono !== SEM_CATEGORIA)
-        .forEach((p) => {
-          p.itens.forEach((item) => {
-            itens.push({ desc: item.descricao, valor: item.valor, dono: p.dono, mes });
-          });
+      historico[mes].relatorio_por_pessoa.forEach((p) => {
+        p.itens.forEach((item) => {
+          itens.push({ desc: item.descricao, valor: item.valor, dono: p.dono, mes });
         });
+      });
     });
     return itens.sort((a, b) => b.valor - a.valor).slice(0, 5);
   }, [mesesCron, historico]);
@@ -329,7 +328,7 @@ export const EstatsScreen = memo(function EstatsScreen({
                     { backgroundColor: personColors[dono] ?? CHART_COLOR_OUTROS },
                   ]}
                 />
-                <Text style={s.legendLabel}>{dono}</Text>
+                <Text style={s.legendLabel}>{formatDono(dono)}</Text>
               </View>
             ))}
           </View>
@@ -346,7 +345,7 @@ export const EstatsScreen = memo(function EstatsScreen({
           return (
             <View key={dono} style={s.barRow}>
               <View style={s.barHeader}>
-                <Text style={[s.barNome, { color }]}>{dono}</Text>
+                <Text style={[s.barNome, { color }]}>{formatDono(dono)}</Text>
                 <Text style={s.barValor}>{fmtBRL(total)}</Text>
               </View>
               <View style={s.barTrack}>
@@ -394,7 +393,7 @@ export const EstatsScreen = memo(function EstatsScreen({
                 style={[s.dot, { backgroundColor: personColors[dono] ?? CHART_COLOR_OUTROS }]}
               />
               <View>
-                <Text style={s.pessoaNome}>{dono}</Text>
+                <Text style={s.pessoaNome}>{formatDono(dono)}</Text>
                 <Text style={s.pessoaMeses}>
                   {qtd} {qtd === 1 ? 'mês' : 'meses'}
                 </Text>
@@ -419,7 +418,7 @@ export const EstatsScreen = memo(function EstatsScreen({
                   {desc}
                 </Text>
                 <Text style={s.topItemMeta}>
-                  {dono} · {nomeMes(mes)}
+                  {formatDono(dono)} · {nomeMes(mes)}
                 </Text>
               </View>
               <Text style={s.topItemValor}>{fmtBRL(valor)}</Text>

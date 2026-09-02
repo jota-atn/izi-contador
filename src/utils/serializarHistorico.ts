@@ -1,7 +1,6 @@
 import { Historico } from '../hooks/useHistorico';
+import { SEM_CATEGORIA, SEM_CATEGORIA_LABEL } from '../parser/parseFatura';
 import { nomeMes } from './meses';
-
-const SEM_CATEGORIA = '__SEM_CATEGORIA__';
 
 function fmtBRL(v: number): string {
   return 'R$ ' + Math.round(v).toLocaleString('pt-BR');
@@ -19,10 +18,10 @@ export function serializarHistorico(historico: Historico, meses: string[]): stri
       const header = `=== ${nomeMes(mes).toUpperCase()} ${ano} — ${fmtBRL(fatura.total_fatura)} ===`;
 
       const pessoas = fatura.relatorio_por_pessoa
-        .filter((p) => p.dono !== SEM_CATEGORIA)
         .map((p) => {
+          const dono = p.dono === SEM_CATEGORIA ? SEM_CATEGORIA_LABEL : p.dono;
           const itens = p.itens.map((i) => `${i.descricao} ${fmtBRL(i.valor)}`).join(' · ');
-          return `${p.dono} (${fmtBRL(p.total_individual)}): ${itens}`;
+          return `${dono} (${fmtBRL(p.total_individual)}): ${itens}`;
         })
         .join('\n');
 

@@ -5,6 +5,7 @@ import { RegrasAlocacao } from '../config/regrasAlocacao';
 import { Assinatura } from '../config/assinaturas';
 
 export const SEM_CATEGORIA = '__SEM_CATEGORIA__';
+export const SEM_CATEGORIA_LABEL = 'Não identificados';
 
 const NON_PERSONS = new Set(['NUPAY']);
 

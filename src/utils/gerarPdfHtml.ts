@@ -1,6 +1,6 @@
 import { RelatorioFatura, Gasto } from '../types';
 import { formatMesAno, formatSincronizacao } from './meses';
-import { SEM_CATEGORIA } from '../parser/parseFatura';
+import { SEM_CATEGORIA, SEM_CATEGORIA_LABEL } from '../parser/parseFatura';
 
 function esc(str: string): string {
   return str
@@ -54,7 +54,7 @@ export function gerarPdfHtml(
   estadoPorPessoa: Record<string, { pago: boolean }>,
   iconBase64: string,
 ): string {
-  const pessoas = dados.relatorio_por_pessoa.filter((p) => p.dono !== SEM_CATEGORIA);
+  const pessoas = dados.relatorio_por_pessoa;
 
   const { totalPago, qtdPago, totalPendente, qtdPendente } = pessoas.reduce(
     (acc, p) => {
@@ -90,7 +90,12 @@ export function gerarPdfHtml(
 
   const pessoasHtml = pessoas
     .map((p) =>
-      renderPessoa(p.dono, p.itens, p.total_individual, estadoPorPessoa[p.dono]?.pago ?? false),
+      renderPessoa(
+        p.dono === SEM_CATEGORIA ? SEM_CATEGORIA_LABEL : p.dono,
+        p.itens,
+        p.total_individual,
+        estadoPorPessoa[p.dono]?.pago ?? false,
+      ),
     )
     .join('');
 
