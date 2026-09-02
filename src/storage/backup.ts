@@ -43,6 +43,23 @@ interface AvisoDispensadoRow {
   soma: number;
 }
 
+interface EdicaoOrfaRow extends EdicaoRow {
+  detectado_em: string;
+}
+
+interface DivisaoRow {
+  mes: string;
+  item_desc: string;
+  item_data: string;
+  item_valor: number;
+  pessoa: string;
+  valor: number;
+}
+
+interface DivisaoOrfaRow extends DivisaoRow {
+  detectado_em: string;
+}
+
 export interface BackupData {
   version: number;
   exportadoEm: string;
@@ -51,6 +68,10 @@ export interface BackupData {
   edicoes: EdicaoRow[];
   chat: ChatRow[];
   avisosDispensados: AvisoDispensadoRow[];
+  // opcionais: ausentes em backups exportados antes dessas tabelas existirem
+  edicoesOrfas?: EdicaoOrfaRow[];
+  divisoes?: DivisaoRow[];
+  divisoesOrfas?: DivisaoOrfaRow[];
   config: {
     categorias: Categorias;
     regras: RegrasAlocacao;
@@ -66,6 +87,9 @@ export async function gerarBackup(db: SQLiteDatabase, userEmail: string): Promis
     edicoesRaw,
     chatRaw,
     avisosDispensados,
+    edicoesOrfasRaw,
+    divisoes,
+    divisoesOrfas,
     categorias,
     regras,
     assinaturas,
@@ -99,6 +123,27 @@ export async function gerarBackup(db: SQLiteDatabase, userEmail: string): Promis
       'SELECT mes, titulo, valor, soma FROM avisos_dispensados_v1 WHERE user_id = ?',
       userEmail,
     ),
+    db.getAllAsync<{
+      mes: string;
+      item_desc: string;
+      item_data: string;
+      item_valor: number;
+      novo_dono: string | null;
+      nova_desc: string | null;
+      deletado: number;
+      detectado_em: string;
+    }>(
+      'SELECT mes, item_desc, item_data, item_valor, novo_dono, nova_desc, deletado, detectado_em FROM edicoes_orfas_v1 WHERE user_id = ?',
+      userEmail,
+    ),
+    db.getAllAsync<DivisaoRow>(
+      'SELECT mes, item_desc, item_data, item_valor, pessoa, valor FROM divisoes_v1 WHERE user_id = ?',
+      userEmail,
+    ),
+    db.getAllAsync<DivisaoOrfaRow>(
+      'SELECT mes, item_desc, item_data, item_valor, pessoa, valor, detectado_em FROM divisoes_orfas_v1 WHERE user_id = ?',
+      userEmail,
+    ),
     loadCategorias(userEmail),
     loadRegras(userEmail),
     loadAssinaturas(userEmail),
@@ -118,6 +163,9 @@ export async function gerarBackup(db: SQLiteDatabase, userEmail: string): Promis
     edicoes: edicoesRaw.map((r) => ({ ...r, deletado: r.deletado === 1 })),
     chat: chatRaw.map((r) => ({ ...r, is_hidden: r.is_hidden === 1 })),
     avisosDispensados,
+    edicoesOrfas: edicoesOrfasRaw.map((r) => ({ ...r, deletado: r.deletado === 1 })),
+    divisoes,
+    divisoesOrfas,
     config: { categorias, regras, assinaturas, pixKey },
   };
 }
@@ -150,6 +198,9 @@ export async function restaurarBackup(
     await db.runAsync('DELETE FROM edicoes_v1 WHERE user_id = ?', userEmail);
     await db.runAsync('DELETE FROM chat_v1 WHERE user_id = ?', userEmail);
     await db.runAsync('DELETE FROM avisos_dispensados_v1 WHERE user_id = ?', userEmail);
+    await db.runAsync('DELETE FROM edicoes_orfas_v1 WHERE user_id = ?', userEmail);
+    await db.runAsync('DELETE FROM divisoes_v1 WHERE user_id = ?', userEmail);
+    await db.runAsync('DELETE FROM divisoes_orfas_v1 WHERE user_id = ?', userEmail);
 
     for (const f of backup.faturas) {
       await db.runAsync(
@@ -191,6 +242,36 @@ export async function restaurarBackup(
       await db.runAsync(
         'INSERT OR REPLACE INTO avisos_dispensados_v1 (user_id, mes, titulo, valor, soma) VALUES (?, ?, ?, ?, ?)',
         [userEmail, a.mes, a.titulo, a.valor, a.soma],
+      );
+    }
+    for (const ed of backup.edicoesOrfas ?? []) {
+      await db.runAsync(
+        `INSERT INTO edicoes_orfas_v1 (user_id, mes, item_desc, item_data, item_valor, novo_dono, nova_desc, deletado, detectado_em)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          userEmail,
+          ed.mes,
+          ed.item_desc,
+          ed.item_data,
+          ed.item_valor,
+          ed.novo_dono,
+          ed.nova_desc,
+          ed.deletado ? 1 : 0,
+          ed.detectado_em,
+        ],
+      );
+    }
+    for (const d of backup.divisoes ?? []) {
+      await db.runAsync(
+        'INSERT INTO divisoes_v1 (user_id, mes, item_desc, item_data, item_valor, pessoa, valor) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [userEmail, d.mes, d.item_desc, d.item_data, d.item_valor, d.pessoa, d.valor],
+      );
+    }
+    for (const d of backup.divisoesOrfas ?? []) {
+      await db.runAsync(
+        `INSERT INTO divisoes_orfas_v1 (user_id, mes, item_desc, item_data, item_valor, pessoa, valor, detectado_em)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [userEmail, d.mes, d.item_desc, d.item_data, d.item_valor, d.pessoa, d.valor, d.detectado_em],
       );
     }
   });

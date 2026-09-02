@@ -33,4 +33,11 @@ describe('validarBackup', () => {
     expect(() => validarBackup('texto qualquer')).toThrow();
     expect(() => validarBackup(42)).toThrow();
   });
+
+  it('aceita backup antigo sem edicoesOrfas/divisoes/divisoesOrfas (compatibilidade)', () => {
+    const antigo = backupValido();
+    expect('edicoesOrfas' in antigo).toBe(false);
+    expect('divisoes' in antigo).toBe(false);
+    expect(() => validarBackup(antigo)).not.toThrow();
+  });
 });
