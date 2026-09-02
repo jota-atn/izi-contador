@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Alert,
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,14 +8,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Assinatura } from '../config/assinaturas';
 import { useKeyboardHeight } from '../hooks/useKeyboardHeight';
 import { IconClose } from './icons/IconClose';
 
 interface Props {
-  visible: boolean;
-  onClose: () => void;
   assinaturas: Assinatura[];
   pessoas: string[];
   salvarAssinatura: (assinatura: Assinatura) => void;
@@ -30,9 +26,7 @@ interface ParticipanteForm {
 
 const PARTICIPANTE_VAZIO: ParticipanteForm = { pessoa: '', valor: '' };
 
-export function AssinaturasModal({
-  visible,
-  onClose,
+export function AssinaturasContent({
   assinaturas,
   pessoas,
   salvarAssinatura,
@@ -124,180 +118,137 @@ export function AssinaturasModal({
   }, 0);
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      onRequestClose={() => {
-        resetForm();
-        onClose();
-      }}
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={[s.scroll, kbHeight > 0 && { paddingBottom: kbHeight + 24 }]}
+      keyboardShouldPersistTaps="handled"
     >
-      <SafeAreaView style={s.root}>
-        <View style={s.header}>
-          <Text style={s.headerTitle}>Assinaturas</Text>
-          <TouchableOpacity
-            onPress={() => {
-              resetForm();
-              onClose();
-            }}
-            style={s.closeBtn}
-          >
-            <Text style={s.closeBtnText}>Fechar</Text>
-          </TouchableOpacity>
+      <Text style={s.hint}>
+        Cadastre uma assinatura recorrente (ex.: Netflix) e quem divide ela com você. Todo mês o
+        valor real da fatura já entra dividido nesses valores fixos automaticamente — sem precisar
+        anotar nada. Uma anotação manual no título daquele mês sempre tem prioridade.
+      </Text>
+
+      {assinaturas.map((a) => (
+        <TouchableOpacity
+          key={a.keyword}
+          style={[s.card, editandoOriginal === a.keyword && s.cardEditando]}
+          onPress={() => handleEditar(a)}
+          activeOpacity={0.8}
+        >
+          <View style={s.catHeader}>
+            <Text style={s.catName}>{a.keyword}</Text>
+            <TouchableOpacity onPress={() => handleRemover(a.keyword)} style={s.removeBtn}>
+              <Text style={s.removeBtnText}>Remover</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={s.chips}>
+            {a.participantes.map((p, idx) => (
+              <View key={idx} style={s.chip}>
+                <Text style={s.chipText}>
+                  {p.pessoa}: R$ {p.valor.toFixed(2)}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </TouchableOpacity>
+      ))}
+
+      {assinaturas.length === 0 && <Text style={s.empty}>Nenhuma assinatura cadastrada.</Text>}
+
+      <View style={[s.card, { marginTop: 8 }]}>
+        <View style={s.formHeaderRow}>
+          <Text style={s.newCatLabel}>
+            {editandoOriginal ? 'Editando assinatura' : 'Nova assinatura'}
+          </Text>
+          {editandoOriginal && (
+            <TouchableOpacity
+              onPress={resetForm}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={s.cancelarEdicaoText}>Cancelar edição</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={[s.scroll, kbHeight > 0 && { paddingBottom: kbHeight + 24 }]}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Text style={s.hint}>
-            Cadastre uma assinatura recorrente (ex.: Netflix) e quem divide ela com você. Todo mês o
-            valor real da fatura já entra dividido nesses valores fixos automaticamente — sem
-            precisar anotar nada. Uma anotação manual no título daquele mês sempre tem prioridade.
-          </Text>
+        <View style={s.cardBody}>
+          <TextInput
+            style={s.input}
+            placeholder="Palavra-chave (ex: NETFLIX)"
+            placeholderTextColor="#475569"
+            value={keyword}
+            onChangeText={setKeyword}
+            autoCapitalize="characters"
+            returnKeyType="next"
+          />
 
-          {assinaturas.map((a) => (
-            <TouchableOpacity
-              key={a.keyword}
-              style={[s.card, editandoOriginal === a.keyword && s.cardEditando]}
-              onPress={() => handleEditar(a)}
-              activeOpacity={0.8}
-            >
-              <View style={s.catHeader}>
-                <Text style={s.catName}>{a.keyword}</Text>
-                <TouchableOpacity onPress={() => handleRemover(a.keyword)} style={s.removeBtn}>
-                  <Text style={s.removeBtnText}>Remover</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={s.chips}>
-                {a.participantes.map((p, idx) => (
-                  <View key={idx} style={s.chip}>
-                    <Text style={s.chipText}>
-                      {p.pessoa}: R$ {p.valor.toFixed(2)}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            </TouchableOpacity>
+          {participantes.map((p, idx) => (
+            <View key={idx} style={s.participanteRow}>
+              <TextInput
+                style={[s.input, { flex: 1 }]}
+                placeholder="Pessoa"
+                placeholderTextColor="#475569"
+                value={p.pessoa}
+                onChangeText={(t) => handleParticipanteChange(idx, 'pessoa', t)}
+                autoCapitalize="words"
+              />
+              <TextInput
+                style={[s.input, { width: 90 }]}
+                placeholder="Valor"
+                placeholderTextColor="#475569"
+                value={p.valor}
+                onChangeText={(t) => handleParticipanteChange(idx, 'valor', t)}
+                keyboardType="decimal-pad"
+              />
+              <TouchableOpacity
+                onPress={() => handleRemoveParticipanteRow(idx)}
+                style={s.removeParticipanteBtn}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <IconClose size={12} color="#f87171" />
+              </TouchableOpacity>
+            </View>
           ))}
 
-          {assinaturas.length === 0 && <Text style={s.empty}>Nenhuma assinatura cadastrada.</Text>}
-
-          <View style={[s.card, { marginTop: 8 }]}>
-            <View style={s.formHeaderRow}>
-              <Text style={s.newCatLabel}>
-                {editandoOriginal ? 'Editando assinatura' : 'Nova assinatura'}
-              </Text>
-              {editandoOriginal && (
-                <TouchableOpacity
-                  onPress={resetForm}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Text style={s.cancelarEdicaoText}>Cancelar edição</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
-            <View style={s.cardBody}>
-              <TextInput
-                style={s.input}
-                placeholder="Palavra-chave (ex: NETFLIX)"
-                placeholderTextColor="#475569"
-                value={keyword}
-                onChangeText={setKeyword}
-                autoCapitalize="characters"
-                returnKeyType="next"
-              />
-
-              {participantes.map((p, idx) => (
-                <View key={idx} style={s.participanteRow}>
-                  <TextInput
-                    style={[s.input, { flex: 1 }]}
-                    placeholder="Pessoa"
-                    placeholderTextColor="#475569"
-                    value={p.pessoa}
-                    onChangeText={(t) => handleParticipanteChange(idx, 'pessoa', t)}
-                    autoCapitalize="words"
-                  />
-                  <TextInput
-                    style={[s.input, { width: 90 }]}
-                    placeholder="Valor"
-                    placeholderTextColor="#475569"
-                    value={p.valor}
-                    onChangeText={(t) => handleParticipanteChange(idx, 'valor', t)}
-                    keyboardType="decimal-pad"
-                  />
+          {pessoasRapidas.length > 0 && (
+            <View style={s.rapidasWrap}>
+              <Text style={s.rapidasLabel}>Adicionar</Text>
+              <View style={s.rapidasChips}>
+                {pessoasRapidas.map((p) => (
                   <TouchableOpacity
-                    onPress={() => handleRemoveParticipanteRow(idx)}
-                    style={s.removeParticipanteBtn}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    key={p}
+                    style={s.chipRapido}
+                    onPress={() => handleAddParticipanteRapido(p)}
                   >
-                    <IconClose size={12} color="#f87171" />
+                    <Text style={s.chipRapidoText}>+ {p}</Text>
                   </TouchableOpacity>
-                </View>
-              ))}
-
-              {pessoasRapidas.length > 0 && (
-                <View style={s.rapidasWrap}>
-                  <Text style={s.rapidasLabel}>Adicionar</Text>
-                  <View style={s.rapidasChips}>
-                    {pessoasRapidas.map((p) => (
-                      <TouchableOpacity
-                        key={p}
-                        style={s.chipRapido}
-                        onPress={() => handleAddParticipanteRapido(p)}
-                      >
-                        <Text style={s.chipRapidoText}>+ {p}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-              )}
-
-              <TouchableOpacity onPress={handleAddParticipanteRow} style={s.addParticipanteBtn}>
-                <Text style={s.addParticipanteText}>+ Novo nome</Text>
-              </TouchableOpacity>
-
-              {totalConfigurado > 0 && (
-                <Text style={s.totalConfigurado}>
-                  Total configurado: R$ {totalConfigurado.toFixed(2)}
-                </Text>
-              )}
-
-              <TouchableOpacity onPress={handleSalvar} style={s.saveBtn}>
-                <Text style={s.saveBtnText}>
-                  {editandoOriginal ? 'Salvar alterações' : 'Salvar assinatura'}
-                </Text>
-              </TouchableOpacity>
+                ))}
+              </View>
             </View>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </Modal>
+          )}
+
+          <TouchableOpacity onPress={handleAddParticipanteRow} style={s.addParticipanteBtn}>
+            <Text style={s.addParticipanteText}>+ Novo nome</Text>
+          </TouchableOpacity>
+
+          {totalConfigurado > 0 && (
+            <Text style={s.totalConfigurado}>
+              Total configurado: R$ {totalConfigurado.toFixed(2)}
+            </Text>
+          )}
+
+          <TouchableOpacity onPress={handleSalvar} style={s.saveBtn}>
+            <Text style={s.saveBtnText}>
+              {editandoOriginal ? 'Salvar alterações' : 'Salvar assinatura'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </ScrollView>
   );
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#020617' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
-  },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '900', letterSpacing: -0.5 },
-  closeBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  closeBtnText: { color: '#94a3b8', fontSize: 13, fontWeight: '700' },
   scroll: { padding: 16, paddingBottom: 40 },
   hint: { color: '#475569', fontSize: 12, lineHeight: 18, marginBottom: 20 },
   card: {

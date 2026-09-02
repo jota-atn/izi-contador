@@ -20,5 +20,9 @@ export function useOnboarding(userEmail: string) {
     if (userEmail) await SecureStore.setItemAsync(key(userEmail), '1');
   }
 
-  return { mostrar, marcarVisto };
+  function rever() {
+    setMostrar(true);
+  }
+
+  return { mostrar, marcarVisto, rever };
 }

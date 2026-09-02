@@ -5,6 +5,7 @@ import { IconClose } from './icons/IconClose';
 interface Props {
   visible: boolean;
   onClose: () => void;
+  onRevisarOnboarding: () => void;
 }
 
 interface Regra {
@@ -48,7 +49,12 @@ const REGRAS: Regra[] = [
   },
 ];
 
-export function TutorialModal({ visible, onClose }: Props) {
+export function TutorialModal({ visible, onClose, onRevisarOnboarding }: Props) {
+  function handleRever() {
+    onClose();
+    onRevisarOnboarding();
+  }
+
   return (
     <Modal
       visible={visible}
@@ -107,6 +113,10 @@ export function TutorialModal({ visible, onClose }: Props) {
               • O separador no split múltiplo pode ser vírgula ou espaço.
             </Text>
           </View>
+
+          <TouchableOpacity onPress={handleRever} style={s.reverBtn}>
+            <Text style={s.reverBtnText}>Rever introdução completa</Text>
+          </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -200,4 +210,19 @@ const s = StyleSheet.create({
     marginBottom: 2,
   },
   dicaItem: { color: '#475569', fontSize: 12, lineHeight: 18 },
+  reverBtn: {
+    paddingVertical: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  reverBtnText: {
+    color: '#475569',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
 });

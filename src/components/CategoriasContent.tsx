@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Alert,
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,14 +8,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Categorias } from '../config/categorias';
 import { useKeyboardHeight } from '../hooks/useKeyboardHeight';
 import { IconClose } from './icons/IconClose';
 
 interface Props {
-  visible: boolean;
-  onClose: () => void;
   categorias: Categorias;
   addKeyword: (cat: string, kw: string) => void;
   removeKeyword: (cat: string, kw: string) => void;
@@ -25,9 +21,7 @@ interface Props {
   reset: () => void;
 }
 
-export function CategoriasModal({
-  visible,
-  onClose,
+export function CategoriasContent({
   categorias,
   addKeyword,
   removeKeyword,
@@ -71,122 +65,76 @@ export function CategoriasModal({
   }
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaView style={s.root}>
-        <View style={s.header}>
-          <Text style={s.headerTitle}>Categorias</Text>
-          <TouchableOpacity onPress={onClose} style={s.closeBtn}>
-            <Text style={s.closeBtnText}>Fechar</Text>
-          </TouchableOpacity>
-        </View>
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={[s.scroll, kbHeight > 0 && { paddingBottom: kbHeight + 24 }]}
+      keyboardShouldPersistTaps="handled"
+    >
+      {Object.entries(categorias).map(([nome, palavras]) => (
+        <View key={nome} style={s.card}>
+          <View style={s.catHeader}>
+            <Text style={s.catName}>{nome}</Text>
+            <TouchableOpacity onPress={() => handleRemoveCategoria(nome)} style={s.removeBtn}>
+              <Text style={s.removeBtnText}>Remover</Text>
+            </TouchableOpacity>
+          </View>
 
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={[s.scroll, kbHeight > 0 && { paddingBottom: kbHeight + 24 }]}
-          keyboardShouldPersistTaps="handled"
-        >
-          {Object.entries(categorias).map(([nome, palavras]) => (
-            <View key={nome} style={s.card}>
-              <View style={s.catHeader}>
-                <Text style={s.catName}>{nome}</Text>
-                <TouchableOpacity onPress={() => handleRemoveCategoria(nome)} style={s.removeBtn}>
-                  <Text style={s.removeBtnText}>Remover</Text>
+          <View style={s.cardBody}>
+            <View style={s.chips}>
+              {palavras.map((kw) => (
+                <TouchableOpacity key={kw} onPress={() => removeKeyword(nome, kw)} style={s.chip}>
+                  <Text style={s.chipText}>{kw}</Text>
+                  <IconClose size={10} color="#64748b" />
                 </TouchableOpacity>
-              </View>
-
-              <View style={s.cardBody}>
-                <View style={s.chips}>
-                  {palavras.map((kw) => (
-                    <TouchableOpacity
-                      key={kw}
-                      onPress={() => removeKeyword(nome, kw)}
-                      style={s.chip}
-                    >
-                      <Text style={s.chipText}>{kw}</Text>
-                      <IconClose size={10} color="#64748b" />
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                <View style={s.inputRow}>
-                  <TextInput
-                    style={s.input}
-                    placeholder="Nova palavra-chave..."
-                    placeholderTextColor="#475569"
-                    value={kwInputs[nome] ?? ''}
-                    onChangeText={(t) => setKwInputs((prev) => ({ ...prev, [nome]: t }))}
-                    onSubmitEditing={() => handleAddKeyword(nome)}
-                    returnKeyType="done"
-                    autoCapitalize="characters"
-                  />
-                  <TouchableOpacity onPress={() => handleAddKeyword(nome)} style={s.addBtn}>
-                    <Text style={s.addBtnText}>+</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+              ))}
             </View>
-          ))}
 
-          <View style={[s.card, { marginTop: 8 }]}>
-            <Text style={s.newCatLabel}>Nova categoria</Text>
-            <View style={[s.inputRow, { marginTop: 8 }]}>
+            <View style={s.inputRow}>
               <TextInput
                 style={s.input}
-                placeholder="Ex: ACADEMIA"
+                placeholder="Nova palavra-chave..."
                 placeholderTextColor="#475569"
-                value={newCat}
-                onChangeText={setNewCat}
-                onSubmitEditing={handleAddCategoria}
+                value={kwInputs[nome] ?? ''}
+                onChangeText={(t) => setKwInputs((prev) => ({ ...prev, [nome]: t }))}
+                onSubmitEditing={() => handleAddKeyword(nome)}
                 returnKeyType="done"
                 autoCapitalize="characters"
               />
-              <TouchableOpacity onPress={handleAddCategoria} style={s.addBtn}>
+              <TouchableOpacity onPress={() => handleAddKeyword(nome)} style={s.addBtn}>
                 <Text style={s.addBtnText}>+</Text>
               </TouchableOpacity>
             </View>
           </View>
+        </View>
+      ))}
 
-          <TouchableOpacity onPress={handleReset} style={s.resetBtn}>
-            <Text style={s.resetBtnText}>Restaurar padrões</Text>
+      <View style={[s.card, { marginTop: 8 }]}>
+        <Text style={s.newCatLabel}>Nova categoria</Text>
+        <View style={[s.inputRow, { marginTop: 8 }]}>
+          <TextInput
+            style={s.input}
+            placeholder="Ex: ACADEMIA"
+            placeholderTextColor="#475569"
+            value={newCat}
+            onChangeText={setNewCat}
+            onSubmitEditing={handleAddCategoria}
+            returnKeyType="done"
+            autoCapitalize="characters"
+          />
+          <TouchableOpacity onPress={handleAddCategoria} style={s.addBtn}>
+            <Text style={s.addBtnText}>+</Text>
           </TouchableOpacity>
-        </ScrollView>
-      </SafeAreaView>
-    </Modal>
+        </View>
+      </View>
+
+      <TouchableOpacity onPress={handleReset} style={s.resetBtn}>
+        <Text style={s.resetBtnText}>Restaurar padrões</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
 
 const s = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: '#020617',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
-  },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '900',
-    letterSpacing: -0.5,
-  },
-  closeBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  closeBtnText: {
-    color: '#94a3b8',
-    fontSize: 13,
-    fontWeight: '700',
-  },
   scroll: {
     padding: 16,
     paddingBottom: 40,

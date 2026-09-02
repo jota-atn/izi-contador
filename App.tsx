@@ -45,9 +45,8 @@ import { AnotacoesInvalidasCard } from './src/components/AnotacoesInvalidasCard'
 import { EdicoesOrfasCard, OrfaRow } from './src/components/EdicoesOrfasCard';
 import { EdicoesModal } from './src/components/EdicoesModal';
 import { DividirItemModal } from './src/components/DividirItemModal';
-import { RegrasModal } from './src/components/RegrasModal';
-import { AssinaturasModal } from './src/components/AssinaturasModal';
-import { CategoriasModal } from './src/components/CategoriasModal';
+import { AutomacaoModal } from './src/components/AutomacaoModal';
+import { BackupModal } from './src/components/BackupModal';
 import { EditarItemModal } from './src/components/EditarItemModal';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { TutorialModal } from './src/components/TutorialModal';
@@ -57,9 +56,7 @@ import { HeaderMenu } from './src/components/HeaderMenu';
 import { MonthSelector } from './src/components/MonthSelector';
 import { SearchBar } from './src/components/SearchBar';
 import { IconShare } from './src/components/icons/IconShare';
-import { IconSettings } from './src/components/icons/IconSettings';
 import { IconSliders } from './src/components/icons/IconSliders';
-import { IconUsers } from './src/components/icons/IconUsers';
 import { IconBook } from './src/components/icons/IconBook';
 import { IconCard } from './src/components/icons/IconCard';
 import { IconLogOut } from './src/components/icons/IconLogOut';
@@ -158,13 +155,16 @@ function AppContent() {
     salvar: salvarNotif,
     cancelar: cancelarNotif,
   } = useNotificacoes(userEmail);
-  const { mostrar: mostrarOnboarding, marcarVisto } = useOnboarding(userEmail);
-  const [showCategorias, setShowCategorias] = useState(false);
+  const {
+    mostrar: mostrarOnboarding,
+    marcarVisto,
+    rever: reverOnboarding,
+  } = useOnboarding(userEmail);
+  const [showAutomacao, setShowAutomacao] = useState(false);
   const [showNotificacoes, setShowNotificacoes] = useState(false);
-  const [showRegras, setShowRegras] = useState(false);
-  const [showAssinaturas, setShowAssinaturas] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showPixKey, setShowPixKey] = useState(false);
+  const [showBackup, setShowBackup] = useState(false);
   const [showEdicoes, setShowEdicoes] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [itemEditando, setItemEditando] = useState<{ item: Gasto; donoAtual: string } | null>(null);
@@ -602,21 +602,9 @@ function AppContent() {
                   section: 'Ações',
                 },
                 {
-                  label: 'Categorias',
-                  onPress: () => setShowCategorias(true),
-                  icon: <IconSettings size={15} color="#a78bfa" />,
-                  section: 'Configuração',
-                },
-                {
-                  label: 'Regras',
-                  onPress: () => setShowRegras(true),
+                  label: 'Automação',
+                  onPress: () => setShowAutomacao(true),
                   icon: <IconSliders size={15} color="#a78bfa" />,
-                  section: 'Configuração',
-                },
-                {
-                  label: 'Assinaturas',
-                  onPress: () => setShowAssinaturas(true),
-                  icon: <IconUsers size={15} color="#a78bfa" />,
                   section: 'Configuração',
                 },
                 {
@@ -632,14 +620,8 @@ function AppContent() {
                   section: 'Configuração',
                 },
                 {
-                  label: 'Exportar backup',
-                  onPress: handleExportarBackup,
-                  icon: <IconDatabase size={15} color="#a78bfa" />,
-                  section: 'Dados',
-                },
-                {
-                  label: 'Importar backup',
-                  onPress: handleImportarBackup,
+                  label: 'Backup',
+                  onPress: () => setShowBackup(true),
                   icon: <IconDatabase size={15} color="#a78bfa" />,
                   section: 'Dados',
                 },
@@ -797,7 +779,11 @@ function AppContent() {
         </SafeAreaView>
       )}
 
-      <TutorialModal visible={showTutorial} onClose={() => setShowTutorial(false)} />
+      <TutorialModal
+        visible={showTutorial}
+        onClose={() => setShowTutorial(false)}
+        onRevisarOnboarding={reverOnboarding}
+      />
       <PixKeyModal
         visible={showPixKey}
         pixKey={pixKey}
@@ -812,30 +798,28 @@ function AppContent() {
         userName={userName}
         onClose={() => setPessoaQR(null)}
       />
-      <RegrasModal
-        visible={showRegras}
-        onClose={() => setShowRegras(false)}
-        regras={regras}
-        addRegra={addRegra}
-        removeRegra={removeRegra}
-      />
-      <AssinaturasModal
-        visible={showAssinaturas}
-        onClose={() => setShowAssinaturas(false)}
-        assinaturas={assinaturas}
-        pessoas={pessoas.map((p) => p.dono)}
-        salvarAssinatura={salvarAssinatura}
-        removerAssinatura={removerAssinatura}
-      />
-      <CategoriasModal
-        visible={showCategorias}
-        onClose={() => setShowCategorias(false)}
+      <AutomacaoModal
+        visible={showAutomacao}
+        onClose={() => setShowAutomacao(false)}
         categorias={categorias}
         addKeyword={addKeyword}
         removeKeyword={removeKeyword}
         addCategoria={addCategoria}
         removeCategoria={removeCategoria}
-        reset={reset}
+        resetCategorias={reset}
+        regras={regras}
+        addRegra={addRegra}
+        removeRegra={removeRegra}
+        assinaturas={assinaturas}
+        pessoas={pessoas.map((p) => p.dono)}
+        salvarAssinatura={salvarAssinatura}
+        removerAssinatura={removerAssinatura}
+      />
+      <BackupModal
+        visible={showBackup}
+        onClose={() => setShowBackup(false)}
+        onExportar={handleExportarBackup}
+        onImportar={handleImportarBackup}
       />
       <EdicoesModal
         visible={showEdicoes}
