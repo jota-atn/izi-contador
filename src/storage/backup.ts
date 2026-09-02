@@ -203,10 +203,11 @@ export async function restaurarBackup(
     await db.runAsync('DELETE FROM divisoes_orfas_v1 WHERE user_id = ?', userEmail);
 
     for (const f of backup.faturas) {
-      await db.runAsync(
-        'INSERT OR REPLACE INTO faturas_v2 (user_id, mes, data) VALUES (?, ?, ?)',
-        [userEmail, f.mes, JSON.stringify(f.data)],
-      );
+      await db.runAsync('INSERT OR REPLACE INTO faturas_v2 (user_id, mes, data) VALUES (?, ?, ?)', [
+        userEmail,
+        f.mes,
+        JSON.stringify(f.data),
+      ]);
     }
     for (const e of backup.estado) {
       await db.runAsync(
@@ -271,7 +272,16 @@ export async function restaurarBackup(
       await db.runAsync(
         `INSERT INTO divisoes_orfas_v1 (user_id, mes, item_desc, item_data, item_valor, pessoa, valor, detectado_em)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [userEmail, d.mes, d.item_desc, d.item_data, d.item_valor, d.pessoa, d.valor, d.detectado_em],
+        [
+          userEmail,
+          d.mes,
+          d.item_desc,
+          d.item_data,
+          d.item_valor,
+          d.pessoa,
+          d.valor,
+          d.detectado_em,
+        ],
       );
     }
   });

@@ -36,7 +36,12 @@ describe('aplicarDivisoes', () => {
 
   it('soma das fatias igual ao total: explode em itens por pessoa, sem restante', () => {
     const divisoes = [
-      divisao({ shares: [{ pessoa: 'ANA', valor: 60 }, { pessoa: 'BRUNO', valor: 40 }] }),
+      divisao({
+        shares: [
+          { pessoa: 'ANA', valor: 60 },
+          { pessoa: 'BRUNO', valor: 40 },
+        ],
+      }),
     ];
     const r = aplicarDivisoes(dadosBase, divisoes);
     const joao = r.relatorio_por_pessoa.find((p) => p.dono === 'JOAO');
@@ -69,7 +74,12 @@ describe('aplicarDivisoes', () => {
 
   it('soma maior que o total é aceita (acerto intencional), total_fatura aumenta', () => {
     const divisoes = [
-      divisao({ shares: [{ pessoa: 'ANA', valor: 60 }, { pessoa: 'BRUNO', valor: 60 }] }),
+      divisao({
+        shares: [
+          { pessoa: 'ANA', valor: 60 },
+          { pessoa: 'BRUNO', valor: 60 },
+        ],
+      }),
     ];
     const r = aplicarDivisoes(dadosBase, divisoes);
     const joao = r.relatorio_por_pessoa.find((p) => p.dono === 'JOAO');
@@ -80,9 +90,7 @@ describe('aplicarDivisoes', () => {
   it('fatia gerada pode depois ser reatribuída via aplicarEdicoes (composição)', () => {
     const divisoes = [divisao({ shares: [{ pessoa: 'ANA', valor: 60 }] })];
     const comDivisao = aplicarDivisoes(dadosBase, divisoes);
-    const fatiaAna = comDivisao.relatorio_por_pessoa
-      .find((p) => p.dono === 'ANA')!
-      .itens[0];
+    const fatiaAna = comDivisao.relatorio_por_pessoa.find((p) => p.dono === 'ANA')!.itens[0];
 
     const edicoes: Edicao[] = [
       {
@@ -97,8 +105,8 @@ describe('aplicarDivisoes', () => {
     ];
     const final = aplicarEdicoes(comDivisao, edicoes);
     expect(final.relatorio_por_pessoa.find((p) => p.dono === 'ANA')).toBeUndefined();
-    expect(final.relatorio_por_pessoa.find((p) => p.dono === 'CARLA')?.total_individual).toBeCloseTo(
-      60,
-    );
+    expect(
+      final.relatorio_por_pessoa.find((p) => p.dono === 'CARLA')?.total_individual,
+    ).toBeCloseTo(60);
   });
 });

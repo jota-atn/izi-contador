@@ -24,8 +24,8 @@ export function EdicoesModal({ visible, onClose, edicoes, onRestaurar }: Props) 
 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={s.scroll}>
           <Text style={s.hint}>
-            Itens reatribuídos, renomeados ou removidos no app neste mês. Restaurar volta o item
-            ao estado original da fatura.
+            Itens reatribuídos, renomeados ou removidos no app neste mês. Restaurar volta o item ao
+            estado original da fatura.
           </Text>
 
           {edicoes.map((ed) => (
@@ -54,9 +54,7 @@ export function EdicoesModal({ visible, onClose, edicoes, onRestaurar }: Props) 
             </View>
           ))}
 
-          {edicoes.length === 0 && (
-            <Text style={s.empty}>Nenhuma edição feita neste mês.</Text>
-          )}
+          {edicoes.length === 0 && <Text style={s.empty}>Nenhuma edição feita neste mês.</Text>}
         </ScrollView>
       </SafeAreaView>
     </Modal>

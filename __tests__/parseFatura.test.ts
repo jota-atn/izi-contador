@@ -56,7 +56,9 @@ describe('parseFatura — splits', () => {
     );
     expect(pessoa(r, 'JOAO')?.itens.find((i) => i.descricao === 'CINEMA')?.dividido).toBe(true);
     expect(pessoa(r, 'SOFIA')?.itens[0].dividido).toBe(true);
-    expect(pessoa(r, 'JOAO')?.itens.find((i) => i.descricao === 'LOJA X')?.dividido).toBeUndefined();
+    expect(
+      pessoa(r, 'JOAO')?.itens.find((i) => i.descricao === 'LOJA X')?.dividido,
+    ).toBeUndefined();
   });
 
   it('- metade NOME divide 50/50 via sufixo dash', () => {

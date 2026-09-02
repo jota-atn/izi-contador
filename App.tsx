@@ -134,10 +134,11 @@ function AppContent() {
     remover: removerEdicao,
     reload: reloadEdicoes,
   } = useEdicoesFatura(userEmail, mesSelecionado);
-  const { orfas, remover: dispensarOrfa, reload: reloadOrfas } = useEdicoesOrfas(
-    userEmail,
-    mesSelecionado,
-  );
+  const {
+    orfas,
+    remover: dispensarOrfa,
+    reload: reloadOrfas,
+  } = useEdicoesOrfas(userEmail, mesSelecionado);
   const {
     divisoes,
     salvar: salvarDivisaoItem,

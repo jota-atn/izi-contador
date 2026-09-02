@@ -81,7 +81,10 @@ export function DividirItemModal({
 
   function handleSalvar() {
     const validos: DivisaoShare[] = shares
-      .map((s) => ({ pessoa: s.pessoa.trim().toUpperCase(), valor: parseFloat(s.valor.replace(',', '.')) }))
+      .map((s) => ({
+        pessoa: s.pessoa.trim().toUpperCase(),
+        valor: parseFloat(s.valor.replace(',', '.')),
+      }))
       .filter((s) => s.pessoa && !isNaN(s.valor) && s.valor > 0);
 
     if (validos.length === 0) {
@@ -122,11 +125,21 @@ export function DividirItemModal({
   const restante = parseFloat((item.valor - somaShares).toFixed(2));
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
       <SafeAreaView style={s.root}>
         <View style={s.header}>
-          <Text style={s.headerTitle}>{divisaoExistente ? 'Editar divisão' : 'Dividir compra'}</Text>
-          <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Text style={s.headerTitle}>
+            {divisaoExistente ? 'Editar divisão' : 'Dividir compra'}
+          </Text>
+          <TouchableOpacity
+            onPress={onClose}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <IconClose size={18} color="#64748b" />
           </TouchableOpacity>
         </View>
@@ -176,7 +189,11 @@ export function DividirItemModal({
               <Text style={s.rapidasLabel}>Adicionar</Text>
               <View style={s.rapidasChips}>
                 {pessoasRapidas.map((p) => (
-                  <TouchableOpacity key={p} style={s.chipRapido} onPress={() => handleAddShareRapido(p)}>
+                  <TouchableOpacity
+                    key={p}
+                    style={s.chipRapido}
+                    onPress={() => handleAddShareRapido(p)}
+                  >
                     <Text style={s.chipRapidoText}>+ {p}</Text>
                   </TouchableOpacity>
                 ))}

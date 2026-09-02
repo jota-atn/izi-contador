@@ -20,7 +20,9 @@ export async function reconciliarEdicoesResync(
 
   const itensValidos = new Set(
     dadosNovos.relatorio_por_pessoa.flatMap((p) =>
-      p.itens.map((i) => chaveEdicao({ item_desc: i.descricao, item_data: i.data, item_valor: i.valor })),
+      p.itens.map((i) =>
+        chaveEdicao({ item_desc: i.descricao, item_data: i.data, item_valor: i.valor }),
+      ),
     ),
   );
 
@@ -47,7 +49,9 @@ export async function reconciliarDivisoesResync(
 
   const itensValidos = new Set(
     dadosNovos.relatorio_por_pessoa.flatMap((p) =>
-      p.itens.map((i) => chaveEdicao({ item_desc: i.descricao, item_data: i.data, item_valor: i.valor })),
+      p.itens.map((i) =>
+        chaveEdicao({ item_desc: i.descricao, item_data: i.data, item_valor: i.valor }),
+      ),
     ),
   );
 

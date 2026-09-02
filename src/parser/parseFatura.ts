@@ -74,7 +74,12 @@ function expandSplitRows(
           .replace(/\s*-\s*\S+\s*$/, '')
           .trim();
         for (const { name, amount } of parsed) {
-          result.push({ ...row, amount, title: `${baseTitle} - ${normalizeName(name)}`, dividido: true });
+          result.push({
+            ...row,
+            amount,
+            title: `${baseTitle} - ${normalizeName(name)}`,
+            dividido: true,
+          });
         }
       }
     } else if (fixedMatch) {
@@ -90,7 +95,12 @@ function expandSplitRows(
         title: `${baseTitle} - ${normalizeName(defaultOwner)}`,
         dividido: true,
       });
-      result.push({ ...row, amount: personAmount, title: `${baseTitle} - ${splitPerson}`, dividido: true });
+      result.push({
+        ...row,
+        amount: personAmount,
+        title: `${baseTitle} - ${splitPerson}`,
+        dividido: true,
+      });
     } else if (fixedDashMatch) {
       const personAmount = parseFloat(fixedDashMatch[1].replace(',', '.'));
       const splitPerson = normalizeName(fixedDashMatch[2]);
@@ -102,20 +112,35 @@ function expandSplitRows(
         title: `${baseTitle} - ${normalizeName(defaultOwner)}`,
         dividido: true,
       });
-      result.push({ ...row, amount: personAmount, title: `${baseTitle} - ${splitPerson}`, dividido: true });
+      result.push({
+        ...row,
+        amount: personAmount,
+        title: `${baseTitle} - ${splitPerson}`,
+        dividido: true,
+      });
     } else if (parensMatch) {
       const half = row.amount / 2;
       const splitPerson = normalizeName(parensMatch[1]);
       const baseTitle = row.title.replace(SPLIT_PARENS, '').trim();
 
-      result.push({ ...row, amount: half, title: `${baseTitle} - ${normalizeName(defaultOwner)}`, dividido: true });
+      result.push({
+        ...row,
+        amount: half,
+        title: `${baseTitle} - ${normalizeName(defaultOwner)}`,
+        dividido: true,
+      });
       result.push({ ...row, amount: half, title: `${baseTitle} - ${splitPerson}`, dividido: true });
     } else if (dashMatch) {
       const half = row.amount / 2;
       const splitPerson = normalizeName(dashMatch[1]);
       const baseTitle = row.title.replace(SPLIT_DASH, '').trim();
 
-      result.push({ ...row, amount: half, title: `${baseTitle} - ${normalizeName(defaultOwner)}`, dividido: true });
+      result.push({
+        ...row,
+        amount: half,
+        title: `${baseTitle} - ${normalizeName(defaultOwner)}`,
+        dividido: true,
+      });
       result.push({ ...row, amount: half, title: `${baseTitle} - ${splitPerson}`, dividido: true });
     } else {
       result.push(row);

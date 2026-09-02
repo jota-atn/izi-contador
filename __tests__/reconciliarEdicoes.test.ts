@@ -1,7 +1,9 @@
 import { chaveEdicao, reconciliarEdicoes } from '../src/utils/reconciliarEdicoes';
 import { Edicao } from '../src/storage/edicoesFatura';
 
-function ed(overrides: Partial<Edicao> & Pick<Edicao, 'item_desc' | 'item_data' | 'item_valor'>): Edicao {
+function ed(
+  overrides: Partial<Edicao> & Pick<Edicao, 'item_desc' | 'item_data' | 'item_valor'>,
+): Edicao {
   return {
     mes: '2025-01',
     novo_dono: null,

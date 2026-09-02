@@ -137,7 +137,9 @@ describe('aplicarEdicoes', () => {
   });
 
   it('não marca como editado quando a edição salva não muda nada', () => {
-    const edicoes: Edicao[] = [ed({ item_desc: 'AMAZON', item_data: '2025-01-10', item_valor: 90 })];
+    const edicoes: Edicao[] = [
+      ed({ item_desc: 'AMAZON', item_data: '2025-01-10', item_valor: 90 }),
+    ];
     const r = aplicarEdicoes(dadosBase, edicoes);
     const joao = r.relatorio_por_pessoa.find((p) => p.dono === 'JOAO');
     expect(joao?.itens.find((i) => i.descricao === 'AMAZON')?.editado).toBeUndefined();

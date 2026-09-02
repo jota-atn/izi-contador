@@ -8,14 +8,22 @@ const historico: Historico = {
     mes: '2025-01',
     total_fatura: 100,
     relatorio_por_pessoa: [
-      { dono: 'JOAO', itens: [{ descricao: 'MERCADO', valor: 100, data: '2025-01-10' }], total_individual: 100 },
+      {
+        dono: 'JOAO',
+        itens: [{ descricao: 'MERCADO', valor: 100, data: '2025-01-10' }],
+        total_individual: 100,
+      },
     ],
   },
   '2025-02': {
     mes: '2025-02',
     total_fatura: 50,
     relatorio_por_pessoa: [
-      { dono: 'JOAO', itens: [{ descricao: 'NETFLIX', valor: 50, data: '2025-02-05' }], total_individual: 50 },
+      {
+        dono: 'JOAO',
+        itens: [{ descricao: 'NETFLIX', valor: 50, data: '2025-02-05' }],
+        total_individual: 50,
+      },
     ],
   },
 };
@@ -59,8 +67,12 @@ describe('aplicarHistoricoCompleto', () => {
   it('divisão de um mês explode o item e mantém o restante com o dono', () => {
     const r = aplicarHistoricoCompleto(historico, {}, { '2025-02': [divisao()] });
     const fev = r['2025-02'];
-    expect(fev.relatorio_por_pessoa.find((p) => p.dono === 'ANA')?.total_individual).toBeCloseTo(20);
-    expect(fev.relatorio_por_pessoa.find((p) => p.dono === 'JOAO')?.total_individual).toBeCloseTo(30);
+    expect(fev.relatorio_por_pessoa.find((p) => p.dono === 'ANA')?.total_individual).toBeCloseTo(
+      20,
+    );
+    expect(fev.relatorio_por_pessoa.find((p) => p.dono === 'JOAO')?.total_individual).toBeCloseTo(
+      30,
+    );
     // janeiro não tem divisão, continua igual
     expect(r['2025-01'].relatorio_por_pessoa[0].dono).toBe('JOAO');
   });
