@@ -17,6 +17,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SQLiteProvider, useSQLiteContext } from 'expo-sqlite';
 
 import { Gasto, RelatorioPessoa } from './src/types';
+import { DivisaoShare } from './src/storage/divisoesFatura';
 import { migrateDbAsync } from './src/storage/db';
 import { useGoogleAuth } from './src/auth/useGoogleAuth';
 import { useRelatorio } from './src/hooks/useRelatorio';
@@ -27,6 +28,11 @@ import { useAssinaturas } from './src/hooks/useAssinaturas';
 import { useEstadoFatura } from './src/hooks/useEstadoFatura';
 import { useAvisosDispensados } from './src/hooks/useAvisosDispensados';
 import { useEdicoesFatura } from './src/hooks/useEdicoesFatura';
+import { useEdicoesOrfas } from './src/hooks/useEdicoesOrfas';
+import { useDivisoesFatura } from './src/hooks/useDivisoesFatura';
+import { useDivisoesOrfas } from './src/hooks/useDivisoesOrfas';
+import { useEdicoesTodosMeses } from './src/hooks/useEdicoesTodosMeses';
+import { useDivisoesTodosMeses } from './src/hooks/useDivisoesTodosMeses';
 import { usePixKey } from './src/hooks/usePixKey';
 import { LoadingScreen } from './src/components/LoadingScreen';
 import { ErrorScreen } from './src/components/ErrorScreen';
@@ -36,6 +42,9 @@ import { PieChartCard } from './src/components/PieChartCard';
 import { PersonCard } from './src/components/PersonCard';
 import { SemCategoriaCard } from './src/components/SemCategoriaCard';
 import { AnotacoesInvalidasCard } from './src/components/AnotacoesInvalidasCard';
+import { EdicoesOrfasCard, OrfaRow } from './src/components/EdicoesOrfasCard';
+import { EdicoesModal } from './src/components/EdicoesModal';
+import { DividirItemModal } from './src/components/DividirItemModal';
 import { RegrasModal } from './src/components/RegrasModal';
 import { AssinaturasModal } from './src/components/AssinaturasModal';
 import { CategoriasModal } from './src/components/CategoriasModal';
@@ -66,12 +75,17 @@ import { IziBotScreen } from './src/screens/IziBotScreen';
 import { SEM_CATEGORIA } from './src/parser/parseFatura';
 import { formatSincronizacao, nomeMes } from './src/utils/meses';
 import { aplicarEdicoes } from './src/utils/aplicarEdicoes';
+import { aplicarDivisoes } from './src/utils/aplicarDivisoes';
+import { aplicarHistoricoCompleto } from './src/utils/aplicarHistoricoCompleto';
+import { descreverEdicao, descreverDivisao } from './src/utils/descreverEdicao';
 import { filtrarPessoas } from './src/utils/busca';
 import { haptic } from './src/utils/haptic';
 import { hashFatura } from './src/utils/hashFatura';
 import { exportarPdf } from './src/utils/exportarPdf';
 import { exportarBackup, importarBackup } from './src/utils/backupIO';
+import { reconciliarEdicoesResync, reconciliarDivisoesResync } from './src/utils/reconciliarFatura';
 import { IconDatabase } from './src/components/icons/IconDatabase';
+import { IconEdit } from './src/components/icons/IconEdit';
 
 export default function App() {
   return (
@@ -114,7 +128,29 @@ function AppContent() {
   );
   const { historico, meses, upsert } = useHistorico(userEmail);
   const [mesSelecionado, setMesSelecionado] = useState('');
-  const { edicoes, salvar: salvarEdicao, limparMes } = useEdicoesFatura(userEmail, mesSelecionado);
+  const {
+    edicoes,
+    salvar: salvarEdicao,
+    remover: removerEdicao,
+    reload: reloadEdicoes,
+  } = useEdicoesFatura(userEmail, mesSelecionado);
+  const { orfas, remover: dispensarOrfa, reload: reloadOrfas } = useEdicoesOrfas(
+    userEmail,
+    mesSelecionado,
+  );
+  const {
+    divisoes,
+    salvar: salvarDivisaoItem,
+    remover: removerDivisaoItem,
+    reload: reloadDivisoes,
+  } = useDivisoesFatura(userEmail, mesSelecionado);
+  const {
+    orfas: divisoesOrfas,
+    remover: dispensarDivisaoOrfa,
+    reload: reloadDivisoesOrfas,
+  } = useDivisoesOrfas(userEmail, mesSelecionado);
+  const { edicoesPorMes, reload: reloadEdicoesTodosMeses } = useEdicoesTodosMeses(userEmail);
+  const { divisoesPorMes, reload: reloadDivisoesTodosMeses } = useDivisoesTodosMeses(userEmail);
   const { pixKey, salvarPixKey } = usePixKey(userEmail);
   const {
     diaFechamento,
@@ -128,8 +164,12 @@ function AppContent() {
   const [showAssinaturas, setShowAssinaturas] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showPixKey, setShowPixKey] = useState(false);
+  const [showEdicoes, setShowEdicoes] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [itemEditando, setItemEditando] = useState<{ item: Gasto; donoAtual: string } | null>(null);
+  const [itemDividindo, setItemDividindo] = useState<{ item: Gasto; donoAtual: string } | null>(
+    null,
+  );
   const [pessoaQR, setPessoaQR] = useState<{ pessoa: RelatorioPessoa; mes: string } | null>(null);
   const [termoBusca, setTermoBusca] = useState('');
   const [activeTab, setActiveTab] = useState<'fatura' | 'stats' | 'bot'>('fatura');
@@ -137,10 +177,15 @@ function AppContent() {
   const donoAtualRef = useRef('');
   const historicoRef = useRef(historico);
   const promptadoRef = useRef<string | null>(null);
+  const mesSelecionadoRef = useRef(mesSelecionado);
 
   useEffect(() => {
     historicoRef.current = historico;
   }, [historico]);
+
+  useEffect(() => {
+    mesSelecionadoRef.current = mesSelecionado;
+  }, [mesSelecionado]);
 
   useEffect(() => {
     if (!userEmail) {
@@ -174,14 +219,39 @@ function AppContent() {
         { text: 'Agora não', style: 'cancel' },
         {
           text: 'Atualizar',
-          onPress: () => {
+          onPress: async () => {
             upsert(mes, { ...state.data, sincronizadoEm: new Date().toISOString() });
-            limparMes(mes);
+            // preserva as edições/divisões cuja chave (desc|data|valor) ainda existe nos itens
+            // novos; as que não existem mais viram avisos de divergência em vez de sumir sem aviso
+            const [{ houveOrfas: houveEdicoesOrfas }, { houveOrfas: houveDivisoesOrfas }] =
+              await Promise.all([
+                reconciliarEdicoesResync(db, userEmail, mes, state.data),
+                reconciliarDivisoesResync(db, userEmail, mes, state.data),
+              ]);
+            if (mes === mesSelecionadoRef.current) {
+              await Promise.all([reloadEdicoes(), reloadDivisoes()]);
+              if (houveEdicoesOrfas) await reloadOrfas();
+              if (houveDivisoesOrfas) await reloadDivisoesOrfas();
+            }
+            // "todos os meses" alimenta IziStats/IziBot, que agregam o histórico inteiro —
+            // recarrega sempre, independente de qual mês ressincronizou
+            await Promise.all([reloadEdicoesTodosMeses(), reloadDivisoesTodosMeses()]);
           },
         },
       ],
     );
-  }, [state, upsert, limparMes]);
+  }, [
+    state,
+    upsert,
+    db,
+    userEmail,
+    reloadEdicoes,
+    reloadOrfas,
+    reloadDivisoes,
+    reloadEdicoesTodosMeses,
+    reloadDivisoesTodosMeses,
+    reloadDivisoesOrfas,
+  ]);
 
   const dadosBrutos = useMemo(
     () =>
@@ -190,9 +260,21 @@ function AppContent() {
     [mesSelecionado, historico, state],
   );
 
+  const dadosComDivisoes = useMemo(
+    () => (dadosBrutos ? aplicarDivisoes(dadosBrutos, divisoes) : null),
+    [dadosBrutos, divisoes],
+  );
+
   const dadosExibidos = useMemo(
-    () => (dadosBrutos ? aplicarEdicoes(dadosBrutos, edicoes) : null),
-    [dadosBrutos, edicoes],
+    () => (dadosComDivisoes ? aplicarEdicoes(dadosComDivisoes, edicoes) : null),
+    [dadosComDivisoes, edicoes],
+  );
+
+  // histórico com edições/divisões aplicadas em todos os meses — só pra telas que agregam
+  // vários meses de uma vez (IziStats, IziBot); a aba Fatura usa dadosExibidos acima
+  const historicoCompleto = useMemo(
+    () => aplicarHistoricoCompleto(historico, edicoesPorMes, divisoesPorMes),
+    [historico, edicoesPorMes, divisoesPorMes],
   );
 
   const pessoas = useMemo(
@@ -214,6 +296,28 @@ function AppContent() {
       (item) => !isDispensado(mesSelecionado, item),
     );
   }, [dadosExibidos, mesSelecionado, meses, isDispensado]);
+
+  const itensOrfaos = useMemo<OrfaRow[]>(() => {
+    const deEdicoes: OrfaRow[] = orfas.map((ed) => ({
+      key: `ed-${ed.item_desc}-${ed.item_data}-${ed.item_valor}`,
+      titulo: ed.item_desc,
+      descricaoPerda: descreverEdicao(ed),
+      onDispensar: () => dispensarOrfa(ed),
+    }));
+    const deDivisoes: OrfaRow[] = divisoesOrfas.map((d) => ({
+      key: `div-${d.item_desc}-${d.item_data}-${d.item_valor}`,
+      titulo: d.item_desc,
+      descricaoPerda: descreverDivisao(d),
+      onDispensar: () =>
+        dispensarDivisaoOrfa({
+          mes: mesSelecionado,
+          item_desc: d.item_desc,
+          item_data: d.item_data,
+          item_valor: d.item_valor,
+        }),
+    }));
+    return [...deEdicoes, ...deDivisoes];
+  }, [orfas, divisoesOrfas, mesSelecionado, dispensarOrfa, dispensarDivisaoOrfa]);
 
   const idxMes = meses.indexOf(mesSelecionado);
   const mesAnterior = meses[idxMes + 1];
@@ -281,6 +385,7 @@ function AppContent() {
       nova_desc: novaDesc !== item.descricao ? novaDesc : null,
       deletado: false,
     });
+    await reloadEdicoesTodosMeses();
   }
 
   async function handleDeletarItem() {
@@ -295,6 +400,48 @@ function AppContent() {
       nova_desc: null,
       deletado: true,
     });
+    await reloadEdicoesTodosMeses();
+  }
+
+  const divisaoExistente = useMemo(() => {
+    if (!itemDividindo) return null;
+    const chave = itemDividindo.item.origemDivisao ?? {
+      item_desc: itemDividindo.item.descricao,
+      item_data: itemDividindo.item.data,
+      item_valor: itemDividindo.item.valor,
+    };
+    return (
+      divisoes.find(
+        (d) =>
+          d.item_desc === chave.item_desc &&
+          d.item_data === chave.item_data &&
+          d.item_valor === chave.item_valor,
+      ) ?? null
+    );
+  }, [divisoes, itemDividindo]);
+
+  async function handleSalvarDivisao(shares: DivisaoShare[]) {
+    if (!itemDividindo) return;
+    const { item } = itemDividindo;
+    const chave = item.origemDivisao ?? {
+      item_desc: item.descricao,
+      item_data: item.data,
+      item_valor: item.valor,
+    };
+    await salvarDivisaoItem(chave, shares);
+    await reloadDivisoesTodosMeses();
+  }
+
+  async function handleRemoverDivisao() {
+    if (!itemDividindo) return;
+    const { item } = itemDividindo;
+    const chave = item.origemDivisao ?? {
+      item_desc: item.descricao,
+      item_data: item.data,
+      item_valor: item.valor,
+    };
+    await removerDivisaoItem({ mes: mesSelecionado, ...chave });
+    await reloadDivisoesTodosMeses();
   }
 
   function handleSignOut() {
@@ -434,6 +581,12 @@ function AppContent() {
                   section: 'Ações',
                 },
                 {
+                  label: 'Edições deste mês',
+                  onPress: () => setShowEdicoes(true),
+                  icon: <IconEdit size={15} color="#a78bfa" />,
+                  section: 'Ações',
+                },
+                {
                   label: 'Categorias',
                   onPress: () => setShowCategorias(true),
                   icon: <IconSettings size={15} color="#a78bfa" />,
@@ -553,6 +706,11 @@ function AppContent() {
                     />
                   </View>
                 )}
+                {itensOrfaos.length > 0 && (
+                  <View style={{ marginHorizontal: 16 }}>
+                    <EdicoesOrfasCard itens={itensOrfaos} />
+                  </View>
+                )}
                 {pessoasOrdenadas.map((pessoa) => {
                   const ep = getEstado(mesSelecionado, pessoa.dono);
                   return (
@@ -580,7 +738,7 @@ function AppContent() {
 
           {activeTab === 'stats' && (
             <EstatsScreen
-              historico={historico}
+              historico={historicoCompleto}
               meses={meses}
               refreshing={refreshing}
               onRefresh={onRefresh}
@@ -589,7 +747,7 @@ function AppContent() {
 
           <View style={{ flex: 1, display: activeTab === 'bot' ? 'flex' : 'none' }}>
             <IziBotScreen
-              historico={historico}
+              historico={historicoCompleto}
               meses={meses}
               userName={userName}
               userEmail={userEmail}
@@ -662,6 +820,12 @@ function AppContent() {
         removeCategoria={removeCategoria}
         reset={reset}
       />
+      <EdicoesModal
+        visible={showEdicoes}
+        onClose={() => setShowEdicoes(false)}
+        edicoes={edicoes}
+        onRestaurar={removerEdicao}
+      />
       <EditarItemModal
         visible={itemEditando !== null}
         item={itemEditando?.item ?? null}
@@ -669,7 +833,18 @@ function AppContent() {
         pessoas={pessoas.map((p) => p.dono)}
         onSalvar={handleSalvarEdicao}
         onDeletar={handleDeletarItem}
+        onDividir={() => setItemDividindo(itemEditando)}
         onClose={() => setItemEditando(null)}
+      />
+      <DividirItemModal
+        visible={itemDividindo !== null}
+        item={itemDividindo?.item ?? null}
+        donoAtual={itemDividindo?.donoAtual ?? ''}
+        pessoas={pessoas.map((p) => p.dono)}
+        divisaoExistente={divisaoExistente}
+        onSalvar={handleSalvarDivisao}
+        onRemover={handleRemoverDivisao}
+        onClose={() => setItemDividindo(null)}
       />
       <ModalNotificacoes
         visible={showNotificacoes}
