@@ -377,13 +377,16 @@ function AppContent() {
   async function handleSalvarEdicao(novoDono: string, novaDesc: string) {
     if (!itemEditando) return;
     const { item } = itemEditando;
+    const novo_dono = novoDono !== donoAtualRef.current ? novoDono : null;
+    const nova_desc = novaDesc !== item.descricao ? novaDesc : null;
+    if (novo_dono === null && nova_desc === null) return; // nada mudou, não grava edição vazia
     await salvarEdicao({
       mes: mesSelecionado,
       item_desc: item.descricao,
       item_data: item.data,
       item_valor: item.valor,
-      novo_dono: novoDono !== donoAtualRef.current ? novoDono : null,
-      nova_desc: novaDesc !== item.descricao ? novaDesc : null,
+      novo_dono,
+      nova_desc,
       deletado: false,
     });
     await reloadEdicoesTodosMeses();
