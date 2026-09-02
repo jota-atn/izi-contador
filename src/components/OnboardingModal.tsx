@@ -5,6 +5,7 @@ import { IconSparkle } from './icons/IconSparkle';
 import { IconCard } from './icons/IconCard';
 import { IconBook } from './icons/IconBook';
 import { IconBell } from './icons/IconBell';
+import { IconEdit } from './icons/IconEdit';
 
 const { width: W } = Dimensions.get('window');
 
@@ -13,8 +14,8 @@ interface Props {
   onClose: () => void;
 }
 
-type SlideKey = 'welcome' | 'como' | 'anotar' | 'notif';
-const SLIDES: SlideKey[] = ['welcome', 'como', 'anotar', 'notif'];
+type SlideKey = 'welcome' | 'como' | 'anotar' | 'editar' | 'notif';
+const SLIDES: SlideKey[] = ['welcome', 'como', 'anotar', 'editar', 'notif'];
 
 export function OnboardingModal({ visible, onClose }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -65,6 +66,7 @@ export function OnboardingModal({ visible, onClose }: Props) {
               {key === 'welcome' && <SlideWelcome />}
               {key === 'como' && <SlideComo />}
               {key === 'anotar' && <SlideAnotar />}
+              {key === 'editar' && <SlideEditar />}
               {key === 'notif' && <SlideNotif />}
             </View>
           ))}
@@ -154,6 +156,30 @@ function SlideAnotar() {
         <ExampleRow input="MERCADO (menos 30 Pedro)" output="Pedro paga R$30, você o resto" />
       </View>
       <Text style={s.hint}>Ver todos os formatos em Menu ⋮ › Como anotar</Text>
+    </View>
+  );
+}
+
+function SlideEditar() {
+  return (
+    <View style={s.slideInner}>
+      <View style={[s.iconCircle, { backgroundColor: '#052e16' }]}>
+        <IconEdit size={40} color="#4ade80" />
+      </View>
+      <Text style={s.slideTitle}>
+        <Text style={s.white}>Ajuste</Text>
+        {' direto no app'}
+      </Text>
+      <Text style={s.slideBody}>
+        Errou a divisão ou quer mudar alguma coisa depois? Não precisa editar nada no Nubank — toque
+        no item.
+      </Text>
+      <View style={s.stepList}>
+        <StepItem n="1" text="Toque num item pra reatribuir, renomear ou remover" />
+        <StepItem n="2" text="Use 'Dividir compra' pra separar entre várias pessoas" />
+        <StepItem n="3" text="Marque 'sempre atribuir' pra criar uma regra automática" />
+      </View>
+      <Text style={s.hint}>Veja tudo em Menu ⋮ › Edições deste mês</Text>
     </View>
   );
 }
