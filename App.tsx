@@ -482,6 +482,17 @@ function AppContent() {
     await Share.share({ message: linhas.join('\n\n') });
   };
 
+  const compartilharPendentes = async () => {
+    const pendentes = pessoas.filter((p) => !getEstado(mesSelecionado, p.dono).pago);
+    if (pendentes.length === 0) return;
+    const linhas = pendentes.map((p) => {
+      const itens = p.itens.map((i) => `${i.descricao} - ${i.valor.toFixed(2)}`).join('\n');
+      return `${p.dono}\n${itens}\nTotal = ${p.total_individual.toFixed(2)}`;
+    });
+    if (pixKey) linhas.push(`Pix: ${pixKey}`);
+    await Share.share({ message: linhas.join('\n\n') });
+  };
+
   const exportarRelatorioPdf = async () => {
     if (!dadosExibidos) return;
     const estadoPorPessoa: Record<string, { pago: boolean }> = {};
@@ -688,6 +699,7 @@ function AppContent() {
                     mesAnterior={mesAnterior}
                     {...pagamentoStatus}
                     onPagarFatura={handlePagarFatura}
+                    onCobrarPendentes={compartilharPendentes}
                     onExportarPdf={exportarRelatorioPdf}
                   />
                 </View>

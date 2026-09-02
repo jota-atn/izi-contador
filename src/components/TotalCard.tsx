@@ -15,6 +15,7 @@ interface Props {
   totalPendente: number;
   numPendente: number;
   onPagarFatura?: () => void;
+  onCobrarPendentes?: () => void;
   onExportarPdf?: () => void;
 }
 
@@ -28,6 +29,7 @@ export const TotalCard = memo(function TotalCard({
   totalPendente,
   numPendente,
   onPagarFatura,
+  onCobrarPendentes,
   onExportarPdf,
 }: Props) {
   const diff = totalAnterior !== undefined ? total - totalAnterior : null;
@@ -128,10 +130,23 @@ export const TotalCard = memo(function TotalCard({
             </View>
           </View>
 
-          {numPendente > 0 && onPagarFatura && (
-            <TouchableOpacity style={s.btnPagar} onPress={onPagarFatura} activeOpacity={0.8}>
-              <Text style={s.btnPagarText}>Pagar fatura</Text>
-            </TouchableOpacity>
+          {numPendente > 0 && (onPagarFatura || onCobrarPendentes) && (
+            <View style={s.acoesPendentes}>
+              {onCobrarPendentes && (
+                <TouchableOpacity
+                  style={s.btnCobrar}
+                  onPress={onCobrarPendentes}
+                  activeOpacity={0.8}
+                >
+                  <Text style={s.btnCobrarText}>Cobrar pendentes</Text>
+                </TouchableOpacity>
+              )}
+              {onPagarFatura && (
+                <TouchableOpacity style={s.btnPagar} onPress={onPagarFatura} activeOpacity={0.8}>
+                  <Text style={s.btnPagarText}>Pagar fatura</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           )}
         </View>
       )}
@@ -152,8 +167,9 @@ const s = StyleSheet.create({
     paddingVertical: 3,
   },
   quitadaText: { color: '#4ade80', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+  acoesPendentes: { flexDirection: 'row', gap: 8, marginTop: 4 },
   btnPagar: {
-    marginTop: 4,
+    flex: 1,
     backgroundColor: '#1e293b',
     borderRadius: 12,
     paddingVertical: 12,
@@ -162,6 +178,16 @@ const s = StyleSheet.create({
     borderColor: '#334155',
   },
   btnPagarText: { color: '#e2e8f0', fontSize: 13, fontWeight: '800', letterSpacing: 0.3 },
+  btnCobrar: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#4c1d95',
+  },
+  btnCobrarText: { color: '#a78bfa', fontSize: 13, fontWeight: '800', letterSpacing: 0.3 },
   painel: {
     borderTopWidth: 1,
     borderTopColor: '#1e293b',
