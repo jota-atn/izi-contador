@@ -4,16 +4,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Categorias } from '../config/categorias';
 import { RegrasAlocacao } from '../config/regrasAlocacao';
 import { Assinatura } from '../config/assinaturas';
+import { Orcamentos } from '../config/orcamentos';
 import { CategoriasContent } from './CategoriasContent';
 import { RegrasContent } from './RegrasContent';
 import { AssinaturasContent } from './AssinaturasContent';
+import { OrcamentoContent } from './OrcamentoContent';
 
-type Tab = 'categorias' | 'regras' | 'assinaturas';
+type Tab = 'categorias' | 'regras' | 'assinaturas' | 'orcamento';
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'categorias', label: 'Categorias' },
   { key: 'regras', label: 'Regras' },
   { key: 'assinaturas', label: 'Assinaturas' },
+  { key: 'orcamento', label: 'Orçamento' },
 ];
 
 interface Props {
@@ -32,6 +35,8 @@ interface Props {
   pessoas: string[];
   salvarAssinatura: (assinatura: Assinatura) => void;
   removerAssinatura: (keyword: string) => void;
+  orcamentos: Orcamentos;
+  setLimite: (categoria: string, limite: number | null) => void;
 }
 
 export function AutomacaoModal({
@@ -50,6 +55,8 @@ export function AutomacaoModal({
   pessoas,
   salvarAssinatura,
   removerAssinatura,
+  orcamentos,
+  setLimite,
 }: Props) {
   const [tab, setTab] = useState<Tab>('categorias');
 
@@ -95,6 +102,9 @@ export function AutomacaoModal({
             salvarAssinatura={salvarAssinatura}
             removerAssinatura={removerAssinatura}
           />
+        )}
+        {tab === 'orcamento' && (
+          <OrcamentoContent categorias={categorias} orcamentos={orcamentos} setLimite={setLimite} />
         )}
       </SafeAreaView>
     </Modal>

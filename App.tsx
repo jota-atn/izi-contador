@@ -25,6 +25,8 @@ import { useCategorias } from './src/hooks/useCategorias';
 import { useHistorico } from './src/hooks/useHistorico';
 import { useRegrasAlocacao } from './src/hooks/useRegrasAlocacao';
 import { useAssinaturas } from './src/hooks/useAssinaturas';
+import { useOrcamentos } from './src/hooks/useOrcamentos';
+import { useOrcamentoAlertas } from './src/hooks/useOrcamentoAlertas';
 import { useEstadoFatura } from './src/hooks/useEstadoFatura';
 import { useAvisosDispensados } from './src/hooks/useAvisosDispensados';
 import { useEdicoesFatura } from './src/hooks/useEdicoesFatura';
@@ -82,6 +84,8 @@ import { exportarPdf } from './src/utils/exportarPdf';
 import { exportarBackup, importarBackup } from './src/utils/backupIO';
 import { exportarCsv } from './src/utils/exportarCsv';
 import { reconciliarEdicoesResync, reconciliarDivisoesResync } from './src/utils/reconciliarFatura';
+import { verificarOrcamentos } from './src/utils/verificarOrcamentos';
+import { notificarOrcamentosEstourados } from './src/utils/notificarOrcamentos';
 import { IconDatabase } from './src/components/icons/IconDatabase';
 import { IconEdit } from './src/components/icons/IconEdit';
 
@@ -114,6 +118,9 @@ function AppContent() {
     useCategorias(userEmail);
   const { regras, addRegra, removeRegra } = useRegrasAlocacao(userEmail);
   const { assinaturas, salvarAssinatura, removerAssinatura } = useAssinaturas(userEmail);
+  const { orcamentos, setLimite } = useOrcamentos(userEmail);
+  const { jaAlertado: jaAlertadoOrcamento, marcarAlertado: marcarAlertadoOrcamento } =
+    useOrcamentoAlertas(userEmail);
   const { getEstado, toggleOculto, togglePago, marcarTodosPago } = useEstadoFatura(userEmail);
   const { isDispensado, dispensar } = useAvisosDispensados(userEmail);
   const { state, refresh } = useRelatorio(
@@ -205,6 +212,12 @@ function AppContent() {
     const existing = historicoRef.current[mes];
     if (!existing || hashFatura(existing) === hashFatura(state.data)) {
       upsert(mes, { ...state.data, sincronizadoEm: new Date().toISOString() });
+      notificarOrcamentosEstourados(
+        verificarOrcamentos(state.data, categorias, orcamentos),
+        mes,
+        jaAlertadoOrcamento,
+        marcarAlertadoOrcamento,
+      );
       // nada mudou (ou é a primeira sincronização) — não há motivo para apagar
       // as edições/alocações já feitas pelo usuário nesse mês
       return;
@@ -223,6 +236,12 @@ function AppContent() {
           text: 'Atualizar',
           onPress: async () => {
             upsert(mes, { ...state.data, sincronizadoEm: new Date().toISOString() });
+            notificarOrcamentosEstourados(
+              verificarOrcamentos(state.data, categorias, orcamentos),
+              mes,
+              jaAlertadoOrcamento,
+              marcarAlertadoOrcamento,
+            );
             // preserva as edições/divisões cuja chave (desc|data|valor) ainda existe nos itens
             // novos; as que não existem mais viram avisos de divergência em vez de sumir sem aviso
             const [{ houveOrfas: houveEdicoesOrfas }, { houveOrfas: houveDivisoesOrfas }] =
@@ -253,6 +272,10 @@ function AppContent() {
     reloadEdicoesTodosMeses,
     reloadDivisoesTodosMeses,
     reloadDivisoesOrfas,
+    categorias,
+    orcamentos,
+    jaAlertadoOrcamento,
+    marcarAlertadoOrcamento,
   ]);
 
   const dadosBrutos = useMemo(
@@ -751,6 +774,7 @@ function AppContent() {
               refreshing={refreshing}
               onRefresh={onRefresh}
               categorias={categorias}
+              orcamentos={orcamentos}
             />
           )}
 
@@ -824,6 +848,8 @@ function AppContent() {
         pessoas={pessoas.map((p) => p.dono)}
         salvarAssinatura={salvarAssinatura}
         removerAssinatura={removerAssinatura}
+        orcamentos={orcamentos}
+        setLimite={setLimite}
       />
       <BackupModal
         visible={showBackup}
