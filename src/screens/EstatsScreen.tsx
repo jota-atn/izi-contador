@@ -4,6 +4,7 @@ import { LineChart } from 'react-native-chart-kit';
 import { Historico } from '../hooks/useHistorico';
 import { Categorias } from '../config/categorias';
 import { SEM_CATEGORIA, SEM_CATEGORIA_LABEL } from '../parser/parseFatura';
+import { categorizarGasto } from '../utils/categorizarGasto';
 import { MESES_PT, nomeMes } from '../utils/meses';
 import {
   CHART_COLOR_OUTROS,
@@ -110,15 +111,11 @@ export const EstatsScreen = memo(function EstatsScreen({
   // começa com "CATEGORIA - " (fatia gerada por uma divisão feita no app); o resto
   // (a maioria das compras, sem palavra-chave de categoria) cai em "Outros"
   const categoriasAcumulado = useMemo(() => {
-    const nomesCategorias = Object.keys(categorias);
     const byCategoria: Record<string, number> = {};
     mesesCron.forEach((mes) => {
       historico[mes].relatorio_por_pessoa.forEach((p) => {
         p.itens.forEach((item) => {
-          const categoria =
-            nomesCategorias.find(
-              (c) => item.descricao === c || item.descricao.startsWith(`${c} - `),
-            ) ?? 'Outros';
+          const categoria = categorizarGasto(item.descricao, categorias);
           byCategoria[categoria] = (byCategoria[categoria] ?? 0) + item.valor;
         });
       });

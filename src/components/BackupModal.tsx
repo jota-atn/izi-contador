@@ -2,15 +2,17 @@ import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconClose } from './icons/IconClose';
 import { IconDatabase } from './icons/IconDatabase';
+import { IconTable } from './icons/IconTable';
 
 interface Props {
   visible: boolean;
   onClose: () => void;
   onExportar: () => void;
   onImportar: () => void;
+  onExportarCsv: () => void;
 }
 
-export function BackupModal({ visible, onClose, onExportar, onImportar }: Props) {
+export function BackupModal({ visible, onClose, onExportar, onImportar, onExportarCsv }: Props) {
   return (
     <Modal
       visible={visible}
@@ -56,6 +58,24 @@ export function BackupModal({ visible, onClose, onExportar, onImportar }: Props)
             <IconDatabase size={16} color="#a78bfa" />
             <Text style={s.btnText}>Importar backup</Text>
           </TouchableOpacity>
+
+          <View style={s.divider} />
+
+          <Text style={s.hint}>
+            Ou exporte uma planilha (CSV) com uma linha por item de todo o histórico — pra abrir no
+            Excel/Google Sheets e fazer suas próprias análises.
+          </Text>
+
+          <TouchableOpacity
+            style={s.btn}
+            onPress={() => {
+              onClose();
+              onExportarCsv();
+            }}
+          >
+            <IconTable size={16} color="#a78bfa" />
+            <Text style={s.btnText}>Exportar planilha (CSV)</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     </Modal>
@@ -76,6 +96,7 @@ const s = StyleSheet.create({
   headerTitle: { color: '#fff', fontSize: 17, fontWeight: '800' },
   content: { padding: 24, gap: 14 },
   hint: { color: '#64748b', fontSize: 12, lineHeight: 18, marginBottom: 4 },
+  divider: { height: 1, backgroundColor: '#1e293b', marginVertical: 4 },
   btn: {
     flexDirection: 'row',
     alignItems: 'center',

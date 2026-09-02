@@ -80,6 +80,7 @@ import { haptic } from './src/utils/haptic';
 import { hashFatura } from './src/utils/hashFatura';
 import { exportarPdf } from './src/utils/exportarPdf';
 import { exportarBackup, importarBackup } from './src/utils/backupIO';
+import { exportarCsv } from './src/utils/exportarCsv';
 import { reconciliarEdicoesResync, reconciliarDivisoesResync } from './src/utils/reconciliarFatura';
 import { IconDatabase } from './src/components/icons/IconDatabase';
 import { IconEdit } from './src/components/icons/IconEdit';
@@ -515,6 +516,15 @@ function AppContent() {
     }
   };
 
+  const handleExportarCsv = async () => {
+    try {
+      await exportarCsv(historicoCompleto, meses, categorias, getEstado);
+    } catch (e) {
+      console.error('[App] exportarCsv falhou:', e);
+      Alert.alert('Erro', 'Não foi possível gerar a planilha.');
+    }
+  };
+
   const handleImportarBackup = () => {
     Alert.alert(
       'Importar backup',
@@ -820,6 +830,7 @@ function AppContent() {
         onClose={() => setShowBackup(false)}
         onExportar={handleExportarBackup}
         onImportar={handleImportarBackup}
+        onExportarCsv={handleExportarCsv}
       />
       <EdicoesModal
         visible={showEdicoes}
