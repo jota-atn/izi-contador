@@ -56,5 +56,5 @@ export function useEdicoesFatura(userId: string, mes: string) {
     [db, userId, load],
   );
 
-  return { edicoes, salvar, remover, limparMes };
+  return { edicoes, salvar, remover, limparMes, reload: load };
 }

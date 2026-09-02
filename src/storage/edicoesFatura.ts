@@ -33,6 +33,30 @@ export async function loadEdicoes(
   return rows.map((r) => ({ ...r, deletado: r.deletado === 1 }));
 }
 
+export async function loadEdicoesTodosMeses(
+  db: SQLiteDatabase,
+  userId: string,
+): Promise<Record<string, Edicao[]>> {
+  const rows = await db.getAllAsync<{
+    mes: string;
+    item_desc: string;
+    item_data: string;
+    item_valor: number;
+    novo_dono: string | null;
+    nova_desc: string | null;
+    deletado: number;
+  }>(
+    'SELECT mes, item_desc, item_data, item_valor, novo_dono, nova_desc, deletado FROM edicoes_v1 WHERE user_id = ?',
+    userId,
+  );
+  const porMes: Record<string, Edicao[]> = {};
+  for (const r of rows) {
+    const ed: Edicao = { ...r, deletado: r.deletado === 1 };
+    (porMes[r.mes] ??= []).push(ed);
+  }
+  return porMes;
+}
+
 export async function upsertEdicao(db: SQLiteDatabase, userId: string, ed: Edicao): Promise<void> {
   await db.runAsync(
     `INSERT INTO edicoes_v1 (user_id, mes, item_desc, item_data, item_valor, novo_dono, nova_desc, deletado)

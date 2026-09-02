@@ -28,7 +28,19 @@ export const SemCategoriaCard = memo(function SemCategoriaCard({ grupo, onEditar
             activeOpacity={0.7}
           >
             <View style={s.descCol}>
-              <Text style={s.desc}>{item.descricao}</Text>
+              <View style={s.descRow}>
+                <Text style={s.desc}>{item.descricao}</Text>
+                {item.editado && (
+                  <View style={[s.tag, s.tagEditado]}>
+                    <Text style={[s.tagText, s.tagTextEditado]}>editado</Text>
+                  </View>
+                )}
+                {item.dividido && (
+                  <View style={[s.tag, s.tagDividido]}>
+                    <Text style={[s.tagText, s.tagTextDividido]}>dividido</Text>
+                  </View>
+                )}
+              </View>
               <Text style={s.date}>{item.data}</Text>
             </View>
             <View style={s.badge}>
@@ -71,6 +83,7 @@ const s = StyleSheet.create({
   body: { paddingHorizontal: 24, paddingVertical: 16, gap: 12 },
   row: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   descCol: { flex: 1, marginRight: 16 },
+  descRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
   desc: {
     color: '#94a3b8',
     fontSize: 11,
@@ -79,6 +92,17 @@ const s = StyleSheet.create({
     letterSpacing: 0.3,
   },
   date: { color: '#475569', fontSize: 10, marginTop: 2 },
+  tag: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 5 },
+  tagEditado: { backgroundColor: '#2e1065' },
+  tagDividido: { backgroundColor: '#1e293b' },
+  tagText: {
+    fontSize: 8,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  tagTextEditado: { color: '#a78bfa' },
+  tagTextDividido: { color: '#64748b' },
   badge: {
     backgroundColor: '#1c0a00',
     paddingHorizontal: 8,

@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Gasto } from '../types';
 import { haptic } from '../utils/haptic';
 import { IconClose } from './icons/IconClose';
+import { IconSplit } from './icons/IconSplit';
 import { IconWarning } from './icons/IconWarning';
 
 interface Props {
@@ -22,6 +23,7 @@ interface Props {
   pessoas: string[];
   onSalvar: (novaDono: string, novaDesc: string) => void;
   onDeletar: () => void;
+  onDividir: () => void;
   onClose: () => void;
 }
 
@@ -32,6 +34,7 @@ export function EditarItemModal({
   pessoas,
   onSalvar,
   onDeletar,
+  onDividir,
   onClose,
 }: Props) {
   const [desc, setDesc] = useState('');
@@ -70,6 +73,18 @@ export function EditarItemModal({
         },
       },
     ]);
+  }
+
+  function handleDividir() {
+    if (item!.editado) {
+      Alert.alert(
+        'Restaure a edição primeiro',
+        'Este item já foi reatribuído ou renomeado no app. Restaure a edição original (menu → Edições deste mês) antes de dividir.',
+      );
+      return;
+    }
+    onDividir();
+    onClose();
   }
 
   function handleSelecionarPessoa(p: string) {
@@ -159,12 +174,20 @@ export function EditarItemModal({
         </ScrollView>
 
         <View style={s.footer}>
-          <TouchableOpacity style={s.btnDeletar} onPress={handleDeletar}>
-            <Text style={s.btnDeletarText}>Deletar item</Text>
+          <TouchableOpacity style={s.btnDividir} onPress={handleDividir}>
+            <IconSplit size={13} color="#a78bfa" />
+            <Text style={s.btnDividirText}>
+              {item.origemDivisao ? 'Editar divisão' : 'Dividir compra'}
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={s.btnSalvar} onPress={handleSalvar}>
-            <Text style={s.btnSalvarText}>Salvar</Text>
-          </TouchableOpacity>
+          <View style={s.footerRow}>
+            <TouchableOpacity style={s.btnDeletar} onPress={handleDeletar}>
+              <Text style={s.btnDeletarText}>Deletar item</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.btnSalvar} onPress={handleSalvar}>
+              <Text style={s.btnSalvarText}>Salvar</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </SafeAreaView>
     </Modal>
@@ -228,12 +251,23 @@ const s = StyleSheet.create({
   aviso: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 8 },
   avisoText: { color: '#f59e0b', fontSize: 11, fontWeight: '600', lineHeight: 16, flex: 1 },
   footer: {
-    flexDirection: 'row',
-    gap: 12,
+    gap: 10,
     padding: 24,
     borderTopWidth: 1,
     borderTopColor: '#1e293b',
   },
+  footerRow: { flexDirection: 'row', gap: 12 },
+  btnDividir: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  btnDividirText: { color: '#a78bfa', fontSize: 13, fontWeight: '700' },
   btnDeletar: {
     flex: 1,
     paddingVertical: 14,

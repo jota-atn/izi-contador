@@ -19,6 +19,7 @@ interface Row {
   date: string;
   title: string;
   amount: number;
+  dividido?: boolean;
 }
 
 function parseAmount(raw: string): number {
@@ -73,7 +74,7 @@ function expandSplitRows(
           .replace(/\s*-\s*\S+\s*$/, '')
           .trim();
         for (const { name, amount } of parsed) {
-          result.push({ ...row, amount, title: `${baseTitle} - ${normalizeName(name)}` });
+          result.push({ ...row, amount, title: `${baseTitle} - ${normalizeName(name)}`, dividido: true });
         }
       }
     } else if (fixedMatch) {
@@ -87,8 +88,9 @@ function expandSplitRows(
         ...row,
         amount: row.amount - personAmount,
         title: `${baseTitle} - ${normalizeName(defaultOwner)}`,
+        dividido: true,
       });
-      result.push({ ...row, amount: personAmount, title: `${baseTitle} - ${splitPerson}` });
+      result.push({ ...row, amount: personAmount, title: `${baseTitle} - ${splitPerson}`, dividido: true });
     } else if (fixedDashMatch) {
       const personAmount = parseFloat(fixedDashMatch[1].replace(',', '.'));
       const splitPerson = normalizeName(fixedDashMatch[2]);
@@ -98,22 +100,23 @@ function expandSplitRows(
         ...row,
         amount: row.amount - personAmount,
         title: `${baseTitle} - ${normalizeName(defaultOwner)}`,
+        dividido: true,
       });
-      result.push({ ...row, amount: personAmount, title: `${baseTitle} - ${splitPerson}` });
+      result.push({ ...row, amount: personAmount, title: `${baseTitle} - ${splitPerson}`, dividido: true });
     } else if (parensMatch) {
       const half = row.amount / 2;
       const splitPerson = normalizeName(parensMatch[1]);
       const baseTitle = row.title.replace(SPLIT_PARENS, '').trim();
 
-      result.push({ ...row, amount: half, title: `${baseTitle} - ${normalizeName(defaultOwner)}` });
-      result.push({ ...row, amount: half, title: `${baseTitle} - ${splitPerson}` });
+      result.push({ ...row, amount: half, title: `${baseTitle} - ${normalizeName(defaultOwner)}`, dividido: true });
+      result.push({ ...row, amount: half, title: `${baseTitle} - ${splitPerson}`, dividido: true });
     } else if (dashMatch) {
       const half = row.amount / 2;
       const splitPerson = normalizeName(dashMatch[1]);
       const baseTitle = row.title.replace(SPLIT_DASH, '').trim();
 
-      result.push({ ...row, amount: half, title: `${baseTitle} - ${normalizeName(defaultOwner)}` });
-      result.push({ ...row, amount: half, title: `${baseTitle} - ${splitPerson}` });
+      result.push({ ...row, amount: half, title: `${baseTitle} - ${normalizeName(defaultOwner)}`, dividido: true });
+      result.push({ ...row, amount: half, title: `${baseTitle} - ${splitPerson}`, dividido: true });
     } else {
       result.push(row);
     }
@@ -292,7 +295,7 @@ export function parseFatura(
   // chave interna = nome normalizado (sem acentos); display = primeira forma vista
   const porDono = new Map<
     string,
-    { display: string; itensMap: Map<string, { total: number; date: string }> }
+    { display: string; itensMap: Map<string, { total: number; date: string; dividido: boolean }> }
   >();
 
   for (const row of rows) {
@@ -304,11 +307,14 @@ export function parseFatura(
 
     const isCategoria = Object.keys(categorias).includes(exibicao);
     if (itensMap.has(exibicao)) {
-      itensMap.get(exibicao)!.total += row.amount;
+      const atual = itensMap.get(exibicao)!;
+      atual.total += row.amount;
+      atual.dividido = atual.dividido || !!row.dividido;
     } else {
       itensMap.set(exibicao, {
         total: row.amount,
         date: isCategoria ? 'Agrupado' : row.date,
+        dividido: !!row.dividido,
       });
     }
   }
@@ -318,7 +324,12 @@ export function parseFatura(
 
   for (const [, { display: dono, itensMap }] of porDono.entries()) {
     const itens: Gasto[] = Array.from(itensMap.entries())
-      .map(([descricao, { total, date }]) => ({ descricao, valor: total, data: date }))
+      .map(([descricao, { total, date, dividido }]) => ({
+        descricao,
+        valor: total,
+        data: date,
+        ...(dividido && { dividido: true }),
+      }))
       .sort((a, b) => b.valor - a.valor);
 
     const totalIndividual = parseFloat(itens.reduce((s, i) => s + i.valor, 0).toFixed(2));

@@ -127,6 +127,22 @@ describe('aplicarEdicoes', () => {
     expect(joao?.total_individual).toBeCloseTo(220);
   });
 
+  it('marca item como editado quando dono ou descrição mudam', () => {
+    const edicoes: Edicao[] = [
+      ed({ item_desc: 'AMAZON', item_data: '2025-01-10', item_valor: 90, novo_dono: 'SOFIA' }),
+    ];
+    const r = aplicarEdicoes(dadosBase, edicoes);
+    const sofia = r.relatorio_por_pessoa.find((p) => p.dono === 'SOFIA');
+    expect(sofia?.itens.find((i) => i.descricao === 'AMAZON')?.editado).toBe(true);
+  });
+
+  it('não marca como editado quando a edição salva não muda nada', () => {
+    const edicoes: Edicao[] = [ed({ item_desc: 'AMAZON', item_data: '2025-01-10', item_valor: 90 })];
+    const r = aplicarEdicoes(dadosBase, edicoes);
+    const joao = r.relatorio_por_pessoa.find((p) => p.dono === 'JOAO');
+    expect(joao?.itens.find((i) => i.descricao === 'AMAZON')?.editado).toBeUndefined();
+  });
+
   it('deletar todos os itens de uma pessoa remove o card', () => {
     const edicoes: Edicao[] = [
       ed({ item_desc: 'ALMOÇO', item_data: '2025-01-12', item_valor: 30, deletado: true }),

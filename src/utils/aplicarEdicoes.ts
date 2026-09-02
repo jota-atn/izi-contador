@@ -23,7 +23,8 @@ export function aplicarEdicoes(dados: RelatorioFatura, edicoes: Edicao[]): Relat
 
       const dono = ed?.novo_dono ?? pessoa.dono;
       const desc = ed?.nova_desc ?? item.descricao;
-      const gastoFinal: Gasto = { ...item, descricao: desc };
+      const foiEditado = !!(ed?.novo_dono || ed?.nova_desc);
+      const gastoFinal: Gasto = { ...item, descricao: desc, ...(foiEditado && { editado: true }) };
 
       if (!pessoasMap.has(dono)) {
         pessoasMap.set(dono, { dono, itens: [], total_individual: 0 });
@@ -32,6 +33,7 @@ export function aplicarEdicoes(dados: RelatorioFatura, edicoes: Edicao[]): Relat
       const existente = p.itens.find((i) => i.descricao === desc);
       if (existente) {
         existente.valor = parseFloat((existente.valor + item.valor).toFixed(2));
+        if (foiEditado) existente.editado = true;
       } else {
         p.itens.push(gastoFinal);
       }

@@ -45,5 +45,38 @@ export async function migrateDbAsync(db: SQLiteDatabase): Promise<void> {
       soma    REAL NOT NULL,
       PRIMARY KEY (user_id, mes, titulo, valor, soma)
     );
+    CREATE TABLE IF NOT EXISTS edicoes_orfas_v1 (
+      user_id      TEXT NOT NULL,
+      mes          TEXT NOT NULL,
+      item_desc    TEXT NOT NULL,
+      item_data    TEXT NOT NULL,
+      item_valor   REAL NOT NULL,
+      novo_dono    TEXT,
+      nova_desc    TEXT,
+      deletado     INTEGER NOT NULL DEFAULT 0,
+      detectado_em TEXT NOT NULL,
+      PRIMARY KEY (user_id, mes, item_desc, item_data, item_valor)
+    );
+    CREATE TABLE IF NOT EXISTS divisoes_v1 (
+      user_id    TEXT NOT NULL,
+      mes        TEXT NOT NULL,
+      item_desc  TEXT NOT NULL,
+      item_data  TEXT NOT NULL,
+      item_valor REAL NOT NULL,
+      pessoa     TEXT NOT NULL,
+      valor      REAL NOT NULL,
+      PRIMARY KEY (user_id, mes, item_desc, item_data, item_valor, pessoa)
+    );
+    CREATE TABLE IF NOT EXISTS divisoes_orfas_v1 (
+      user_id      TEXT NOT NULL,
+      mes          TEXT NOT NULL,
+      item_desc    TEXT NOT NULL,
+      item_data    TEXT NOT NULL,
+      item_valor   REAL NOT NULL,
+      pessoa       TEXT NOT NULL,
+      valor        REAL NOT NULL,
+      detectado_em TEXT NOT NULL,
+      PRIMARY KEY (user_id, mes, item_desc, item_data, item_valor, pessoa)
+    );
   `);
 }

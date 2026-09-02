@@ -49,6 +49,16 @@ describe('parseFatura — splits', () => {
     expect(pessoa(r, 'SOFIA')?.total_individual).toBeCloseTo(50);
   });
 
+  it('itens de um split são marcados como divididos, item normal não', () => {
+    const r = parseFatura(
+      csv('2025-01-10,CINEMA (metade SOFIA),100,00', '2025-01-11,LOJA X - JOAO,50,00'),
+      'JOAO',
+    );
+    expect(pessoa(r, 'JOAO')?.itens.find((i) => i.descricao === 'CINEMA')?.dividido).toBe(true);
+    expect(pessoa(r, 'SOFIA')?.itens[0].dividido).toBe(true);
+    expect(pessoa(r, 'JOAO')?.itens.find((i) => i.descricao === 'LOJA X')?.dividido).toBeUndefined();
+  });
+
   it('- metade NOME divide 50/50 via sufixo dash', () => {
     const r = parseFatura(csv('2025-01-10,CINEMA - metade ANA,80,00'), 'JOAO');
     expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(40);
