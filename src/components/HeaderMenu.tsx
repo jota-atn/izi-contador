@@ -141,8 +141,7 @@ function createStyles(c: ThemeColors) {
       paddingHorizontal: 20,
       paddingTop: 12,
       paddingBottom: 4,
-      // tom levemente distinto do bgElevated, específico da faixa de seção — mantido
-      backgroundColor: '#0b1220',
+      backgroundColor: c.bgElevated2,
     },
     sectionLabelBorder: {
       borderTopWidth: 1,

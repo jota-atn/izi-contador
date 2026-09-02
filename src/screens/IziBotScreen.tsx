@@ -577,7 +577,9 @@ function createStyles(c: ThemeColors) {
     },
 
     bubbleText: { fontSize: 14, lineHeight: 22 },
-    bubbleTextUser: { color: c.textPrimary },
+    // bolha do usuário é roxo fixo nos dois temas, então o texto também é
+    // fixo (branco) em vez de seguir textPrimary — senão fica ilegível no claro
+    bubbleTextUser: { color: '#fff' },
     bubbleTextBot: { color: c.textSecondary },
 
     cursor: { color: c.accent },
@@ -641,6 +643,6 @@ function createStyles(c: ThemeColors) {
     },
     // tom apagado específico do botão desabilitado deste chat — mantido
     sendBtnDisabled: { backgroundColor: '#3b1c7a', opacity: 0.5 },
-    sendBtnText: { color: c.textPrimary, fontSize: 13, fontWeight: '700' },
+    sendBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
   });
 }

@@ -612,7 +612,7 @@ function AppContent() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#020617' }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {authStatus === 'loading' && <LoadingScreen message="Verificando autenticação..." />}
 
       {authStatus === 'unauthenticated' && <LoginScreen onSignIn={signIn} />}
@@ -696,50 +696,50 @@ function AppContent() {
                   {
                     label: 'Compartilhar',
                     onPress: compartilharResumo,
-                    icon: <IconShare size={15} color="#a78bfa" />,
+                    icon: <IconShare size={15} color={colors.accentLight} />,
                     section: 'Ações',
                   },
                   {
                     label: 'Edições deste mês',
                     onPress: () => setShowEdicoes(true),
-                    icon: <IconEdit size={15} color="#a78bfa" />,
+                    icon: <IconEdit size={15} color={colors.accentLight} />,
                     section: 'Ações',
                   },
                   {
                     label: 'Automação',
                     onPress: () => setShowAutomacao(true),
-                    icon: <IconSliders size={15} color="#a78bfa" />,
+                    icon: <IconSliders size={15} color={colors.accentLight} />,
                     section: 'Configuração',
                   },
                   {
                     label: 'Chave Pix',
                     onPress: () => setShowPixKey(true),
-                    icon: <IconCard size={15} color="#a78bfa" />,
+                    icon: <IconCard size={15} color={colors.accentLight} />,
                     section: 'Configuração',
                   },
                   {
                     label: diaFechamento ? `Notificações (dia ${diaFechamento})` : 'Notificações',
                     onPress: () => setShowNotificacoes(true),
-                    icon: <IconBell size={15} color="#a78bfa" />,
+                    icon: <IconBell size={15} color={colors.accentLight} />,
                     section: 'Configuração',
                   },
                   {
                     label: 'Backup',
                     onPress: () => setShowBackup(true),
-                    icon: <IconDatabase size={15} color="#a78bfa" />,
+                    icon: <IconDatabase size={15} color={colors.accentLight} />,
                     section: 'Dados',
                   },
                   {
                     label: 'Como anotar',
                     onPress: () => setShowTutorial(true),
-                    icon: <IconBook size={15} color="#a78bfa" />,
+                    icon: <IconBook size={15} color={colors.accentLight} />,
                     section: 'Ajuda',
                   },
                   {
                     label: 'Sair',
                     onPress: handleSignOut,
                     danger: true,
-                    icon: <IconLogOut size={15} color="#f87171" />,
+                    icon: <IconLogOut size={15} color={colors.danger} />,
                     section: 'Conta',
                   },
                 ]}
