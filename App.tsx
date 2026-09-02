@@ -834,6 +834,7 @@ function AppContent() {
         onSalvar={handleSalvarEdicao}
         onDeletar={handleDeletarItem}
         onDividir={() => setItemDividindo(itemEditando)}
+        onCriarRegra={addRegra}
         onClose={() => setItemEditando(null)}
       />
       <DividirItemModal

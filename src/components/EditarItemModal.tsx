@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Gasto } from '../types';
 import { haptic } from '../utils/haptic';
+import { IconCheck } from './icons/IconCheck';
 import { IconClose } from './icons/IconClose';
 import { IconSplit } from './icons/IconSplit';
 import { IconWarning } from './icons/IconWarning';
@@ -24,6 +25,7 @@ interface Props {
   onSalvar: (novaDono: string, novaDesc: string) => void;
   onDeletar: () => void;
   onDividir: () => void;
+  onCriarRegra: (keyword: string, pessoa: string) => void;
   onClose: () => void;
 }
 
@@ -35,12 +37,14 @@ export function EditarItemModal({
   onSalvar,
   onDeletar,
   onDividir,
+  onCriarRegra,
   onClose,
 }: Props) {
   const [desc, setDesc] = useState('');
   const [donoPicker, setDonoPicker] = useState('');
   const [donoCustom, setDonoCustom] = useState('');
   const [modoCustom, setModoCustom] = useState(false);
+  const [criarRegra, setCriarRegra] = useState(false);
 
   useEffect(() => {
     if (item) {
@@ -48,15 +52,21 @@ export function EditarItemModal({
       setDonoPicker(donoAtual);
       setDonoCustom('');
       setModoCustom(false);
+      setCriarRegra(false);
     }
   }, [item, donoAtual]);
 
   if (!item) return null;
 
+  const donoFinal = modoCustom ? donoCustom.trim().toUpperCase() : donoPicker;
+  const mudouDono = !!donoFinal && donoFinal !== donoAtual;
+
   function handleSalvar() {
-    const donoFinal = modoCustom ? donoCustom.trim().toUpperCase() : donoPicker;
     if (!donoFinal) return;
     onSalvar(donoFinal, desc.trim() || item!.descricao);
+    if (criarRegra && mudouDono) {
+      onCriarRegra(item!.descricao, donoFinal);
+    }
     onClose();
   }
 
@@ -171,6 +181,21 @@ export function EditarItemModal({
               </View>
             </View>
           )}
+
+          {mudouDono && (
+            <TouchableOpacity
+              style={s.regraRow}
+              onPress={() => setCriarRegra((v) => !v)}
+              activeOpacity={0.7}
+            >
+              <View style={[s.checkbox, criarRegra && s.checkboxAtivo]}>
+                {criarRegra && <IconCheck size={10} color="#fff" />}
+              </View>
+              <Text style={s.regraText}>
+                Sempre atribuir &ldquo;{item.descricao}&rdquo; a {donoFinal}
+              </Text>
+            </TouchableOpacity>
+          )}
         </ScrollView>
 
         <View style={s.footer}>
@@ -250,6 +275,18 @@ const s = StyleSheet.create({
   chipTextAtivo: { color: '#e9d5ff' },
   aviso: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 8 },
   avisoText: { color: '#f59e0b', fontSize: 11, fontWeight: '600', lineHeight: 16, flex: 1 },
+  regraRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 16 },
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: '#334155',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxAtivo: { backgroundColor: '#7c3aed', borderColor: '#7c3aed' },
+  regraText: { color: '#94a3b8', fontSize: 12, fontWeight: '600', flex: 1 },
   footer: {
     gap: 10,
     padding: 24,
