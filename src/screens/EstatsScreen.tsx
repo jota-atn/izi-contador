@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react';
 import { Dimensions, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { Historico } from '../hooks/useHistorico';
+import { Categorias } from '../config/categorias';
 import { MESES_PT, nomeMes } from '../utils/meses';
 import { CHART_COLOR_OUTROS, corCategorica, corCategoricaRgb } from '../utils/chartColors';
 
@@ -30,6 +31,7 @@ interface Props {
   meses: string[]; // sorted descending (newest first)
   refreshing: boolean;
   onRefresh: () => void;
+  categorias: Categorias;
 }
 
 export const EstatsScreen = memo(function EstatsScreen({
@@ -37,6 +39,7 @@ export const EstatsScreen = memo(function EstatsScreen({
   meses,
   refreshing,
   onRefresh,
+  categorias,
 }: Props) {
   const mesesCron = useMemo(() => [...meses].reverse(), [meses]);
   const mesesChart = useMemo(() => mesesCron.slice(-CHART_MAX_MESES), [mesesCron]);
@@ -96,6 +99,31 @@ export const EstatsScreen = memo(function EstatsScreen({
     () => pessoasAcumulado.reduce((s, p) => s + p.total, 0),
     [pessoasAcumulado],
   );
+
+  // Distribuição por categoria (soma de todos os meses) — um item pertence a uma
+  // categoria quando sua descrição é o nome dela (item categorizado no parser) ou
+  // começa com "CATEGORIA - " (fatia gerada por uma divisão feita no app); o resto
+  // (a maioria das compras, sem palavra-chave de categoria) cai em "Outros"
+  const categoriasAcumulado = useMemo(() => {
+    const nomesCategorias = Object.keys(categorias);
+    const byCategoria: Record<string, number> = {};
+    mesesCron.forEach((mes) => {
+      historico[mes].relatorio_por_pessoa
+        .filter((p) => p.dono !== SEM_CATEGORIA)
+        .forEach((p) => {
+          p.itens.forEach((item) => {
+            const categoria =
+              nomesCategorias.find(
+                (c) => item.descricao === c || item.descricao.startsWith(`${c} - `),
+              ) ?? 'Outros';
+            byCategoria[categoria] = (byCategoria[categoria] ?? 0) + item.valor;
+          });
+        });
+    });
+    return Object.entries(byCategoria)
+      .map(([categoria, total]) => ({ categoria, total }))
+      .sort((a, b) => b.total - a.total);
+  }, [mesesCron, historico, categorias]);
 
   // cor por pessoa é fixada uma vez (ranking do acumulado, a ordenação mais
   // estável) e reaproveitada em todos os gráficos/listas da tela — assim a
@@ -202,6 +230,7 @@ export const EstatsScreen = memo(function EstatsScreen({
   }
 
   const maxAcumulado = pessoasAcumulado[0]?.total ?? 1;
+  const maxCategoria = categoriasAcumulado[0]?.total ?? 1;
 
   return (
     <ScrollView
@@ -329,6 +358,31 @@ export const EstatsScreen = memo(function EstatsScreen({
           );
         })}
       </View>
+
+      {/* Distribuição por categoria */}
+      {categoriasAcumulado.length > 0 && (
+        <View style={s.card}>
+          <Text style={s.cardTitle}>Distribuição por categoria</Text>
+          <Text style={s.cardSub}>total acumulado no período</Text>
+          {categoriasAcumulado.map(({ categoria, total }, i) => {
+            const color = categoria === 'Outros' ? CHART_COLOR_OUTROS : corCategorica(i);
+            const pct = total / maxCategoria;
+            return (
+              <View key={categoria} style={s.barRow}>
+                <View style={s.barHeader}>
+                  <Text style={[s.barNome, { color }]}>{categoria}</Text>
+                  <Text style={s.barValor}>{fmtBRL(total)}</Text>
+                </View>
+                <View style={s.barTrack}>
+                  <View
+                    style={[s.barFill, { width: `${pct * 100}%` as any, backgroundColor: color }]}
+                  />
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      )}
 
       {/* Média por pessoa */}
       <View style={s.card}>

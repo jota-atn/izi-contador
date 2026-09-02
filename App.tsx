@@ -755,6 +755,7 @@ function AppContent() {
               meses={meses}
               refreshing={refreshing}
               onRefresh={onRefresh}
+              categorias={categorias}
             />
           )}
 
