@@ -161,6 +161,21 @@ describe('parseFatura — categorias e regras', () => {
     expect(pessoa(r, 'ANA')?.total_individual).toBeCloseTo(50);
   });
 
+  it('regra criada via "sempre atribuir" num item agrupado (chave = nome da categoria) persiste entre faturas', () => {
+    // reproduz o fluxo do EditarItemModal: usuário marca "sempre atribuir ALMOÇO a JOAO"
+    // num item já agrupado por categoria — a regra fica gravada com o nome da categoria
+    // como chave, não com o comerciante, então não pode depender de substring no título bruto
+    const r = parseFatura(
+      csv('2025-01-10,IFOOD RESTAURANTE X,20,00', '2025-01-15,QUENTINHA DO ZE,15,00'),
+      'EU',
+      { ALMOÇO: ['IFOOD', 'QUENTINHA'] },
+      { ALMOÇO: 'JOAO' },
+    );
+    expect(pessoa(r, 'JOAO')?.itens[0].descricao).toBe('ALMOÇO');
+    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(35);
+    expect(pessoa(r, SEM_CATEGORIA)).toBeUndefined();
+  });
+
   it('sufixo "- NOME-DA-CATEGORIA" não vira pessoa fictícia e vai para Não identificados', () => {
     // "Mini Box Vitoria - Almoço" anota a categoria, não indica de quem é a compra
     const r = parseFatura(

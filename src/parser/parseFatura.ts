@@ -251,9 +251,20 @@ function categorizarItem(
 
   for (const [categoria, palavras] of Object.entries(categorias)) {
     if (palavras.some((p) => titleBase.includes(p))) {
+      // regra pode ter sido criada por keyword de comerciante (ex. "IFOOD") ou,
+      // via "sempre atribuir" num item já agrupado, pelo nome da própria categoria
+      // (ex. "ALMOÇO") — essa segunda forma não bate por substring no título bruto,
+      // por isso o fallback direto comparando com o nome da categoria
+      const pessoaCategoria = Object.entries(regras).find(
+        ([keyword]) => keyword.toUpperCase() === categoria.toUpperCase(),
+      )?.[1];
+      const regraCategoria = pessoaCategoria ? normalizeName(pessoaCategoria) : null;
       // sem sufixo de nome nem regra, não assume que é do titular — vai pra
       // Não identificados (ex.: "Almoço" sozinho pode ser de qualquer um da casa)
-      return { exibicao: categoria, dono: explicitDono ?? regraDono() ?? SEM_CATEGORIA };
+      return {
+        exibicao: categoria,
+        dono: explicitDono ?? regraDono() ?? regraCategoria ?? SEM_CATEGORIA,
+      };
     }
   }
 
