@@ -63,7 +63,7 @@ function createStyles(c: ThemeColors) {
       backgroundColor: c.bgElevated,
       borderRadius: 24,
       borderWidth: 1,
-      borderColor: '#431407',
+      borderColor: c.warningBorder,
       overflow: 'hidden',
     },
     header: {
@@ -74,7 +74,7 @@ function createStyles(c: ThemeColors) {
       paddingVertical: 16,
       backgroundColor: c.warningSurface,
       borderBottomWidth: 1,
-      borderBottomColor: '#431407',
+      borderBottomColor: c.warningBorder,
     },
     titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     title: {
@@ -98,7 +98,7 @@ function createStyles(c: ThemeColors) {
     },
     date: { color: c.placeholder, fontSize: 10, marginTop: 2 },
     tag: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 5 },
-    tagEditado: { backgroundColor: '#2e1065' },
+    tagEditado: { backgroundColor: c.accentSurface },
     tagDividido: { backgroundColor: c.bgElevated2 },
     tagText: {
       fontSize: 8,
@@ -114,7 +114,7 @@ function createStyles(c: ThemeColors) {
       paddingVertical: 4,
       borderRadius: 6,
       borderWidth: 1,
-      borderColor: '#431407',
+      borderColor: c.warningBorder,
     },
     badgeText: { color: c.warning, fontFamily: 'monospace', fontSize: 11, fontWeight: '700' },
   });

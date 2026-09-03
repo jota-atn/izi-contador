@@ -80,7 +80,7 @@ export const PersonCard = memo(function PersonCard({
   const renderLeftAction = () => (
     <View style={[s.swipeAction, pago ? s.swipeActionUndo : s.swipeActionPay]}>
       <View style={[s.swipeActionFill, pago ? s.swipeActionUndo : s.swipeActionPay]} />
-      <IconCheck size={20} color={pago ? '#f97316' : colors.success} />
+      <IconCheck size={20} color={pago ? colors.warning : colors.success} />
       <Text style={[s.swipeText, pago && s.swipeTextUndo]}>{pago ? 'Desfazer' : 'Pago'}</Text>
     </View>
   );
@@ -215,7 +215,7 @@ function createStyles(c: ThemeColors) {
       borderBottomLeftRadius: 24,
     },
     swipeActionPay: { backgroundColor: c.successSurface },
-    swipeActionUndo: { backgroundColor: '#431407' },
+    swipeActionUndo: { backgroundColor: c.warningSurface },
     swipeText: {
       color: c.success,
       fontSize: 10,
@@ -223,7 +223,7 @@ function createStyles(c: ThemeColors) {
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
-    swipeTextUndo: { color: '#f97316' },
+    swipeTextUndo: { color: c.warning },
 
     card: {
       backgroundColor: c.bgElevated,
@@ -291,7 +291,7 @@ function createStyles(c: ThemeColors) {
     },
     date: { color: c.placeholder, fontSize: 10, marginTop: 2 },
     tag: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 5 },
-    tagEditado: { backgroundColor: '#2e1065' },
+    tagEditado: { backgroundColor: c.accentSurface },
     tagDividido: { backgroundColor: c.bgElevated2 },
     tagText: {
       fontSize: 8,

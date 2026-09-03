@@ -168,12 +168,11 @@ function createStyles(c: ThemeColors) {
       letterSpacing: 1.5,
       textTransform: 'uppercase',
     },
-    // tom de vermelho bem escuro específico deste botão — mantido
     removeBtn: {
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: 8,
-      backgroundColor: '#1e0a0a',
+      backgroundColor: c.dangerSurface,
       borderWidth: 1,
       borderColor: c.dangerBorder,
     },
