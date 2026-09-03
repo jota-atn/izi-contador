@@ -19,6 +19,12 @@ describe('chaveEdicao', () => {
       'AMAZON|2025-01-10|90',
     );
   });
+
+  it('ignora o valor pra item agrupado por categoria (soma do mês é instável)', () => {
+    expect(chaveEdicao({ item_desc: 'ALMOÇO', item_data: 'Agrupado', item_valor: 200 })).toBe(
+      chaveEdicao({ item_desc: 'ALMOÇO', item_data: 'Agrupado', item_valor: 350 }),
+    );
+  });
 });
 
 describe('reconciliarEdicoes', () => {
@@ -47,6 +53,16 @@ describe('reconciliarEdicoes', () => {
     const r = reconciliarEdicoes([valida, orfa], new Set(['A|2025-01-01|10']));
     expect(r.validas).toEqual([valida]);
     expect(r.orfas).toEqual([orfa]);
+  });
+
+  it('edição de item agrupado por categoria sobrevive à soma do mês mudar', () => {
+    const edicoes = [
+      ed({ item_desc: 'ALMOÇO', item_data: 'Agrupado', item_valor: 200, novo_dono: 'JOAO' }),
+    ];
+    // nova fatura chegou com mais uma compra de almoço — soma foi de 200 pra 235
+    const r = reconciliarEdicoes(edicoes, new Set(['ALMOÇO|Agrupado']));
+    expect(r.validas).toEqual(edicoes);
+    expect(r.orfas).toHaveLength(0);
   });
 
   it('sem edições retorna listas vazias', () => {

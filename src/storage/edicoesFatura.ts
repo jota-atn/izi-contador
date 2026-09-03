@@ -58,6 +58,15 @@ export async function loadEdicoesTodosMeses(
 }
 
 export async function upsertEdicao(db: SQLiteDatabase, userId: string, ed: Edicao): Promise<void> {
+  if (ed.item_data === 'Agrupado') {
+    // itens agrupados por categoria têm valor variável (soma do mês) — sem isso,
+    // cada edição feita com uma soma diferente da anterior vira uma linha nova
+    // em vez de atualizar a existente (o ON CONFLICT abaixo não bate)
+    await db.runAsync(
+      'DELETE FROM edicoes_v1 WHERE user_id = ? AND mes = ? AND item_desc = ? AND item_data = ? AND item_valor != ?',
+      [userId, ed.mes, ed.item_desc, ed.item_data, ed.item_valor],
+    );
+  }
   await db.runAsync(
     `INSERT INTO edicoes_v1 (user_id, mes, item_desc, item_data, item_valor, novo_dono, nova_desc, deletado)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)

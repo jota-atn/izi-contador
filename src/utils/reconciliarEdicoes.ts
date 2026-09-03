@@ -5,6 +5,10 @@ interface ChaveItem {
 }
 
 export function chaveEdicao(ed: ChaveItem): string {
+  // itens agrupados por categoria (data === "Agrupado") têm valor = soma de
+  // todas as compras da categoria no mês, que muda a cada nova compra — se o
+  // valor entrar na chave, toda atualização de fatura "perde" a edição/regra
+  if (ed.item_data === 'Agrupado') return `${ed.item_desc}|${ed.item_data}`;
   return `${ed.item_desc}|${ed.item_data}|${ed.item_valor}`;
 }
 

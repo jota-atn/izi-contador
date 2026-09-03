@@ -127,6 +127,29 @@ describe('aplicarEdicoes', () => {
     expect(joao?.total_individual).toBeCloseTo(220);
   });
 
+  it('edição de item agrupado por categoria continua valendo quando a soma do mês muda', () => {
+    const dados: RelatorioFatura = {
+      mes: '2025-01',
+      total_fatura: 235,
+      relatorio_por_pessoa: [
+        {
+          dono: 'SEM_CATEGORIA',
+          // fatura foi reprocessada: entrou mais uma compra e a soma mudou de 200 pra 235
+          itens: [{ descricao: 'ALMOÇO', valor: 235, data: 'Agrupado' }],
+          total_individual: 235,
+        },
+      ],
+    };
+    const edicoes: Edicao[] = [
+      // edição foi salva quando a soma ainda era 200
+      ed({ item_desc: 'ALMOÇO', item_data: 'Agrupado', item_valor: 200, novo_dono: 'JOAO' }),
+    ];
+    const r = aplicarEdicoes(dados, edicoes);
+    expect(r.relatorio_por_pessoa.find((p) => p.dono === 'SEM_CATEGORIA')).toBeUndefined();
+    const joao = r.relatorio_por_pessoa.find((p) => p.dono === 'JOAO');
+    expect(joao?.total_individual).toBeCloseTo(235);
+  });
+
   it('marca item como editado quando dono ou descrição mudam', () => {
     const edicoes: Edicao[] = [
       ed({ item_desc: 'AMAZON', item_data: '2025-01-10', item_valor: 90, novo_dono: 'SOFIA' }),
