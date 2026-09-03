@@ -15,13 +15,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { Historico } from '../hooks/useHistorico';
 import { streamGemini, GeminiMessage } from '../services/geminiApi';
 import { serializarHistorico } from '../utils/serializarHistorico';
-import {
-  loadChatHistory,
-  saveChatMessages,
-  clearChatHistory,
-  loadChips,
-  saveChips,
-} from '../storage/chatHistory';
+import { loadChatHistory, saveChatMessages, clearChatHistory } from '../storage/chatHistory';
 import { IconTrash } from '../components/icons/IconTrash';
 import { IconSparkle } from '../components/icons/IconSparkle';
 import { useTheme } from '../hooks/useTheme';
@@ -64,12 +58,6 @@ const PROACTIVE_PROMPT =
   'Faça uma análise do mês mais recente. Sem introdução, vá direto aos insights. ' +
   'Mencione: variação vs mês anterior (se houver), quem mais gastou e o que puxou, ' +
   'algum gasto recorrente relevante. Máximo 4 frases, texto simples.';
-
-const CHIPS_PROMPT =
-  'Com base na análise acima, sugira exatamente 3 perguntas curtas (máximo 6 palavras cada) ' +
-  'que o usuário pode querer perguntar sobre seus gastos. ' +
-  'Retorne somente um array JSON de strings, sem mais nenhum texto. ' +
-  'Exemplo: ["Quem gastou mais?","Maiores gastos do mês","Compare meses anteriores"]';
 
 interface Message {
   id: string;
@@ -141,7 +129,6 @@ export function IziBotScreen({ historico, meses, userName, userEmail, tabBarHeig
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
-  const [chips, setChips] = useState<string[]>([]);
   const [historyReady, setHistoryReady] = useState(false);
   const cancelRef = useRef<(() => void) | null>(null);
   const scrollRef = useRef<ScrollView>(null);
@@ -159,13 +146,12 @@ export function IziBotScreen({ historico, meses, userName, userEmail, tabBarHeig
       return;
     }
     setMessages([]);
-    setChips([]);
     setHistoryReady(false);
     // descarta o resultado se o mês mudou de novo enquanto a leitura estava em
     // voo — senão o histórico de um mês antigo pode sobrescrever o do atual
     let cancelled = false;
-    Promise.all([loadChatHistory(db, userEmail, currentMes), loadChips(db, userEmail, currentMes)])
-      .then(([rows, savedChips]) => {
+    loadChatHistory(db, userEmail, currentMes)
+      .then((rows) => {
         if (cancelled) return;
         if (rows.length > 0) {
           setMessages(
@@ -179,7 +165,6 @@ export function IziBotScreen({ historico, meses, userName, userEmail, tabBarHeig
           // Já há conversa — bloqueia análise proativa para este mês
           analyzedMesRef.current = currentMes;
         }
-        if (savedChips.length > 0) setChips(savedChips);
         setHistoryReady(true);
       })
       .catch((e) => {
@@ -223,13 +208,11 @@ export function IziBotScreen({ historico, meses, userName, userEmail, tabBarHeig
     ]);
 
     const mes = currentMes;
-    let botTextBuffer = '';
     cancelRef.current = streamGemini(
       API_KEY,
       systemPrompt,
       [{ role: 'user', text: PROACTIVE_PROMPT }],
       (chunk) => {
-        botTextBuffer += chunk;
         setMessages((prev) => {
           const last = prev[prev.length - 1];
           if (!last || last.role !== 'bot') return prev;
@@ -249,40 +232,6 @@ export function IziBotScreen({ historico, meses, userName, userEmail, tabBarHeig
         });
         setStreaming(false);
         cancelRef.current = null;
-        // Busca chips de forma silenciosa após a análise proativa
-        if (botTextBuffer) {
-          let chipsBuffer = '';
-          streamGemini(
-            API_KEY,
-            systemPromptRef.current,
-            [
-              { role: 'user', text: PROACTIVE_PROMPT },
-              { role: 'model', text: botTextBuffer },
-              { role: 'user', text: CHIPS_PROMPT },
-            ],
-            (chunk) => {
-              chipsBuffer += chunk;
-            },
-            () => {
-              try {
-                const match = chipsBuffer.match(/\[[\s\S]*?\]/);
-                if (match) {
-                  const parsed = JSON.parse(match[0]);
-                  if (Array.isArray(parsed)) {
-                    const valid = parsed
-                      .slice(0, 3)
-                      .filter((x): x is string => typeof x === 'string');
-                    setChips(valid);
-                    if (valid.length > 0) {
-                      saveChips(db, userEmail, mes, valid).catch(() => {});
-                    }
-                  }
-                }
-              } catch {}
-            },
-            () => {}, // chips são best-effort; ignora erros
-          );
-        }
       },
       (err) => {
         setMessages((prev) => {
@@ -306,8 +255,6 @@ export function IziBotScreen({ historico, meses, userName, userEmail, tabBarHeig
       const text = (textOverride ?? input).trim();
       if (!text || streaming || meses.length === 0) return;
 
-      setChips([]);
-      saveChips(db, userEmail, meses[0], []).catch(() => {});
       if (!textOverride) setInput('');
 
       if (!API_KEY) {
@@ -389,7 +336,6 @@ export function IziBotScreen({ historico, meses, userName, userEmail, tabBarHeig
     cancelRef.current = null;
     setStreaming(false);
     setMessages([]);
-    setChips([]);
     setHistoryReady(true);
     analyzedMesRef.current = '';
     clearChatHistory(db, userEmail, currentMes).catch((e) =>
@@ -468,28 +414,6 @@ export function IziBotScreen({ historico, meses, userName, userEmail, tabBarHeig
           </View>
         )}
       </ScrollView>
-
-      {chips.length > 0 && !streaming && (
-        <View style={s.chipsScroll}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={s.chipsContent}
-            keyboardShouldPersistTaps="handled"
-          >
-            {chips.map((chip) => (
-              <TouchableOpacity
-                key={chip}
-                style={s.chip}
-                onPress={() => send(chip)}
-                activeOpacity={0.7}
-              >
-                <Text style={s.chipText}>{chip}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      )}
 
       <View style={s.inputBar}>
         <TextInput
@@ -604,28 +528,6 @@ function createStyles(c: ThemeColors) {
       borderRadius: 4,
       backgroundColor: c.accent,
     },
-
-    chipsScroll: {
-      borderTopWidth: 1,
-      borderTopColor: c.border,
-      backgroundColor: c.bg,
-      height: 52,
-      justifyContent: 'center',
-    },
-    chipsContent: {
-      gap: 8,
-      paddingHorizontal: 16,
-      alignItems: 'center',
-    },
-    chip: {
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: c.accentSurfaceBorder,
-      backgroundColor: c.accentSurface,
-      paddingHorizontal: 14,
-      paddingVertical: 7,
-    },
-    chipText: { color: c.accentLight, fontSize: 12, fontWeight: '600' },
 
     inputBar: {
       flexDirection: 'row',
