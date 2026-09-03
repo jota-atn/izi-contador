@@ -4,6 +4,8 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   useAnimatedKeyboard,
+  useAnimatedReaction,
+  runOnJS,
   withRepeat,
   withSequence,
   withTiming,
@@ -98,8 +100,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail, tabBarHeig
   });
   const kbStyle = useAnimatedStyle(() => ({
     // desconta a tab bar (some atrás do teclado, mas continua ocupando espaço no layout)
-    // e deixa uma folguinha pequena, do tamanho do padding interno da barra de input
-    paddingBottom: Math.max(keyboard.height.value - tabBarHeight + 12, 0),
+    paddingBottom: Math.max(keyboard.height.value - tabBarHeight - 8, 0),
   }));
   const systemPrompt = useMemo(() => {
     if (meses.length === 0) return '';
@@ -145,6 +146,9 @@ export function IziBotScreen({ historico, meses, userName, userEmail, tabBarHeig
   const cancelRef = useRef<(() => void) | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const analyzedMesRef = useRef('');
+  const scrollToEndNow = useCallback(() => {
+    scrollRef.current?.scrollToEnd({ animated: false });
+  }, []);
 
   // Carrega histórico do SQLite ao trocar de mês ou usuário
   useEffect(() => {
@@ -187,6 +191,14 @@ export function IziBotScreen({ historico, meses, userName, userEmail, tabBarHeig
   useEffect(() => {
     scrollRef.current?.scrollToEnd({ animated: true });
   }, [messages]);
+
+  // Mantém o scroll colado no fim enquanto o teclado abre/fecha e o container encolhe/cresce
+  useAnimatedReaction(
+    () => keyboard.height.value,
+    () => {
+      runOnJS(scrollToEndNow)();
+    },
+  );
 
   // Análise proativa — dispara uma vez por mês, só após checar o histórico
   useEffect(() => {
