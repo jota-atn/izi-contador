@@ -176,6 +176,20 @@ describe('parseFatura — categorias e regras', () => {
     expect(pessoa(r, SEM_CATEGORIA)).toBeUndefined();
   });
 
+  it('duas compras do mesmo comerciante pro mesmo dono mesclam e viram "Agrupado" (valor instável)', () => {
+    // sem isso, uma edição/regra feita nesse item some quando uma 3ª compra do
+    // mesmo comerciante entra no mês e muda a soma (mesmo bug do item de categoria)
+    const r = parseFatura(csv('2025-01-05,AMAZON - JOAO,20,00', '2025-01-20,AMAZON - JOAO,20,00'));
+    const item = pessoa(r, 'JOAO')?.itens[0];
+    expect(item?.valor).toBeCloseTo(40);
+    expect(item?.data).toBe('Agrupado');
+  });
+
+  it('uma única compra de um comerciante mantém a data real (não mescla)', () => {
+    const r = parseFatura(csv('2025-01-05,AMAZON - JOAO,20,00'));
+    expect(pessoa(r, 'JOAO')?.itens[0].data).toBe('2025-01-05');
+  });
+
   it('sufixo "- NOME-DA-CATEGORIA" não vira pessoa fictícia e vai para Não identificados', () => {
     // "Mini Box Vitoria - Almoço" anota a categoria, não indica de quem é a compra
     const r = parseFatura(

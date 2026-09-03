@@ -363,6 +363,10 @@ export function parseFatura(
       const atual = itensMap.get(exibicao)!;
       atual.total += row.amount;
       atual.dividido = atual.dividido || !!row.dividido;
+      // duas compras com a mesma descrição (mesmo comerciante recorrente) viram um
+      // item só com valor somado — igual a um item de categoria, esse valor muda a
+      // cada nova compra, então marca "Agrupado" pra chaveEdicao ignorar o valor
+      atual.date = 'Agrupado';
     } else {
       itensMap.set(exibicao, {
         total: row.amount,
