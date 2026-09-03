@@ -219,6 +219,14 @@ describe('parseFatura — assinaturas recorrentes', () => {
     expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(30);
   });
 
+  it('participantes somando o valor todo não deixam linha de R$ 0,00 pro dono padrão', () => {
+    const r = parseFatura(csv('2025-01-10,NETFLIX,30'), 'JOAO', { Streaming: ['NETFLIX'] }, {}, [
+      { keyword: 'NETFLIX', participantes: [{ pessoa: 'Sofia', valor: 30 }] },
+    ]);
+    expect(pessoa(r, 'SOFIA')?.total_individual).toBeCloseTo(30);
+    expect(pessoa(r, 'JOAO')).toBeUndefined();
+  });
+
   it('anotação manual no título daquele mês tem prioridade sobre a assinatura', () => {
     const r = parseFatura(
       csv('2025-01-10,NETFLIX (metade ANA),60'),

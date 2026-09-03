@@ -199,11 +199,15 @@ function expandAssinaturas(
     for (const { pessoa, valor } of assinatura.participantes) {
       result.push({ ...row, amount: valor, title: `${row.title} - ${normalizeName(pessoa)}` });
     }
-    result.push({
-      ...row,
-      amount: restante,
-      title: `${row.title} - ${normalizeName(defaultOwner)}`,
-    });
+    // participantes configurados somam o valor todo — sem sobra pro dono padrão,
+    // não cria linha fantasma de R$ 0,00
+    if (restante > 0.01) {
+      result.push({
+        ...row,
+        amount: restante,
+        title: `${row.title} - ${normalizeName(defaultOwner)}`,
+      });
+    }
   }
 
   return { rows: result, invalidas };
