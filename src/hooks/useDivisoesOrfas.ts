@@ -17,7 +17,10 @@ export function useDivisoesOrfas(userId: string, mes: string) {
       setOrfas([]);
       return;
     }
-    setOrfas(await loadDivisoesOrfas(db, userId, currentMes));
+    const rows = await loadDivisoesOrfas(db, userId, currentMes);
+    // descarta se o mês mudou enquanto a leitura estava em voo — senão o
+    // resultado de um mês antigo pode sobrescrever o do mês atual
+    if (mesRef.current === currentMes) setOrfas(rows);
   }, [db, userId]);
 
   useEffect(() => {

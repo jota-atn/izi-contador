@@ -17,7 +17,10 @@ export function useEdicoesOrfas(userId: string, mes: string) {
       setOrfas([]);
       return;
     }
-    setOrfas(await loadOrfas(db, userId, currentMes));
+    const rows = await loadOrfas(db, userId, currentMes);
+    // descarta se o mês mudou enquanto a leitura estava em voo — senão o
+    // resultado de um mês antigo pode sobrescrever o do mês atual
+    if (mesRef.current === currentMes) setOrfas(rows);
   }, [db, userId]);
 
   useEffect(() => {

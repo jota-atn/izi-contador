@@ -23,7 +23,10 @@ export function useDivisoesFatura(userId: string, mes: string) {
       setDivisoes([]);
       return;
     }
-    setDivisoes(await loadDivisoes(db, userId, currentMes));
+    const rows = await loadDivisoes(db, userId, currentMes);
+    // descarta se o mês mudou enquanto a leitura estava em voo — senão o
+    // resultado de um mês antigo pode sobrescrever o do mês atual
+    if (mesRef.current === currentMes) setDivisoes(rows);
   }, [db, userId]);
 
   useEffect(() => {

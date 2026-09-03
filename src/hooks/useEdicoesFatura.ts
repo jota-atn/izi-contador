@@ -25,7 +25,10 @@ export function useEdicoesFatura(userId: string, mes: string) {
       setEdicoes([]);
       return;
     }
-    setEdicoes(await loadEdicoes(db, userId, currentMes));
+    const rows = await loadEdicoes(db, userId, currentMes);
+    // descarta se o mês mudou enquanto a leitura estava em voo — senão o
+    // resultado de um mês antigo pode sobrescrever o do mês atual
+    if (mesRef.current === currentMes) setEdicoes(rows);
   }, [db, userId]);
 
   useEffect(() => {
