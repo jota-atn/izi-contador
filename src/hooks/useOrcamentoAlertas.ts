@@ -11,6 +11,7 @@ function chave(mes: string, categoria: string): string {
 
 export function useOrcamentoAlertas(userEmail: string) {
   const [alertas, setAlertas] = useState<OrcamentoAlertas>({});
+  const [loaded, setLoaded] = useState(false);
   const emailRef = useRef(userEmail);
   useEffect(() => {
     emailRef.current = userEmail;
@@ -19,9 +20,13 @@ export function useOrcamentoAlertas(userEmail: string) {
   useEffect(() => {
     if (!userEmail) {
       setAlertas({});
+      setLoaded(false);
       return;
     }
-    loadOrcamentoAlertas(userEmail).then(setAlertas);
+    loadOrcamentoAlertas(userEmail).then((a) => {
+      setAlertas(a);
+      setLoaded(true);
+    });
   }, [userEmail]);
 
   const jaAlertado = useCallback(
@@ -39,5 +44,5 @@ export function useOrcamentoAlertas(userEmail: string) {
     });
   }, []);
 
-  return { jaAlertado, marcarAlertado };
+  return { jaAlertado, marcarAlertado, loaded };
 }

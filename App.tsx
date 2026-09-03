@@ -148,10 +148,18 @@ function AppContent() {
     salvarAssinatura,
     removerAssinatura,
   } = useAssinaturas(userEmail);
-  const prefsLoaded = categoriasLoaded && regrasLoaded && assinaturasLoaded;
-  const { orcamentos, setLimite } = useOrcamentos(userEmail);
-  const { jaAlertado: jaAlertadoOrcamento, marcarAlertado: marcarAlertadoOrcamento } =
-    useOrcamentoAlertas(userEmail);
+  const { orcamentos, loaded: orcamentosLoaded, setLimite } = useOrcamentos(userEmail);
+  const {
+    jaAlertado: jaAlertadoOrcamento,
+    marcarAlertado: marcarAlertadoOrcamento,
+    loaded: alertasOrcamentoLoaded,
+  } = useOrcamentoAlertas(userEmail);
+  const prefsLoaded =
+    categoriasLoaded &&
+    regrasLoaded &&
+    assinaturasLoaded &&
+    orcamentosLoaded &&
+    alertasOrcamentoLoaded;
   const { getEstado, toggleOculto, togglePago, marcarTodosPago } = useEstadoFatura(userEmail);
   const { isDispensado, dispensar } = useAvisosDispensados(userEmail);
   const { state, refresh } = useRelatorio(

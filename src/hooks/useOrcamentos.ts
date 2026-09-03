@@ -3,6 +3,7 @@ import { Orcamentos, loadOrcamentos, saveOrcamentos } from '../config/orcamentos
 
 export function useOrcamentos(userEmail: string) {
   const [orcamentos, setOrcamentos] = useState<Orcamentos>({});
+  const [loaded, setLoaded] = useState(false);
   const emailRef = useRef(userEmail);
   useEffect(() => {
     emailRef.current = userEmail;
@@ -11,9 +12,13 @@ export function useOrcamentos(userEmail: string) {
   useEffect(() => {
     if (!userEmail) {
       setOrcamentos({});
+      setLoaded(false);
       return;
     }
-    loadOrcamentos(userEmail).then(setOrcamentos);
+    loadOrcamentos(userEmail).then((o) => {
+      setOrcamentos(o);
+      setLoaded(true);
+    });
   }, [userEmail]);
 
   const persist = (next: Orcamentos) => {
@@ -35,5 +40,5 @@ export function useOrcamentos(userEmail: string) {
     });
   }, []);
 
-  return { orcamentos, setLimite };
+  return { orcamentos, loaded, setLimite };
 }
