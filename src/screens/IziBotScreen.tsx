@@ -1,17 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
+  useAnimatedKeyboard,
   withRepeat,
   withSequence,
   withTiming,
@@ -99,6 +91,11 @@ interface Props {
 export function IziBotScreen({ historico, meses, userName, userEmail }: Props) {
   const { colors } = useTheme();
   const s = useMemo(() => createStyles(colors), [colors]);
+  const keyboard = useAnimatedKeyboard({
+    isStatusBarTranslucentAndroid: true,
+    isNavigationBarTranslucentAndroid: true,
+  });
+  const kbStyle = useAnimatedStyle(() => ({ paddingBottom: keyboard.height.value }));
   const systemPrompt = useMemo(() => {
     if (meses.length === 0) return '';
     return (
@@ -386,7 +383,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail }: Props) {
   const visibleMessages = messages.filter((m) => !m.isHidden);
 
   return (
-    <KeyboardAvoidingView style={s.root} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <Animated.View style={[s.root, kbStyle]}>
       <View style={s.header}>
         <Text style={s.headerTitle}>
           Izi<Text style={s.headerAccent}>Bot</Text>
@@ -486,7 +483,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail }: Props) {
           <Text style={s.sendBtnText}>Enviar</Text>
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </Animated.View>
   );
 }
 
