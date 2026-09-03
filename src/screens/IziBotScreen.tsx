@@ -161,8 +161,12 @@ export function IziBotScreen({ historico, meses, userName, userEmail, tabBarHeig
     setMessages([]);
     setChips([]);
     setHistoryReady(false);
+    // descarta o resultado se o mês mudou de novo enquanto a leitura estava em
+    // voo — senão o histórico de um mês antigo pode sobrescrever o do atual
+    let cancelled = false;
     Promise.all([loadChatHistory(db, userEmail, currentMes), loadChips(db, userEmail, currentMes)])
       .then(([rows, savedChips]) => {
+        if (cancelled) return;
         if (rows.length > 0) {
           setMessages(
             rows.map((r) => ({
@@ -179,9 +183,13 @@ export function IziBotScreen({ historico, meses, userName, userEmail, tabBarHeig
         setHistoryReady(true);
       })
       .catch((e) => {
+        if (cancelled) return;
         console.error('[IziBotScreen] load falhou:', e);
         setHistoryReady(true);
       });
+    return () => {
+      cancelled = true;
+    };
   }, [db, userEmail, meses[0]]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -398,6 +406,11 @@ export function IziBotScreen({ historico, meses, userName, userEmail, tabBarHeig
   }
 
   const visibleMessages = messages.filter((m) => !m.isHidden);
+  // enquanto não chega o 1º chunk, a bolha de "digitando" (com os 3 pontinhos)
+  // já representa a mensagem do bot vazia — sem isso, as duas apareciam juntas
+  const renderMessages = visibleMessages.filter(
+    (m, i) => !(m.streaming && m.text === '' && i === visibleMessages.length - 1),
+  );
 
   return (
     <Animated.View style={[s.root, kbStyle]}>
@@ -422,7 +435,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail, tabBarHeig
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {visibleMessages.map((msg) => (
+        {renderMessages.map((msg) => (
           <View
             key={msg.id}
             style={[s.bubbleWrap, msg.role === 'user' ? s.bubbleWrapUser : s.bubbleWrapBot]}
