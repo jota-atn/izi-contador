@@ -86,16 +86,21 @@ interface Props {
   meses: string[]; // desc
   userName: string;
   userEmail: string;
+  tabBarHeight: number; // medida via onLayout na tab bar — fica escondida atrás do teclado
 }
 
-export function IziBotScreen({ historico, meses, userName, userEmail }: Props) {
+export function IziBotScreen({ historico, meses, userName, userEmail, tabBarHeight }: Props) {
   const { colors } = useTheme();
   const s = useMemo(() => createStyles(colors), [colors]);
   const keyboard = useAnimatedKeyboard({
     isStatusBarTranslucentAndroid: true,
     isNavigationBarTranslucentAndroid: true,
   });
-  const kbStyle = useAnimatedStyle(() => ({ paddingBottom: keyboard.height.value }));
+  const kbStyle = useAnimatedStyle(() => ({
+    // desconta a tab bar (some atrás do teclado, mas continua ocupando espaço no layout)
+    // e deixa uma folguinha pequena, do tamanho do padding interno da barra de input
+    paddingBottom: Math.max(keyboard.height.value - tabBarHeight + 12, 0),
+  }));
   const systemPrompt = useMemo(() => {
     if (meses.length === 0) return '';
     return (

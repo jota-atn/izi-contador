@@ -200,6 +200,7 @@ function AppContent() {
   const [pessoaQR, setPessoaQR] = useState<{ pessoa: RelatorioPessoa; mes: string } | null>(null);
   const [termoBusca, setTermoBusca] = useState('');
   const [activeTab, setActiveTab] = useState<'fatura' | 'stats' | 'bot'>('fatura');
+  const [tabBarHeight, setTabBarHeight] = useState(0);
   const donoAtualRef = useRef('');
   const historicoRef = useRef(historico);
   const promptadoRef = useRef<string | null>(null);
@@ -865,10 +866,14 @@ function AppContent() {
               meses={meses}
               userName={userName}
               userEmail={userEmail}
+              tabBarHeight={tabBarHeight}
             />
           </View>
 
-          <View style={[tabS.bar, { paddingBottom: insets.bottom }]}>
+          <View
+            style={[tabS.bar, { paddingBottom: insets.bottom }]}
+            onLayout={(e) => setTabBarHeight(e.nativeEvent.layout.height)}
+          >
             {(
               [
                 { key: 'fatura', label: 'Fatura', Icon: IconCard },
