@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -93,10 +94,9 @@ interface Props {
   meses: string[]; // desc
   userName: string;
   userEmail: string;
-  kbOffset: number; // tabBarHeight medido via onLayout na tab bar
 }
 
-export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }: Props) {
+export function IziBotScreen({ historico, meses, userName, userEmail }: Props) {
   const { colors } = useTheme();
   const s = useMemo(() => createStyles(colors), [colors]);
   const systemPrompt = useMemo(() => {
@@ -138,7 +138,6 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
-  const [kbHeight, setKbHeight] = useState(0);
   const [chips, setChips] = useState<string[]>([]);
   const [historyReady, setHistoryReady] = useState(false);
   const cancelRef = useRef<(() => void) | null>(null);
@@ -181,17 +180,6 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
 
   useEffect(() => {
     return () => cancelRef.current?.();
-  }, []);
-
-  useEffect(() => {
-    const show = Keyboard.addListener('keyboardDidShow', (e) =>
-      setKbHeight(e.endCoordinates.height),
-    );
-    const hide = Keyboard.addListener('keyboardDidHide', () => setKbHeight(0));
-    return () => {
-      show.remove();
-      hide.remove();
-    };
   }, []);
 
   useEffect(() => {
@@ -398,7 +386,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
   const visibleMessages = messages.filter((m) => !m.isHidden);
 
   return (
-    <View style={[s.root, kbHeight > 0 && { paddingBottom: kbHeight - kbOffset }]}>
+    <KeyboardAvoidingView style={s.root} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={s.header}>
         <Text style={s.headerTitle}>
           Izi<Text style={s.headerAccent}>Bot</Text>
@@ -498,7 +486,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail, kbOffset }
           <Text style={s.sendBtnText}>Enviar</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -557,8 +545,7 @@ function createStyles(c: ThemeColors) {
     },
 
     bubble: { maxWidth: '78%', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10 },
-    // roxo específico da bolha do usuário, distinto do accent padrão — mantido
-    bubbleUser: { backgroundColor: '#6d28d9', borderBottomRightRadius: 5 },
+    bubbleUser: { backgroundColor: c.accent, borderBottomRightRadius: 5 },
     bubbleBot: {
       backgroundColor: c.bgElevated,
       borderWidth: 1,
