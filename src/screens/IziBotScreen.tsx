@@ -100,7 +100,7 @@ export function IziBotScreen({ historico, meses, userName, userEmail, tabBarHeig
   });
   const kbStyle = useAnimatedStyle(() => ({
     // desconta a tab bar (some atrás do teclado, mas continua ocupando espaço no layout)
-    paddingBottom: Math.max(keyboard.height.value - tabBarHeight - 8, 0),
+    paddingBottom: Math.max(keyboard.height.value - tabBarHeight + 2, 0),
   }));
   const systemPrompt = useMemo(() => {
     if (meses.length === 0) return '';
