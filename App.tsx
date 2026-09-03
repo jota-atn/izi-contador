@@ -132,10 +132,23 @@ function AppContent() {
     signOut,
     getAccessToken,
   } = useGoogleAuth();
-  const { categorias, addKeyword, removeKeyword, addCategoria, removeCategoria, reset } =
-    useCategorias(userEmail);
-  const { regras, addRegra, removeRegra } = useRegrasAlocacao(userEmail);
-  const { assinaturas, salvarAssinatura, removerAssinatura } = useAssinaturas(userEmail);
+  const {
+    categorias,
+    loaded: categoriasLoaded,
+    addKeyword,
+    removeKeyword,
+    addCategoria,
+    removeCategoria,
+    reset,
+  } = useCategorias(userEmail);
+  const { regras, loaded: regrasLoaded, addRegra, removeRegra } = useRegrasAlocacao(userEmail);
+  const {
+    assinaturas,
+    loaded: assinaturasLoaded,
+    salvarAssinatura,
+    removerAssinatura,
+  } = useAssinaturas(userEmail);
+  const prefsLoaded = categoriasLoaded && regrasLoaded && assinaturasLoaded;
   const { orcamentos, setLimite } = useOrcamentos(userEmail);
   const { jaAlertado: jaAlertadoOrcamento, marcarAlertado: marcarAlertadoOrcamento } =
     useOrcamentoAlertas(userEmail);
@@ -148,6 +161,7 @@ function AppContent() {
     categorias,
     regras,
     assinaturas,
+    prefsLoaded,
   );
   const { historico, meses, upsert } = useHistorico(userEmail);
   const [mesSelecionado, setMesSelecionado] = useState('');

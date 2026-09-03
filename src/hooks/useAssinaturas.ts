@@ -3,6 +3,7 @@ import { Assinatura, loadAssinaturas, saveAssinaturas } from '../config/assinatu
 
 export function useAssinaturas(userEmail: string) {
   const [assinaturas, setAssinaturas] = useState<Assinatura[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const emailRef = useRef(userEmail);
   useEffect(() => {
     emailRef.current = userEmail;
@@ -11,9 +12,13 @@ export function useAssinaturas(userEmail: string) {
   useEffect(() => {
     if (!userEmail) {
       setAssinaturas([]);
+      setLoaded(false);
       return;
     }
-    loadAssinaturas(userEmail).then(setAssinaturas);
+    loadAssinaturas(userEmail).then((a) => {
+      setAssinaturas(a);
+      setLoaded(true);
+    });
   }, [userEmail]);
 
   const persist = (next: Assinatura[]) => {
@@ -40,5 +45,5 @@ export function useAssinaturas(userEmail: string) {
     });
   }, []);
 
-  return { assinaturas, salvarAssinatura, removerAssinatura };
+  return { assinaturas, loaded, salvarAssinatura, removerAssinatura };
 }

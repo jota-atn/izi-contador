@@ -3,6 +3,7 @@ import { RegrasAlocacao, loadRegras, saveRegras } from '../config/regrasAlocacao
 
 export function useRegrasAlocacao(userEmail: string) {
   const [regras, setRegras] = useState<RegrasAlocacao>({});
+  const [loaded, setLoaded] = useState(false);
   const emailRef = useRef(userEmail);
   useEffect(() => {
     emailRef.current = userEmail;
@@ -11,9 +12,13 @@ export function useRegrasAlocacao(userEmail: string) {
   useEffect(() => {
     if (!userEmail) {
       setRegras({});
+      setLoaded(false);
       return;
     }
-    loadRegras(userEmail).then(setRegras);
+    loadRegras(userEmail).then((r) => {
+      setRegras(r);
+      setLoaded(true);
+    });
   }, [userEmail]);
 
   const persist = (next: RegrasAlocacao) => {
@@ -41,5 +46,5 @@ export function useRegrasAlocacao(userEmail: string) {
     });
   }, []);
 
-  return { regras, addRegra, removeRegra };
+  return { regras, loaded, addRegra, removeRegra };
 }

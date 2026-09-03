@@ -20,6 +20,7 @@ export function useRelatorio(
   categorias: Categorias,
   regrasAlocacao: RegrasAlocacao,
   assinaturas: Assinatura[],
+  prefsLoaded: boolean,
 ) {
   const [state, setState] = useState<State>({ status: 'idle' });
 
@@ -77,8 +78,11 @@ export function useRelatorio(
   }, [getAccessToken]);
 
   useEffect(() => {
-    if (authStatus === 'authenticated') carregar();
-  }, [authStatus, carregar]);
+    // espera categorias/regras/assinaturas terminarem de carregar do SecureStore
+    // antes da primeira sincronização — senão a fatura pode ser parseada com os
+    // valores padrão (categorias/regras vazias) numa corrida contra o load local
+    if (authStatus === 'authenticated' && prefsLoaded) carregar();
+  }, [authStatus, prefsLoaded, carregar]);
 
   return { state, refresh: carregar };
 }
