@@ -241,11 +241,19 @@ function AppContent() {
     // navegou manualmente toda vez que a fatura ressincroniza (pull-to-refresh, reload)
     setMesSelecionado((atual) => atual || mes);
 
+    // orçamento deve refletir a categorização real (após reatribuições/divisões do
+    // usuário), não a categorização bruta do parser — por isso aplica edicoesPorMes/
+    // divisoesPorMes (não o par "mês selecionado", que pode ser outro mês) antes de checar
+    const dadosCategorizados = aplicarEdicoes(
+      aplicarDivisoes(state.data, divisoesPorMes[mes] ?? []),
+      edicoesPorMes[mes] ?? [],
+    );
+
     const existing = historicoRef.current[mes];
     if (!existing || hashFatura(existing) === hashFatura(state.data)) {
       upsert(mes, { ...state.data, sincronizadoEm: new Date().toISOString() });
       notificarOrcamentosEstourados(
-        verificarOrcamentos(state.data, categorias, orcamentos),
+        verificarOrcamentos(dadosCategorizados, categorias, orcamentos),
         mes,
         jaAlertadoOrcamento,
         marcarAlertadoOrcamento,
@@ -269,7 +277,7 @@ function AppContent() {
           onPress: async () => {
             upsert(mes, { ...state.data, sincronizadoEm: new Date().toISOString() });
             notificarOrcamentosEstourados(
-              verificarOrcamentos(state.data, categorias, orcamentos),
+              verificarOrcamentos(dadosCategorizados, categorias, orcamentos),
               mes,
               jaAlertadoOrcamento,
               marcarAlertadoOrcamento,
@@ -308,6 +316,8 @@ function AppContent() {
     orcamentos,
     jaAlertadoOrcamento,
     marcarAlertadoOrcamento,
+    edicoesPorMes,
+    divisoesPorMes,
   ]);
 
   const dadosBrutos = useMemo(
