@@ -87,6 +87,36 @@ describe('aplicarDivisoes', () => {
     expect(r.total_fatura).toBeCloseTo(170);
   });
 
+  it('divisão de item agrupado por categoria continua valendo quando a soma do mês muda', () => {
+    const dados: RelatorioFatura = {
+      mes: '2025-01',
+      total_fatura: 235,
+      relatorio_por_pessoa: [
+        {
+          dono: 'SEM_CATEGORIA',
+          // fatura foi reprocessada: entrou mais uma compra e a soma mudou de 200 pra 235
+          itens: [{ descricao: 'ALMOÇO', valor: 235, data: 'Agrupado' }],
+          total_individual: 235,
+        },
+      ],
+    };
+    const divisoes = [
+      // divisão foi salva quando a soma ainda era 200
+      divisao({
+        item_desc: 'ALMOÇO',
+        item_data: 'Agrupado',
+        item_valor: 200,
+        shares: [{ pessoa: 'ANA', valor: 60 }],
+      }),
+    ];
+    const r = aplicarDivisoes(dados, divisoes);
+    const ana = r.relatorio_por_pessoa.find((p) => p.dono === 'ANA');
+    expect(ana?.total_individual).toBeCloseTo(60);
+    // restante fica com SEM_CATEGORIA usando o valor atual (235), não o antigo (200)
+    const semCategoria = r.relatorio_por_pessoa.find((p) => p.dono === 'SEM_CATEGORIA');
+    expect(semCategoria?.total_individual).toBeCloseTo(175);
+  });
+
   it('fatia gerada pode depois ser reatribuída via aplicarEdicoes (composição)', () => {
     const divisoes = [divisao({ shares: [{ pessoa: 'ANA', valor: 60 }] })];
     const comDivisao = aplicarDivisoes(dadosBase, divisoes);

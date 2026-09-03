@@ -1,8 +1,9 @@
 import { Gasto, RelatorioFatura, RelatorioPessoa } from '../types';
 import { DivisaoItem } from '../storage/divisoesFatura';
+import { chaveEdicao } from './reconciliarEdicoes';
 
 function chave(item: Gasto): string {
-  return `${item.descricao}|${item.data}|${item.valor}`;
+  return chaveEdicao({ item_desc: item.descricao, item_data: item.data, item_valor: item.valor });
 }
 
 export function aplicarDivisoes(dados: RelatorioFatura, divisoes: DivisaoItem[]): RelatorioFatura {
@@ -10,7 +11,7 @@ export function aplicarDivisoes(dados: RelatorioFatura, divisoes: DivisaoItem[])
 
   const mapaDivisoes = new Map<string, DivisaoItem>();
   for (const d of divisoes) {
-    mapaDivisoes.set(`${d.item_desc}|${d.item_data}|${d.item_valor}`, d);
+    mapaDivisoes.set(chaveEdicao(d), d);
   }
 
   const pessoasMap = new Map<string, RelatorioPessoa>();

@@ -91,10 +91,19 @@ export async function salvarDivisao(
   key: Omit<EdicaoKey, 'mes'>,
   shares: DivisaoShare[],
 ): Promise<void> {
-  await db.runAsync(
-    'DELETE FROM divisoes_v1 WHERE user_id = ? AND mes = ? AND item_desc = ? AND item_data = ? AND item_valor = ?',
-    [userId, mes, key.item_desc, key.item_data, key.item_valor],
-  );
+  if (key.item_data === 'Agrupado') {
+    // item agrupado por categoria tem valor variável (soma do mês) — ignora o
+    // valor pra não deixar fatias antigas (com soma desatualizada) órfãs na tabela
+    await db.runAsync(
+      'DELETE FROM divisoes_v1 WHERE user_id = ? AND mes = ? AND item_desc = ? AND item_data = ?',
+      [userId, mes, key.item_desc, key.item_data],
+    );
+  } else {
+    await db.runAsync(
+      'DELETE FROM divisoes_v1 WHERE user_id = ? AND mes = ? AND item_desc = ? AND item_data = ? AND item_valor = ?',
+      [userId, mes, key.item_desc, key.item_data, key.item_valor],
+    );
+  }
   for (const { pessoa, valor } of shares) {
     await db.runAsync(
       'INSERT INTO divisoes_v1 (user_id, mes, item_desc, item_data, item_valor, pessoa, valor) VALUES (?, ?, ?, ?, ?, ?, ?)',
