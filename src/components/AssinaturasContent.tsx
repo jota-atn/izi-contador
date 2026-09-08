@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   Alert,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,48 +10,84 @@ import {
   View,
 } from 'react-native';
 import { Assinatura } from '../config/assinaturas';
+import { PessoasContato } from '../config/pessoasContato';
 import { useKeyboardHeight } from '../hooks/useKeyboardHeight';
 import { IconClose } from './icons/IconClose';
+import { IconShare } from './icons/IconShare';
 import { useTheme } from '../hooks/useTheme';
 import { ThemeColors } from '../theme/tokens';
 
 interface Props {
   assinaturas: Assinatura[];
   pessoas: string[];
+  contatos: PessoasContato;
+  pixKey: string;
   salvarAssinatura: (assinatura: Assinatura) => void;
-  removerAssinatura: (keyword: string) => void;
+  removerAssinatura: (nome: string) => void;
+  salvarContato: (nome: string, email: string) => void;
 }
 
 interface ParticipanteForm {
   pessoa: string;
-  valor: string;
+  email: string;
 }
 
-const PARTICIPANTE_VAZIO: ParticipanteForm = { pessoa: '', valor: '' };
+const PARTICIPANTE_VAZIO: ParticipanteForm = { pessoa: '', email: '' };
+
+interface CobrancaPessoa {
+  pessoa: string;
+  email: string;
+  itens: { nome: string; valor: number }[];
+  total: number;
+}
 
 export function AssinaturasContent({
   assinaturas,
   pessoas,
+  contatos,
+  pixKey,
   salvarAssinatura,
   removerAssinatura,
+  salvarContato,
 }: Props) {
   const { colors } = useTheme();
   const s = useMemo(() => createStyles(colors), [colors]);
-  const [keyword, setKeyword] = useState('');
+  const [nome, setNome] = useState('');
+  const [keywordInput, setKeywordInput] = useState('');
+  const [keywords, setKeywords] = useState<string[]>([]);
+  const [valorReferencia, setValorReferencia] = useState('');
   const [participantes, setParticipantes] = useState<ParticipanteForm[]>([PARTICIPANTE_VAZIO]);
   const [editandoOriginal, setEditandoOriginal] = useState<string | null>(null);
   const kbHeight = useKeyboardHeight();
 
   function resetForm() {
-    setKeyword('');
+    setNome('');
+    setKeywordInput('');
+    setKeywords([]);
+    setValorReferencia('');
     setParticipantes([PARTICIPANTE_VAZIO]);
     setEditandoOriginal(null);
   }
 
   function handleEditar(a: Assinatura) {
-    setKeyword(a.keyword);
-    setParticipantes(a.participantes.map((p) => ({ pessoa: p.pessoa, valor: String(p.valor) })));
-    setEditandoOriginal(a.keyword);
+    setNome(a.nome);
+    setKeywords(a.keywords);
+    setValorReferencia(String(a.valorReferencia));
+    setParticipantes(
+      a.participantes.map((p) => ({ pessoa: p, email: contatos[p.trim().toUpperCase()] ?? '' })),
+    );
+    setEditandoOriginal(a.nome);
+  }
+
+  function handleAddKeyword() {
+    const kw = keywordInput.trim().toUpperCase();
+    if (!kw || keywords.includes(kw)) return;
+    setKeywords((prev) => [...prev, kw]);
+    setKeywordInput('');
+  }
+
+  function handleRemoveKeyword(kw: string) {
+    setKeywords((prev) => prev.filter((k) => k !== kw));
   }
 
   function handleParticipanteChange(idx: number, campo: keyof ParticipanteForm, valor: string) {
@@ -58,12 +95,13 @@ export function AssinaturasContent({
   }
 
   function handleAddParticipanteRapido(pessoa: string) {
+    const email = contatos[pessoa.trim().toUpperCase()] ?? '';
     setParticipantes((prev) => {
       // se só tem uma linha vazia, preenche ela em vez de criar uma nova
-      if (prev.length === 1 && !prev[0].pessoa && !prev[0].valor) {
-        return [{ pessoa, valor: '' }];
+      if (prev.length === 1 && !prev[0].pessoa && !prev[0].email) {
+        return [{ pessoa, email }];
       }
-      return [...prev, { pessoa, valor: '' }];
+      return [...prev, { pessoa, email }];
     });
   }
 
@@ -76,39 +114,74 @@ export function AssinaturasContent({
   }
 
   function handleSalvar() {
-    const kw = keyword.trim();
-    if (!kw) return;
+    const nm = nome.trim();
+    if (!nm) return;
 
-    const validos = participantes
-      .map((p) => ({ pessoa: p.pessoa.trim(), valor: parseFloat(p.valor.replace(',', '.')) }))
-      .filter((p) => p.pessoa && !isNaN(p.valor) && p.valor > 0);
-
-    if (validos.length === 0) {
-      Alert.alert('Assinatura incompleta', 'Adicione ao menos uma pessoa com valor válido.');
+    if (keywords.length === 0) {
+      Alert.alert('Assinatura incompleta', 'Adicione ao menos uma palavra-chave.');
       return;
     }
 
-    // renomeou a palavra-chave durante a edição — remove a entrada antiga
-    if (editandoOriginal && editandoOriginal !== kw) {
+    const valor = parseFloat(valorReferencia.replace(',', '.'));
+    if (isNaN(valor) || valor <= 0) {
+      Alert.alert('Assinatura incompleta', 'Informe o valor de referência da assinatura.');
+      return;
+    }
+
+    const validos = participantes
+      .map((p) => ({ pessoa: p.pessoa.trim(), email: p.email.trim() }))
+      .filter((p) => p.pessoa);
+
+    if (validos.length === 0) {
+      Alert.alert('Assinatura incompleta', 'Adicione ao menos uma pessoa.');
+      return;
+    }
+
+    // renomeou a assinatura durante a edição — remove a entrada antiga
+    if (editandoOriginal && editandoOriginal.toUpperCase() !== nm.toUpperCase()) {
       removerAssinatura(editandoOriginal);
     }
 
-    salvarAssinatura({ keyword: kw, participantes: validos });
+    salvarAssinatura({
+      nome: nm,
+      keywords,
+      valorReferencia: valor,
+      participantes: validos.map((p) => p.pessoa),
+    });
+    for (const p of validos) {
+      if (p.email) salvarContato(p.pessoa, p.email);
+    }
     resetForm();
   }
 
-  function handleRemover(kw: string) {
-    Alert.alert('Remover assinatura', `Remover a divisão automática de "${kw}"?`, [
+  function handleRemover(nm: string) {
+    Alert.alert('Remover assinatura', `Remover a divisão automática de "${nm}"?`, [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Remover',
         style: 'destructive',
         onPress: () => {
-          if (editandoOriginal === kw) resetForm();
-          removerAssinatura(kw);
+          if (editandoOriginal === nm) resetForm();
+          removerAssinatura(nm);
         },
       },
     ]);
+  }
+
+  function handleEnviarCobranca(c: CobrancaPessoa) {
+    if (!c.email) {
+      Alert.alert('Sem e-mail cadastrado', `Cadastre o e-mail de ${c.pessoa} pra poder cobrar.`);
+      return;
+    }
+    const linhas = c.itens.map((i) => `${i.nome} - R$ ${i.valor.toFixed(2)}`);
+    linhas.push(`TOTAL = R$ ${c.total.toFixed(2)}`);
+    if (pixKey) linhas.push(`Pix: ${pixKey}`);
+    const url = `mailto:${c.email}?subject=${encodeURIComponent(
+      'Cobrança de assinaturas',
+    )}&body=${encodeURIComponent(linhas.join('\n'))}`;
+    Linking.openURL(url).catch(() =>
+      Alert.alert('Erro', 'Não foi possível abrir o app de e-mail.'),
+    );
   }
 
   const nomesJaAdicionados = new Set(
@@ -116,10 +189,23 @@ export function AssinaturasContent({
   );
   const pessoasRapidas = pessoas.filter((p) => !nomesJaAdicionados.has(p.trim().toUpperCase()));
 
-  const totalConfigurado = participantes.reduce((acc, p) => {
-    const v = parseFloat(p.valor.replace(',', '.'));
-    return acc + (isNaN(v) ? 0 : v);
-  }, 0);
+  const cobrancas = useMemo(() => {
+    const porPessoa = new Map<string, CobrancaPessoa>();
+    for (const a of assinaturas) {
+      if (a.participantes.length === 0) continue;
+      const parte = a.valorReferencia / a.participantes.length;
+      for (const p of a.participantes) {
+        const key = p.trim().toUpperCase();
+        if (!porPessoa.has(key)) {
+          porPessoa.set(key, { pessoa: p, email: contatos[key] ?? '', itens: [], total: 0 });
+        }
+        const entry = porPessoa.get(key)!;
+        entry.itens.push({ nome: a.nome, valor: parte });
+        entry.total += parte;
+      }
+    }
+    return [...porPessoa.values()];
+  }, [assinaturas, contatos]);
 
   return (
     <ScrollView
@@ -128,32 +214,38 @@ export function AssinaturasContent({
       keyboardShouldPersistTaps="handled"
     >
       <Text style={s.hint}>
-        Cadastre uma assinatura recorrente (ex.: Netflix) e quem divide ela com você. Todo mês o
-        valor real da fatura já entra dividido nesses valores fixos automaticamente — sem precisar
-        anotar nada. Uma anotação manual no título daquele mês sempre tem prioridade.
+        Cadastre uma assinatura recorrente (ex.: Prime Video) com uma ou mais palavras-chave que a
+        reconheçam na fatura, e quem divide ela com você. Todo mês o valor real da fatura é dividido
+        igualmente entre os participantes automaticamente — sem precisar anotar nada. Uma anotação
+        manual no título daquele mês sempre tem prioridade.
       </Text>
 
       {assinaturas.map((a) => (
         <TouchableOpacity
-          key={a.keyword}
-          style={[s.card, editandoOriginal === a.keyword && s.cardEditando]}
+          key={a.nome}
+          style={[s.card, editandoOriginal === a.nome && s.cardEditando]}
           onPress={() => handleEditar(a)}
           activeOpacity={0.8}
         >
           <View style={s.catHeader}>
-            <Text style={s.catName}>{a.keyword}</Text>
-            <TouchableOpacity onPress={() => handleRemover(a.keyword)} style={s.removeBtn}>
+            <Text style={s.catName}>{a.nome}</Text>
+            <TouchableOpacity onPress={() => handleRemover(a.nome)} style={s.removeBtn}>
               <Text style={s.removeBtnText}>Remover</Text>
             </TouchableOpacity>
           </View>
-          <View style={s.chips}>
-            {a.participantes.map((p, idx) => (
-              <View key={idx} style={s.chip}>
-                <Text style={s.chipText}>
-                  {p.pessoa}: R$ {p.valor.toFixed(2)}
-                </Text>
-              </View>
-            ))}
+          <View style={s.cardBody}>
+            <Text style={s.keywordsHint}>Reconhece: {a.keywords.join(', ')}</Text>
+            <Text style={s.valorRefText}>
+              Referência: R$ {a.valorReferencia.toFixed(2)} · ~R${' '}
+              {(a.valorReferencia / a.participantes.length).toFixed(2)} por pessoa
+            </Text>
+            <View style={s.chips}>
+              {a.participantes.map((p) => (
+                <View key={p} style={s.chip}>
+                  <Text style={s.chipText}>{p}</Text>
+                </View>
+              ))}
+            </View>
           </View>
         </TouchableOpacity>
       ))}
@@ -178,12 +270,45 @@ export function AssinaturasContent({
         <View style={s.cardBody}>
           <TextInput
             style={s.input}
-            placeholder="Palavra-chave (ex: NETFLIX)"
+            placeholder="Nome (ex: Prime Video)"
             placeholderTextColor={colors.placeholder}
-            value={keyword}
-            onChangeText={setKeyword}
-            autoCapitalize="characters"
+            value={nome}
+            onChangeText={setNome}
+            autoCapitalize="words"
             returnKeyType="next"
+          />
+
+          <View style={s.chips}>
+            {keywords.map((kw) => (
+              <TouchableOpacity key={kw} onPress={() => handleRemoveKeyword(kw)} style={s.chip}>
+                <Text style={s.chipText}>{kw}</Text>
+                <IconClose size={10} color={colors.textFaint} />
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={s.inputRow}>
+            <TextInput
+              style={[s.input, { flex: 1 }]}
+              placeholder="Palavra-chave (ex: AMAZONPRIMEBR)"
+              placeholderTextColor={colors.placeholder}
+              value={keywordInput}
+              onChangeText={setKeywordInput}
+              onSubmitEditing={handleAddKeyword}
+              autoCapitalize="characters"
+              returnKeyType="done"
+            />
+            <TouchableOpacity onPress={handleAddKeyword} style={s.addKeywordBtn}>
+              <Text style={s.addKeywordBtnText}>+</Text>
+            </TouchableOpacity>
+          </View>
+
+          <TextInput
+            style={s.input}
+            placeholder="Valor de referência (ex: 15,00)"
+            placeholderTextColor={colors.placeholder}
+            value={valorReferencia}
+            onChangeText={setValorReferencia}
+            keyboardType="decimal-pad"
           />
 
           {participantes.map((p, idx) => (
@@ -197,12 +322,13 @@ export function AssinaturasContent({
                 autoCapitalize="words"
               />
               <TextInput
-                style={[s.input, { width: 90 }]}
-                placeholder="Valor"
+                style={[s.input, { flex: 1 }]}
+                placeholder="E-mail (opcional)"
                 placeholderTextColor={colors.placeholder}
-                value={p.valor}
-                onChangeText={(t) => handleParticipanteChange(idx, 'valor', t)}
-                keyboardType="decimal-pad"
+                value={p.email}
+                onChangeText={(t) => handleParticipanteChange(idx, 'email', t)}
+                autoCapitalize="none"
+                keyboardType="email-address"
               />
               <TouchableOpacity
                 onPress={() => handleRemoveParticipanteRow(idx)}
@@ -235,12 +361,6 @@ export function AssinaturasContent({
             <Text style={s.addParticipanteText}>+ Novo nome</Text>
           </TouchableOpacity>
 
-          {totalConfigurado > 0 && (
-            <Text style={s.totalConfigurado}>
-              Total configurado: R$ {totalConfigurado.toFixed(2)}
-            </Text>
-          )}
-
           <TouchableOpacity onPress={handleSalvar} style={s.saveBtn}>
             <Text style={s.saveBtnText}>
               {editandoOriginal ? 'Salvar alterações' : 'Salvar assinatura'}
@@ -248,6 +368,36 @@ export function AssinaturasContent({
           </TouchableOpacity>
         </View>
       </View>
+
+      {cobrancas.length > 0 && (
+        <View style={[s.card, { marginTop: 8 }]}>
+          <View style={s.cardBody}>
+            <Text style={s.newCatLabel}>Cobrar assinaturas</Text>
+            <Text style={s.hint}>
+              Baseado no valor de referência de cada assinatura, dividido igualmente. Abre um
+              rascunho no seu app de e-mail pra cada pessoa — você confere e envia.
+            </Text>
+            {cobrancas.map((c) => (
+              <View key={c.pessoa} style={s.cobrancaRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.cobrancaNome}>{c.pessoa}</Text>
+                  <Text style={s.cobrancaDetalhe}>
+                    {c.itens.map((i) => `${i.nome} R$${i.valor.toFixed(2)}`).join(' · ')}
+                  </Text>
+                  <Text style={s.cobrancaTotal}>Total: R$ {c.total.toFixed(2)}</Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => handleEnviarCobranca(c)}
+                  style={s.enviarBtn}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <IconShare size={16} color={colors.accentLight} />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -290,8 +440,13 @@ function createStyles(c: ThemeColors) {
       borderColor: c.dangerBorder,
     },
     removeBtnText: { color: c.danger, fontSize: 11, fontWeight: '700' },
-    chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 14 },
+    keywordsHint: { color: c.textFaint, fontSize: 11, fontWeight: '600' },
+    valorRefText: { color: c.textSecondary, fontSize: 11, fontWeight: '700', marginTop: 4 },
+    chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 14, paddingTop: 8 },
     chip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
       backgroundColor: c.bgElevated2,
       paddingHorizontal: 10,
       paddingVertical: 6,
@@ -327,6 +482,16 @@ function createStyles(c: ThemeColors) {
       borderWidth: 1,
       borderColor: c.borderStrong,
     },
+    inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    addKeywordBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      backgroundColor: c.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    addKeywordBtnText: { color: '#fff', fontSize: 22, fontWeight: '700', lineHeight: 26 },
     participanteRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     removeParticipanteBtn: { padding: 4 },
     rapidasWrap: { marginTop: 2, gap: 6 },
@@ -350,7 +515,6 @@ function createStyles(c: ThemeColors) {
     chipRapidoText: { color: '#c4b5fd', fontSize: 12, fontWeight: '700' },
     addParticipanteBtn: { paddingVertical: 8, alignItems: 'flex-start' },
     addParticipanteText: { color: c.accentLight, fontSize: 12, fontWeight: '700' },
-    totalConfigurado: { color: c.textFaint, fontSize: 11, fontWeight: '600', textAlign: 'right' },
     saveBtn: {
       backgroundColor: c.accent,
       borderRadius: 12,
@@ -359,5 +523,31 @@ function createStyles(c: ThemeColors) {
       marginTop: 4,
     },
     saveBtnText: { color: '#fff', fontSize: 13, fontWeight: '800' },
+    cobrancaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingVertical: 10,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    cobrancaNome: {
+      color: c.accentLight,
+      fontSize: 12,
+      fontWeight: '800',
+      textTransform: 'uppercase',
+    },
+    cobrancaDetalhe: { color: c.textFaint, fontSize: 11, marginTop: 2 },
+    cobrancaTotal: { color: c.textSecondary, fontSize: 12, fontWeight: '700', marginTop: 2 },
+    enviarBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: c.accentSurface,
+      borderWidth: 1,
+      borderColor: c.accentSurfaceBorder,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
   });
 }

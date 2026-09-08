@@ -4,21 +4,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Categorias } from '../config/categorias';
 import { RegrasAlocacao } from '../config/regrasAlocacao';
 import { Assinatura } from '../config/assinaturas';
-import { Orcamentos } from '../config/orcamentos';
+import { PessoasContato } from '../config/pessoasContato';
 import { CategoriasContent } from './CategoriasContent';
 import { RegrasContent } from './RegrasContent';
 import { AssinaturasContent } from './AssinaturasContent';
-import { OrcamentoContent } from './OrcamentoContent';
 import { useTheme } from '../hooks/useTheme';
 import { ThemeColors } from '../theme/tokens';
 
-type Tab = 'categorias' | 'regras' | 'assinaturas' | 'orcamento';
+type Tab = 'categorias' | 'regras' | 'assinaturas';
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'categorias', label: 'Categorias' },
   { key: 'regras', label: 'Regras' },
   { key: 'assinaturas', label: 'Assinaturas' },
-  { key: 'orcamento', label: 'Orçamento' },
 ];
 
 interface Props {
@@ -35,10 +33,11 @@ interface Props {
   removeRegra: (keyword: string) => void;
   assinaturas: Assinatura[];
   pessoas: string[];
+  contatos: PessoasContato;
+  pixKey: string;
   salvarAssinatura: (assinatura: Assinatura) => void;
-  removerAssinatura: (keyword: string) => void;
-  orcamentos: Orcamentos;
-  setLimite: (categoria: string, limite: number | null) => void;
+  removerAssinatura: (nome: string) => void;
+  salvarContato: (nome: string, email: string) => void;
 }
 
 export function AutomacaoModal({
@@ -55,10 +54,11 @@ export function AutomacaoModal({
   removeRegra,
   assinaturas,
   pessoas,
+  contatos,
+  pixKey,
   salvarAssinatura,
   removerAssinatura,
-  orcamentos,
-  setLimite,
+  salvarContato,
 }: Props) {
   const { colors } = useTheme();
   const s = useMemo(() => createStyles(colors), [colors]);
@@ -103,12 +103,12 @@ export function AutomacaoModal({
           <AssinaturasContent
             assinaturas={assinaturas}
             pessoas={pessoas}
+            contatos={contatos}
+            pixKey={pixKey}
             salvarAssinatura={salvarAssinatura}
             removerAssinatura={removerAssinatura}
+            salvarContato={salvarContato}
           />
-        )}
-        {tab === 'orcamento' && (
-          <OrcamentoContent categorias={categorias} orcamentos={orcamentos} setLimite={setLimite} />
         )}
       </SafeAreaView>
     </Modal>

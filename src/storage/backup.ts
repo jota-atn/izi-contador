@@ -4,8 +4,7 @@ import { Categorias, loadCategorias, saveCategorias } from '../config/categorias
 import { RegrasAlocacao, loadRegras, saveRegras } from '../config/regrasAlocacao';
 import { Assinatura, loadAssinaturas, saveAssinaturas } from '../config/assinaturas';
 import { loadPixKey, savePixKey } from '../config/pixKey';
-import { Orcamentos, loadOrcamentos, saveOrcamentos } from '../config/orcamentos';
-import { OrcamentoAlertas, loadOrcamentoAlertas, saveOrcamentoAlertas } from './orcamentoAlertas';
+import { PessoasContato, loadPessoasContato, savePessoasContato } from '../config/pessoasContato';
 
 export const BACKUP_VERSION = 1;
 
@@ -79,9 +78,8 @@ export interface BackupData {
     regras: RegrasAlocacao;
     assinaturas: Assinatura[];
     pixKey: string;
-    // opcionais: ausentes em backups exportados antes de existirem
-    orcamentos?: Orcamentos;
-    orcamentoAlertas?: OrcamentoAlertas;
+    // opcional: ausente em backups exportados antes dessa tabela existir
+    pessoasContato?: PessoasContato;
   };
 }
 
@@ -99,8 +97,7 @@ export async function gerarBackup(db: SQLiteDatabase, userEmail: string): Promis
     regras,
     assinaturas,
     pixKey,
-    orcamentos,
-    orcamentoAlertas,
+    pessoasContato,
   ] = await Promise.all([
     db.getAllAsync<{ mes: string; data: string }>(
       'SELECT mes, data FROM faturas_v2 WHERE user_id = ?',
@@ -155,8 +152,7 @@ export async function gerarBackup(db: SQLiteDatabase, userEmail: string): Promis
     loadRegras(userEmail),
     loadAssinaturas(userEmail),
     loadPixKey(userEmail),
-    loadOrcamentos(userEmail),
-    loadOrcamentoAlertas(userEmail),
+    loadPessoasContato(userEmail),
   ]);
 
   return {
@@ -175,7 +171,7 @@ export async function gerarBackup(db: SQLiteDatabase, userEmail: string): Promis
     edicoesOrfas: edicoesOrfasRaw.map((r) => ({ ...r, deletado: r.deletado === 1 })),
     divisoes,
     divisoesOrfas,
-    config: { categorias, regras, assinaturas, pixKey, orcamentos, orcamentoAlertas },
+    config: { categorias, regras, assinaturas, pixKey, pessoasContato },
   };
 }
 
@@ -300,7 +296,6 @@ export async function restaurarBackup(
     saveRegras(userEmail, backup.config.regras),
     saveAssinaturas(userEmail, backup.config.assinaturas),
     savePixKey(userEmail, backup.config.pixKey),
-    saveOrcamentos(userEmail, backup.config.orcamentos ?? {}),
-    saveOrcamentoAlertas(userEmail, backup.config.orcamentoAlertas ?? {}),
+    savePessoasContato(userEmail, backup.config.pessoasContato ?? {}),
   ]);
 }

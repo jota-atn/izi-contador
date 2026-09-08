@@ -3,11 +3,9 @@ import { Dimensions, RefreshControl, ScrollView, StyleSheet, Text, View } from '
 import { LineChart } from 'react-native-chart-kit';
 import { Historico } from '../hooks/useHistorico';
 import { Categorias } from '../config/categorias';
-import { Orcamentos } from '../config/orcamentos';
 import { SEM_CATEGORIA, SEM_CATEGORIA_LABEL } from '../parser/parseFatura';
 import { categorizarGasto } from '../utils/categorizarGasto';
 import { listarParcelasAbertas, projetarComprometido } from '../utils/projetarParcelas';
-import { verificarOrcamentos } from '../utils/verificarOrcamentos';
 import { MESES_PT, nomeMes } from '../utils/meses';
 import {
   CHART_COLOR_OUTROS,
@@ -56,7 +54,6 @@ interface Props {
   refreshing: boolean;
   onRefresh: () => void;
   categorias: Categorias;
-  orcamentos: Orcamentos;
 }
 
 export const EstatsScreen = memo(function EstatsScreen({
@@ -65,7 +62,6 @@ export const EstatsScreen = memo(function EstatsScreen({
   refreshing,
   onRefresh,
   categorias,
-  orcamentos,
 }: Props) {
   const { colors } = useTheme();
   const s = useMemo(() => createStyles(colors), [colors]);
@@ -232,12 +228,6 @@ export const EstatsScreen = memo(function EstatsScreen({
     [parcelasAbertas],
   );
 
-  // progresso do mês mais recente contra os limites configurados em Orçamento
-  const statusOrcamentos = useMemo(() => {
-    if (meses.length === 0) return [];
-    return verificarOrcamentos(historico[meses[0]], categorias, orcamentos);
-  }, [meses, historico, categorias, orcamentos]);
-
   if (meses.length < 2) {
     return (
       <ScrollView
@@ -350,35 +340,6 @@ export const EstatsScreen = memo(function EstatsScreen({
               <Text style={s.topItemValor}>{fmtBRL(p.valorMensal)}</Text>
             </View>
           ))}
-        </View>
-      )}
-
-      {/* Orçamento do mês */}
-      {statusOrcamentos.length > 0 && (
-        <View style={s.card}>
-          <Text style={s.cardTitle}>Orçamento do mês</Text>
-          <Text style={s.cardSub}>{nomeMes(meses[0])}, contra o limite de cada categoria</Text>
-          {statusOrcamentos.map(({ categoria, total, limite, pct }) => {
-            const color = pct >= 1 ? colors.danger : pct >= 0.8 ? colors.pending : colors.success;
-            return (
-              <View key={categoria} style={s.barRow}>
-                <View style={s.barHeader}>
-                  <Text style={[s.barNome, { color }]}>{categoria}</Text>
-                  <Text style={s.barValor}>
-                    {fmtBRL(total)} de {fmtBRL(limite)}
-                  </Text>
-                </View>
-                <View style={s.barTrack}>
-                  <View
-                    style={[
-                      s.barFill,
-                      { width: `${Math.min(pct, 1) * 100}%` as any, backgroundColor: color },
-                    ]}
-                  />
-                </View>
-              </View>
-            );
-          })}
         </View>
       )}
 

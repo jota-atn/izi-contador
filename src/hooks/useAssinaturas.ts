@@ -28,18 +28,21 @@ export function useAssinaturas(userEmail: string) {
   };
 
   const salvarAssinatura = useCallback((assinatura: Assinatura) => {
-    const keyword = assinatura.keyword.trim().toUpperCase();
-    if (!keyword) return;
+    const nome = assinatura.nome.trim();
+    if (!nome) return;
     setAssinaturas((prev) => {
-      const next = [...prev.filter((a) => a.keyword !== keyword), { ...assinatura, keyword }];
+      const next = [
+        ...prev.filter((a) => a.nome.toUpperCase() !== nome.toUpperCase()),
+        { ...assinatura, nome },
+      ];
       persist(next);
       return next;
     });
   }, []);
 
-  const removerAssinatura = useCallback((keyword: string) => {
+  const removerAssinatura = useCallback((nome: string) => {
     setAssinaturas((prev) => {
-      const next = prev.filter((a) => a.keyword !== keyword);
+      const next = prev.filter((a) => a.nome.toUpperCase() !== nome.toUpperCase());
       persist(next);
       return next;
     });

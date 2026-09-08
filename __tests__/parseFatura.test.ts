@@ -205,40 +205,45 @@ describe('parseFatura — categorias e regras', () => {
 });
 
 describe('parseFatura — assinaturas recorrentes', () => {
-  it('divide automaticamente pelos participantes configurados, resto fica com o dono', () => {
-    const r = parseFatura(
-      csv('2025-01-10,NETFLIX,"55,90"'),
-      'JOAO',
-      { Streaming: ['NETFLIX'] },
-      {},
-      [{ keyword: 'NETFLIX', participantes: [{ pessoa: 'Sofia', valor: 14 }] }],
-    );
-    expect(pessoa(r, 'SOFIA')?.total_individual).toBeCloseTo(14);
-    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(41.9);
-    expect(pessoa(r, 'JOAO')?.itens[0].descricao).toBe('Streaming');
-  });
-
-  it('divide entre vários participantes configurados', () => {
-    const r = parseFatura(csv('2025-01-10,NETFLIX,60'), 'JOAO', { Streaming: ['NETFLIX'] }, {}, [
+  it('divide o valor real igualmente entre todos os participantes', () => {
+    const r = parseFatura(csv('2025-01-10,NETFLIX,30'), 'JOAO', { Streaming: ['NETFLIX'] }, {}, [
       {
-        keyword: 'NETFLIX',
-        participantes: [
-          { pessoa: 'Sofia', valor: 15 },
-          { pessoa: 'Thales', valor: 15 },
-        ],
+        nome: 'Netflix',
+        keywords: ['NETFLIX'],
+        valorReferencia: 30,
+        participantes: ['Joao', 'Sofia'],
       },
     ]);
+    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(15);
     expect(pessoa(r, 'SOFIA')?.total_individual).toBeCloseTo(15);
-    expect(pessoa(r, 'THALES')?.total_individual).toBeCloseTo(15);
-    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(30);
   });
 
-  it('participantes somando o valor todo não deixam linha de R$ 0,00 pro dono padrão', () => {
-    const r = parseFatura(csv('2025-01-10,NETFLIX,30'), 'JOAO', { Streaming: ['NETFLIX'] }, {}, [
-      { keyword: 'NETFLIX', participantes: [{ pessoa: 'Sofia', valor: 30 }] },
+  it('reconhece qualquer uma das palavras-chave cadastradas', () => {
+    const r = parseFatura(csv('2025-01-10,PRIME VIDEO BR,15'), 'JOAO', {}, {}, [
+      {
+        nome: 'Prime Video',
+        keywords: ['AMAZONPRIMEBR', 'PRIME VIDEO BR'],
+        valorReferencia: 15,
+        participantes: ['Joao', 'Maria', 'Sofia'],
+      },
     ]);
-    expect(pessoa(r, 'SOFIA')?.total_individual).toBeCloseTo(30);
-    expect(pessoa(r, 'JOAO')).toBeUndefined();
+    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(5);
+    expect(pessoa(r, 'MARIA')?.total_individual).toBeCloseTo(5);
+    expect(pessoa(r, 'SOFIA')?.total_individual).toBeCloseTo(5);
+  });
+
+  it('arredonda cada parte pra cima, mesmo que a soma passe o valor real', () => {
+    const r = parseFatura(csv('2025-01-10,NETFLIX,"14,90"'), 'JOAO', {}, {}, [
+      {
+        nome: 'Netflix',
+        keywords: ['NETFLIX'],
+        valorReferencia: 14.9,
+        participantes: ['A', 'B', 'C'],
+      },
+    ]);
+    expect(pessoa(r, 'A')?.total_individual).toBeCloseTo(4.97);
+    expect(pessoa(r, 'B')?.total_individual).toBeCloseTo(4.97);
+    expect(pessoa(r, 'C')?.total_individual).toBeCloseTo(4.97);
   });
 
   it('anotação manual no título daquele mês tem prioridade sobre a assinatura', () => {
@@ -247,21 +252,34 @@ describe('parseFatura — assinaturas recorrentes', () => {
       'JOAO',
       { Streaming: ['NETFLIX'] },
       {},
-      [{ keyword: 'NETFLIX', participantes: [{ pessoa: 'Sofia', valor: 15 }] }],
+      [
+        {
+          nome: 'Netflix',
+          keywords: ['NETFLIX'],
+          valorReferencia: 30,
+          participantes: ['Joao', 'Sofia'],
+        },
+      ],
     );
     expect(pessoa(r, 'ANA')?.total_individual).toBeCloseTo(30);
     expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(30);
     expect(pessoa(r, 'SOFIA')).toBeUndefined();
   });
 
-  it('soma dos participantes maior que o valor real não divide e registra aviso', () => {
-    const r = parseFatura(csv('2025-01-10,NETFLIX,10'), 'JOAO', { Streaming: ['NETFLIX'] }, {}, [
-      { keyword: 'NETFLIX', participantes: [{ pessoa: 'Sofia', valor: 15 }] },
+  it('valor real diferente do valor de referência divide pelo real e registra aviso', () => {
+    const r = parseFatura(csv('2025-01-10,NETFLIX,32'), 'JOAO', {}, {}, [
+      {
+        nome: 'Netflix',
+        keywords: ['NETFLIX'],
+        valorReferencia: 30,
+        participantes: ['Joao', 'Sofia'],
+      },
     ]);
+    expect(pessoa(r, 'JOAO')?.total_individual).toBeCloseTo(16);
+    expect(pessoa(r, 'SOFIA')?.total_individual).toBeCloseTo(16);
     expect(r.anotacoes_invalidas).toHaveLength(1);
-    expect(r.anotacoes_invalidas![0].soma).toBeCloseTo(15);
-    expect(r.anotacoes_invalidas![0].valor).toBeCloseTo(10);
-    expect(pessoa(r, 'SOFIA')).toBeUndefined();
+    expect(r.anotacoes_invalidas![0].valor).toBeCloseTo(32);
+    expect(r.anotacoes_invalidas![0].soma).toBeCloseTo(30);
   });
 });
 

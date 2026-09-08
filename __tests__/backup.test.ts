@@ -40,11 +40,4 @@ describe('validarBackup', () => {
     expect('divisoes' in antigo).toBe(false);
     expect(() => validarBackup(antigo)).not.toThrow();
   });
-
-  it('aceita backup antigo sem orcamentos/orcamentoAlertas em config (compatibilidade)', () => {
-    const antigo = backupValido();
-    expect('orcamentos' in antigo.config).toBe(false);
-    expect('orcamentoAlertas' in antigo.config).toBe(false);
-    expect(() => validarBackup(antigo)).not.toThrow();
-  });
 });

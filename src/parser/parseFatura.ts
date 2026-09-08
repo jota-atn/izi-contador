@@ -161,12 +161,17 @@ function temSplitManual(title: string): boolean {
   );
 }
 
-// aplica a divisão fixa configurada em "Assinaturas" (ex.: Netflix dividido
-// sempre com as mesmas pessoas) sem precisar anotar isso na fatura todo mês.
+// arredonda pra cima com 2 casas decimais — mesmo que a soma das partes passe o valor
+// real (aceito de propósito, mesma regra de anotação manual com soma maior que o total)
+function arredondarCentavoParaCima(valor: number): number {
+  return Math.ceil(valor * 100 - 1e-9) / 100;
+}
+
+// aplica a divisão igual configurada em "Assinaturas" (ex.: Prime Video dividido
+// sempre entre as mesmas pessoas) sem precisar anotar isso na fatura todo mês.
 // Uma anotação manual no título daquele mês tem prioridade sobre a assinatura.
 function expandAssinaturas(
   rows: Row[],
-  defaultOwner: string,
   assinaturas: Assinatura[],
 ): { rows: Row[]; invalidas: AnotacaoInvalida[] } {
   if (assinaturas.length === 0) return { rows, invalidas: [] };
@@ -176,37 +181,28 @@ function expandAssinaturas(
 
   for (const row of rows) {
     const titleUpper = row.title.toUpperCase();
-    const assinatura = assinaturas.find((a) => titleUpper.includes(a.keyword.toUpperCase()));
+    const assinatura = assinaturas.find((a) =>
+      a.keywords.some((kw) => titleUpper.includes(kw.toUpperCase())),
+    );
 
     if (!assinatura || assinatura.participantes.length === 0 || temSplitManual(row.title)) {
       result.push(row);
       continue;
     }
 
-    const somaParticipantes = parseFloat(
-      assinatura.participantes.reduce((s, p) => s + p.valor, 0).toFixed(2),
-    );
-
-    if (somaParticipantes > row.amount + 0.01) {
-      // participantes configurados somam mais que o valor real da fatura —
-      // não divide (evita sobra negativa), só avisa pro usuário revisar
-      invalidas.push({ titulo: row.title, valor: row.amount, soma: somaParticipantes });
-      result.push(row);
-      continue;
-    }
-
-    const restante = parseFloat((row.amount - somaParticipantes).toFixed(2));
-    for (const { pessoa, valor } of assinatura.participantes) {
-      result.push({ ...row, amount: valor, title: `${row.title} - ${normalizeName(pessoa)}` });
-    }
-    // participantes configurados somam o valor todo — sem sobra pro dono padrão,
-    // não cria linha fantasma de R$ 0,00
-    if (restante > 0.01) {
-      result.push({
-        ...row,
-        amount: restante,
-        title: `${row.title} - ${normalizeName(defaultOwner)}`,
+    if (Math.abs(assinatura.valorReferencia - row.amount) > 0.01) {
+      // valor real da fatura diverge do valor de referência cadastrado (ex.: assinatura
+      // internacional variando por câmbio) — divide pelo valor real mesmo assim, só avisa
+      invalidas.push({
+        titulo: row.title,
+        valor: row.amount,
+        soma: assinatura.valorReferencia,
       });
+    }
+
+    const parte = arredondarCentavoParaCima(row.amount / assinatura.participantes.length);
+    for (const pessoa of assinatura.participantes) {
+      result.push({ ...row, amount: parte, title: `${row.title} - ${normalizeName(pessoa)}` });
     }
   }
 
@@ -329,7 +325,6 @@ export function parseFatura(
 
   const { rows: rowsComAssinaturas, invalidas: invalidasAssinaturas } = expandAssinaturas(
     rows,
-    defaultOwner,
     assinaturas,
   );
   const { rows: expandedRows, invalidas: invalidasSplit } = expandSplitRows(
